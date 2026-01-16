@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Branch Admins - PayFlowPro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* ============ CONTENT ============ */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff4444;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* ============ TABLE ============ */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 195, 0.03);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 PayFlowPro</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span>Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span>Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span>Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item active">
+                <span class="nav-icon">🛡️</span>
+                <span>Branch Admins</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Manage Branch Admins</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3>Add New Branch Admin</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input id="adminName" placeholder="Admin Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="adminEmail" placeholder="Login Email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input id="adminPass" placeholder="Login Password">
+                    </div>
+                    <div class="form-group">
+                        <label>Branch Name</label>
+                        <input id="adminBranch" placeholder="e.g. New York Office">
+                    </div>
+                </div>
+                <button id="saveBtn" onclick="addAdmin()">💾 Save Admin</button>
+            </div>
+
+            <div class="card">
+                <h3>Existing Admins</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Password</th>
+                                <th>Branch</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Basic auth check
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        // Strict Role Check: Only Super Admin can manage admins
+        if (localStorage.getItem("role") !== "super_admin") {
+            location = "dashboard.html";
+        }
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        };
+
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+
+        // --- MANAGE ADMINS ---
+
+        window.addAdmin = () => {
+            const nameEl = document.getElementById('adminName');
+            const emailEl = document.getElementById('adminEmail');
+            const passEl = document.getElementById('adminPass');
+            const branchEl = document.getElementById('adminBranch');
+
+            const name = nameEl.value;
+            const email = emailEl.value;
+            const pass = passEl.value;
+            const branch = branchEl.value;
+
+            if (!name || !email || !pass || !branch) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            // Create a safe ID from email
+            const adminId = email.replace(/[^a-zA-Z0-9]/g, '_');
+
+            set(ref(db, 'admins/' + adminId), {
+                name: name,
+                email: email,
+                password: pass,
+                branch: branch,
+                role: 'branch_admin'
+            }).then(() => {
+                const isEdit = emailEl.disabled;
+                alert(isEdit ? "Admin Updated!" : "Branch Admin Added!");
+
+                // Reset form
+                nameEl.value = '';
+                emailEl.value = '';
+                passEl.value = '';
+                branchEl.value = '';
+                emailEl.disabled = false; // Re-enable for next add
+                document.getElementById('saveBtn').innerText = "💾 Save Admin";
+
+            }).catch(e => alert("Error: " + e.message));
+        };
+
+        onValue(ref(db, 'admins'), snapshot => {
+            const list = document.getElementById('adminList');
+            list.innerHTML = "";
+
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const admin = child.val();
+                    const id = child.key;
+                    // Escape single quotes for safely passing strings
+                    const safeName = admin.name.replace(/'/g, "\\'");
+                    const safeEmail = admin.email.replace(/'/g, "\\'");
+                    const safePass = admin.password.replace(/'/g, "\\'");
+                    const safeBranch = admin.branch.replace(/'/g, "\\'");
+
+                    list.innerHTML += `
+                        <tr>
+                            <td>${admin.name}</td>
+                            <td>${admin.email}</td>
+                            <td>${admin.password}</td>
+                            <td>${admin.branch}</td>
+                            <td>
+                                <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                    onclick="editAdmin('${safeName}', '${safeEmail}', '${safePass}', '${safeBranch}')">✏️ Edit</button>
+                                <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                list.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No branch admins found</td></tr>";
+            }
+        });
+
+        window.editAdmin = (name, email, pass, branch) => {
+            document.getElementById('adminName').value = name;
+            document.getElementById('adminEmail').value = email;
+            document.getElementById('adminPass').value = pass;
+            document.getElementById('adminBranch').value = branch;
+
+            // Lock email to prevent ID change (simplifies update logic)
+            document.getElementById('adminEmail').disabled = true;
+            document.getElementById('saveBtn').innerText = "🔄 Update Admin";
+
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.deleteAdmin = (id) => {
+            if (confirm("Delete this admin?")) {
+                remove(ref(db, 'admins/' + id));
+            }
+        };
+    </script>
+</body>
+
+</html>
