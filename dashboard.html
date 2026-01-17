@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayFlowPro Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00ffc3;
+      --primary-hover: #00e6af;
+      --bg-dark: #0b0f14;
+      --bg-card: #141a22;
+      --bg-input: #0f151d;
+      --text: #ffffff;
+      --text-muted: #8b92a0;
+      --border: #1e2530;
+      --success: #00ffc3;
+      --danger: #ff5c5c;
+      --warning: #ffa726;
+      --sidebar-width: 260px
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      overflow-x: hidden
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      z-index: 100;
+      overflow-y: auto;
+      transition: transform .3s ease
+    }
+
+    .sidebar-header {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .sidebar-header h2 {
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .sidebar-nav {
+      margin-top: 24px;
+      padding: 0 12px
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 4px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .2s ease;
+      font-weight: 500;
+      font-size: 14px;
+      text-decoration: none
+    }
+
+    .nav-item:hover {
+      background: rgba(0, 255, 195, .08);
+      color: var(--primary)
+    }
+
+    .nav-item.active {
+      background: rgba(0, 255, 195, .15);
+      color: var(--primary);
+      font-weight: 600
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      font-size: 18px
+    }
+
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      transition: margin-left .3s ease
+    }
+
+    .top-bar {
+      background: var(--bg-card);
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50
+    }
+
+    .top-bar h1 {
+      font-size: 24px;
+      font-weight: 600
+    }
+
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px
+    }
+
+    .dashboard-section {
+      padding: 32px
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border)
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text)
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all .2s ease
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 255, 195, .1)
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: rgba(0, 255, 195, .1);
+      color: var(--primary)
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      fontweight: 500
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .2s ease;
+      font-family: inherit
+    }
+
+    .btn-logout:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 16px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      text-align: left;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 2px solid var(--border);
+      background: rgba(0, 0, 0, .2)
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px
+    }
+
+    tr:hover {
+      background: rgba(0, 255, 195, .03)
+    }
+
+    .badge-in {
+      color: var(--success);
+      background: rgba(0, 255, 195, .15);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase
+    }
+
+    .badge-out {
+      color: var(--danger);
+      background: rgba(255, 92, 92, .15);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase
+    }
+
+    .badge-absent {
+      color: #888;
+      background: rgba(136, 136, 136, .15);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase
+    }
+
+    @media(max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%)
+      }
+
+      .sidebar.open {
+        transform: translateX(0)
+      }
+
+      .main-content {
+        margin-left: 0
+      }
+
+      .menu-toggle {
+        display: block
+      }
+
+      .dashboard-section {
+        padding: 20px
+      }
+
+      .top-bar {
+        padding: 16px 20px
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      borderradius: 4px
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary)
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>💼 PayFlowPro</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span>Attendance</span></a>
+      <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span>Leave
+          Management</span></a>
+      <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span>Branch Admins</span></a>
+      <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary Settings</span></a>
+      <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly Report</span></a>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:16px">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1>Dashboard</h1>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard-section">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon">👥</div>
+          </div>
+          <div class="stat-value" id="totalEmployees">0</div>
+          <div class="stat-label">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(0,255,195,.1);color:var(--success)">✅</div>
+          </div>
+          <div class="stat-value" id="presentToday">0</div>
+          <div class="stat-label">Present Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(255,92,92,.1);color:var(--danger)">❌</div>
+          </div>
+          <div class="stat-value" id="absentToday">0</div>
+          <div class="stat-label">Absent Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(255,167,38,.1);color:var(--warning)">📋</div>
+          </div>
+          <div class="stat-value" id="totalRecords">0</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Today's Report</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee Name</th>
+                <th>Status</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Daily Price</th>
+              </tr>
+            </thead>
+            <tbody id="recentAttendance"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+      authDomain: "payflowpro-6e62d.firebaseapp.com",
+      databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+      projectId: "payflowpro-6e62d",
+      storageBucket: "payflowpro-6e62d.firebasestorage.app",
+      messagingSenderId: "69298740438",
+      appId: "1:69298740438:web:18fd85e982e083e1543d77"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    if (localStorage.getItem("admin") !== "true") {
+      location = "admin.html";
+    }
+
+    window.toggleSidebar = () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    };
+
+    window.logout = () => {
+      localStorage.clear();
+      location = "admin.html";
+    };
+
+    // --- DATA HANDLING ---
+    const allowedEmpIds = new Set();
+    const adminRole = localStorage.getItem("role");
+    const adminBranch = localStorage.getItem("branch");
+
+    // Hide Branch Admin Link for non-super
+    if (adminRole !== 'super_admin') {
+      const navs = document.querySelectorAll('.nav-item');
+      navs.forEach(nav => {
+        if (nav.href.includes('manage_admins.html')) nav.style.display = 'none';
+      });
+    }
+
+    // 1. Fetch Employees & Attendance
+    Promise.all([
+      get(ref(db, "employees")),
+      get(ref(db, "attendance"))
+    ]).then(([empSnap, attSnap]) => {
+      const employees = [];
+      let totalEmployees = 0;
+
+      // Process Employees
+      if (empSnap.exists()) {
+        empSnap.forEach(c => {
+          const e = c.val();
+          // Filter by Branch
+          if (adminRole === 'branch_admin' && e.branch !== adminBranch) return;
+
+          employees.push(e);
+          totalEmployees++;
+        });
+      }
+      document.getElementById('totalEmployees').textContent = totalEmployees;
+
+      // Process Attendance for Today
+      let totalRecords = 0;
+      let presentToday = 0;
+      let absentToday = 0;
+      const today = new Date().toISOString().split('T')[0];
+
+      // Calculate Days in Month for daily price
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+      const reportData = employees.map(emp => {
+        let status = 'absent';
+        let punchIn = '-';
+        let punchOut = '-';
+        let rawStatus = 'absent';  // for badge class
+
+        if (attSnap.exists()) {
+          const empRecord = attSnap.child(emp.empId);
+          if (empRecord.exists() && empRecord.child(today).exists()) {
+            const r = empRecord.child(today).val();
+            status = r.status;
+            rawStatus = r.status;
+            punchIn = r.punchIn?.time || '-';
+            punchOut = r.punchOut?.time || '-';
+            totalRecords++;
+
+            if (status === 'in') presentToday++;
+            // Note: 'absent' status in DB vs derived absent. 
+            // If DB says 'absent', count it. If no record, we count as absent for stats too?
+            // Usually 'absent' is explicitly marked or inferred.
+            // For the counter, let's count Explicit Absents + No Record? 
+            // The prompt asks "how many employees present absent". 
+            // If status is NOT 'in', they are absent/leave/etc.
+          }
+        }
+
+        // Calculate Daily Price
+        const salary = parseFloat(emp.salary || 0);
+        const dailyPrice = Math.round(salary / daysInMonth);
+
+        return {
+          name: emp.name,
+          status: status,
+          rawStatus: rawStatus,
+          punchIn: punchIn,
+          punchOut: punchOut,
+          dailyPrice: dailyPrice
+        };
+      });
+
+      // Update Counters
+      // Recalculate absent based on logic: Total - Present = Absent (roughly)
+      // Or just check status != 'in'
+      absentToday = reportData.filter(d => d.rawStatus !== 'in').length;
+
+      document.getElementById('totalRecords').textContent = totalRecords; // Records found for today
+      document.getElementById('presentToday').textContent = presentToday;
+      document.getElementById('absentToday').textContent = absentToday;
+
+      // Render Table
+      const tbody = document.getElementById('recentAttendance');
+      tbody.innerHTML = "";
+
+      reportData.forEach(item => {
+        // Format daily price
+        const priceDisplay = item.status === 'in' || item.status === 'halfday' || item.status === 'paid-leave'
+          ? `<span style="color:#00ffc3">₹${item.dailyPrice}</span>`
+          : `<span style="color:gray">₹${item.dailyPrice}</span>`; // Grey if not earned today? 
+        // User just asked "current day price". I'll show the potential earning.
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.name}</td>
+                <td><span class="badge-${item.rawStatus}">${item.status}</span></td>
+                <td>${item.punchIn}</td>
+                <td>${item.punchOut}</td>
+                <td>${priceDisplay}</td>
+            </tr>`;
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - PayFlowPro Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform .3s ease
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 255, 195, .08);
+            color: var(--primary)
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 195, .15);
+            color: var(--primary);
+            font-weight: 600
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left .3s ease
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px
+        }
+
+        .dashboard-section {
+            padding: 32px
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border)
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text)
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 4px
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            transition: all .2s ease;
+            font-family: inherit
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 195, .1)
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all .2s ease;
+            font-family: inherit
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 195, .3)
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white
+        }
+
+        .btn-danger:hover {
+            background: #ff4444;
+            box-shadow: 0 4px 12px rgba(255, 92, 92, .3)
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text)
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 16px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 2px solid var(--border);
+            background: rgba(0, 0, 0, .2)
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px
+        }
+
+        .badge-present,
+        .badge-in {
+            color: #00ffc3;
+            background: rgba(0, 255, 195, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge-absent {
+            color: #ff5c5c;
+            background: rgba(255, 92, 92, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge-paid-leave,
+        .badge-sick-leave {
+            color: #ffa726;
+            background: rgba(255, 167, 38, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 195, .03)
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                transform: translateX(-100%)
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+            .main-content {
+                margin-left: 0
+            }
+
+            .menu-toggle {
+                display: block
+            }
+
+            .dashboard-section {
+                padding: 20px
+            }
+
+            .top-bar {
+                padding: 16px 20px
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary)
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 PayFlowPro</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+            <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
+            <a href="attendance.html" class="nav-item active"><span class="nav-icon">✅</span><span>Attendance</span></a>
+            <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span>Leave
+                    Management</span></a>
+            <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span>Branch
+                    Admins</span></a>
+            <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary
+                    Settings</span></a>
+            <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
+                    Report</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Attendance</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3>Mark Attendance (Single Day)</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">💡 Tip: When marking as Present,
+                    office times will be used automatically (leave time fields empty)</p>
+                <div class="form-grid">
+                    <div class="form-group"><label>Employee ID</label><input id="attEmpId"
+                            placeholder="Enter employee ID"></div>
+                    <div class="form-group"><label>Date</label><input type="date" id="attDate"></div>
+                    <div class="form-group"><label>Status</label><select id="attStatus"
+                            onchange="toggleAttendanceTimes()">
+                            <option value="in">Present</option>
+                            <option value="absent">Absent</option>
+                        </select></div>
+                    <div class="form-group" id="attInGroup" style="display:none"><label>Punch In (Optional - uses office
+                            time if empty)</label><input type="time" id="attIn"
+                            placeholder="Leave empty for office time"></div>
+                    <div class="form-group" id="attOutGroup" style="display:none"><label>Punch Out (Optional - uses
+                            office time if empty)</label><input type="time" id="attOut"
+                            placeholder="Leave empty for office time"></div>
+                </div>
+                <button onclick="markAttendance()">✅ Save Attendance</button>
+            </div>
+
+            <div class="card">
+                <h3>Bulk Attendance (Date Range)</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">💡 Tip: When marking as Present,
+                    office times will be used automatically (leave time fields empty)</p>
+                <div class="form-grid">
+                    <div class="form-group"><label>Employee ID</label><input id="bulkEmpId"
+                            placeholder="Enter employee ID"></div>
+                    <div class="form-group"><label>From Date</label><input type="date" id="bulkFrom"></div>
+                    <div class="form-group"><label>To Date</label><input type="date" id="bulkTo"></div>
+                    <div class="form-group"><label>Status</label><select id="bulkStatus" onchange="toggleBulkTimes()">
+                            <option value="in">Present</option>
+                            <option value="absent">Absent</option>
+                        </select></div>
+                    <div class="form-group" id="bulkInGroup" style="display:none"><label>Punch In (Optional - uses
+                            office time if empty)</label><input type="time" id="bulkIn"
+                            placeholder="Leave empty for office time"></div>
+                    <div class="form-group" id="bulkOutGroup" style="display:none"><label>Punch Out (Optional - uses
+                            office time if empty)</label><input type="time" id="bulkOut"
+                            placeholder="Leave empty for office time"></div>
+                </div>
+                <button onclick="markBulkAttendance()">📅 Mark Bulk Attendance</button>
+            </div>
+
+            <div class="card">
+                <h3>Attendance Records</h3>
+                <!-- Filters -->
+                <div style="display:flex;gap:16px;margin-bottom:16px;align-items:flex-end;">
+                    <div style="flex:1">
+                        <label
+                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px">Filter
+                            by Employee ID</label>
+                        <input id="filterEmpId" list="empList" placeholder="Search or Select Employee ID..."
+                            oninput="renderAttendanceTable()">
+                        <datalist id="empList"></datalist>
+                    </div>
+                    <div style="flex:1">
+                        <label
+                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px">Filter
+                            by Date</label>
+                        <input type="date" id="filterDate" onchange="renderAttendanceTable()">
+                    </div>
+                    <button onclick="clearFilters()" class="btn-logout" style="height:42px;">Clear Filters</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Punch In</th>
+                                <th>Punch Out</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceData"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        };
+
+        window.logout = () => {
+            localStorage.clear();
+            location = "admin.html";
+        };
+
+        // --- AUTH & BRANCH FILTERING ---
+        const allowedEmpIds = new Set();
+        const adminRole = localStorage.getItem("role");
+        const adminBranch = localStorage.getItem("branch");
+
+        // Hide Branch Admin Link for non-super
+        if (adminRole !== 'super_admin') {
+            const navs = document.querySelectorAll('.nav-item');
+            navs.forEach(nav => {
+                if (nav.href.includes('manage_admins.html')) nav.style.display = 'none';
+            });
+        }
+
+        // Fetch Employees to build whitelist and populate datalist
+        onValue(ref(db, "employees"), s => {
+            allowedEmpIds.clear();
+            const empList = document.getElementById('empList');
+            empList.innerHTML = '';
+
+            if (s.exists()) {
+                s.forEach(c => {
+                    const e = c.val();
+                    let allow = true;
+                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                        allow = false;
+                    }
+                    if (allow) {
+                        allowedEmpIds.add(e.empId);
+                        // Populate datalist
+                        const option = document.createElement('option');
+                        option.value = e.empId;
+                        option.label = e.name;
+                        empList.appendChild(option);
+                    }
+                });
+            }
+        });
+
+        // --- OFFICE SETTINGS ---
+        let storedOfficeStart = '';
+        let storedOfficeEnd = '';
+
+        // Dynamic Settings Path
+        let settingsRoot = 'settings';
+        if (adminRole === 'branch_admin' && adminBranch) {
+            settingsRoot = `settings/branches/${adminBranch}`;
+        }
+
+        onValue(ref(db, `${settingsRoot}/officeTime`), s => {
+            if (s.exists()) {
+                storedOfficeStart = s.val().start;
+                storedOfficeEnd = s.val().end;
+            }
+        });
+
+        // --- HELPERS ---
+        window.toggleAttendanceTimes = () => {
+            const status = document.getElementById('attStatus').value;
+            const inGroup = document.getElementById('attInGroup');
+            const outGroup = document.getElementById('attOutGroup');
+            if (status === 'in') {
+                inGroup.style.display = 'none';
+                outGroup.style.display = 'none';
+                document.getElementById('attIn').value = '';
+                document.getElementById('attOut').value = '';
+            } else {
+                inGroup.style.display = 'block';
+                outGroup.style.display = 'block';
+            }
+        };
+
+        window.toggleBulkTimes = () => {
+            const status = document.getElementById('bulkStatus').value;
+            const inGroup = document.getElementById('bulkInGroup');
+            const outGroup = document.getElementById('bulkOutGroup');
+            if (status === 'in') {
+                inGroup.style.display = 'none';
+                outGroup.style.display = 'none';
+                document.getElementById('bulkIn').value = '';
+                document.getElementById('bulkOut').value = '';
+            } else {
+                inGroup.style.display = 'block';
+                outGroup.style.display = 'block';
+            }
+        };
+
+        // --- ACTIONS ---
+        window.markAttendance = () => {
+            const empId = document.getElementById('attEmpId').value;
+            if (adminRole === 'branch_admin' && !allowedEmpIds.has(empId)) {
+                alert("Access Denied: You can only manage employees in your branch (" + adminBranch + ")");
+                return;
+            }
+
+            const status = document.getElementById('attStatus').value;
+            const date = document.getElementById('attDate').value;
+            let punchInTime = document.getElementById('attIn').value;
+            let punchOutTime = document.getElementById('attOut').value;
+
+            if (!empId || !date) {
+                alert("Please fill required fields");
+                return;
+            }
+
+            if (status === 'in') {
+                if (!punchInTime) punchInTime = storedOfficeStart;
+                if (!punchOutTime) punchOutTime = storedOfficeEnd;
+            }
+
+            set(ref(db, `attendance/${empId}/${date}`), {
+                punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
+                punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
+                status
+            });
+
+            alert('Attendance marked successfully!');
+            document.getElementById('attEmpId').value = '';
+            document.getElementById('attDate').value = '';
+            document.getElementById('attIn').value = '';
+            document.getElementById('attOut').value = '';
+            document.getElementById('attStatus').value = 'in';
+            toggleAttendanceTimes();
+        };
+
+        window.markBulkAttendance = async () => {
+            const emp = document.getElementById('bulkEmpId').value;
+            if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp)) {
+                alert("Access Denied: You can only manage employees in your branch");
+                return;
+            }
+
+            const from = new Date(document.getElementById('bulkFrom').value);
+            const to = new Date(document.getElementById('bulkTo').value);
+            const status = document.getElementById('bulkStatus').value;
+            let punchInTime = document.getElementById('bulkIn').value;
+            let punchOutTime = document.getElementById('bulkOut').value;
+
+            if (!emp || isNaN(from) || isNaN(to)) {
+                alert("Please check inputs");
+                return;
+            }
+
+            if (status === 'in') {
+                if (!punchInTime) punchInTime = storedOfficeStart;
+                if (!punchOutTime) punchOutTime = storedOfficeEnd;
+            }
+
+            for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+                const key = d.toISOString().split("T")[0];
+                await set(ref(db, `attendance/${emp}/${key}`), {
+                    punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
+                    punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
+                    status
+                });
+            }
+
+            alert("Bulk attendance completed successfully!");
+            document.getElementById('bulkEmpId').value = '';
+            document.getElementById('bulkFrom').value = '';
+            document.getElementById('bulkTo').value = '';
+            document.getElementById('bulkIn').value = '';
+            document.getElementById('bulkOut').value = '';
+            toggleBulkTimes();
+        };
+
+        // --- LISTENER ---
+        let allAttendanceData = [];
+
+        onValue(ref(db, "attendance"), s => {
+            allAttendanceData = [];
+            s.forEach(emp => {
+                // FILTER
+                if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp.key)) return;
+
+                emp.forEach(day => {
+                    const r = day.val();
+                    allAttendanceData.push({
+                        empId: emp.key,
+                        date: day.key,
+                        punchIn: r.punchIn?.time || "-",
+                        punchOut: r.punchOut?.time || "-",
+                        status: r.status,
+                        punchInRaw: r.punchIn?.time || '',
+                        punchOutRaw: r.punchOut?.time || ''
+                    });
+                });
+            });
+            // Sort by Date Descending
+            allAttendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            renderAttendanceTable();
+        });
+
+        window.renderAttendanceTable = () => {
+            const filterEmp = document.getElementById('filterEmpId').value.toLowerCase();
+            const filterDate = document.getElementById('filterDate').value;
+            const list = document.getElementById('attendanceData');
+            list.innerHTML = "";
+
+            allAttendanceData.forEach(row => {
+                // Client-side filtering
+                if (filterEmp && !row.empId.toLowerCase().includes(filterEmp)) return;
+                if (filterDate && row.date !== filterDate) return;
+
+                // Calculate Late Status
+                let lateBadge = '';
+                if (row.punchIn && row.punchIn !== '-') {
+                    const timeParts = row.punchIn.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                    if (timeParts) {
+                        let hours = parseInt(timeParts[1]);
+                        const minutes = parseInt(timeParts[2]);
+                        const period = timeParts[3].toUpperCase();
+
+                        // Convert to 24h
+                        if (period === 'PM' && hours < 12) hours += 12;
+                        if (period === 'AM' && hours === 12) hours = 0;
+
+                        const totalMinutes = hours * 60 + minutes;
+                        // 9:00 AM = 540 minutes
+                        if (totalMinutes > 540) {
+                            const diff = totalMinutes - 540;
+                            let timeStr = `${diff} min`;
+                            if (diff >= 60) {
+                                const h = Math.floor(diff / 60);
+                                const m = diff % 60;
+                                timeStr = `${h}hr ${m}min`;
+                            }
+                            lateBadge = `<span style="display:inline-block;margin-left:8px;font-size:11px;color:#ff5c5c;background:rgba(255,92,92,0.1);padding:2px 8px;border-radius:12px;font-weight:600;">+${timeStr} Late</span>`;
+                        }
+                    }
+                }
+
+                // Calculate Early Left Status
+                let earlyBadge = '';
+                if (row.punchOut && row.punchOut !== '-') {
+                    const timeParts = row.punchOut.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                    if (timeParts) {
+                        let hours = parseInt(timeParts[1]);
+                        const minutes = parseInt(timeParts[2]);
+                        const period = timeParts[3].toUpperCase();
+
+                        if (period === 'PM' && hours < 12) hours += 12;
+                        if (period === 'AM' && hours === 12) hours = 0;
+
+                        const totalMinutes = hours * 60 + minutes;
+                        // 6:00 PM = 18 * 60 = 1080 minutes
+                        if (totalMinutes < 1080) {
+                            const diff = 1080 - totalMinutes;
+                            let timeStr = `${diff} min`;
+                            if (diff >= 60) {
+                                const h = Math.floor(diff / 60);
+                                const m = diff % 60;
+                                timeStr = `${h}hr ${m}min`;
+                            }
+                            earlyBadge = `<span style="display:inline-block;margin-left:8px;font-size:11px;color:#ffa726;background:rgba(255,167,38,0.1);padding:2px 8px;border-radius:12px;font-weight:600;">-${timeStr} Early</span>`;
+                        }
+                    }
+                }
+
+                list.innerHTML += `<tr>
+                        <td>${row.empId}</td>
+                        <td>${row.date}</td>
+                        <td>${row.punchIn}</td>
+                        <td>${row.punchOut}</td>
+                        <td>
+                            <span class="badge-${row.status}">${row.status}</span>
+                            ${lateBadge}
+                            ${earlyBadge}
+                        </td>
+                        <td>
+                            <button class="btn-small" style="margin-right:4px" onclick="editAttendance('${row.empId}','${row.date}','${row.punchInRaw}','${row.punchOutRaw}')">✏️ Edit</button>
+                            <button class="btn-danger btn-small" onclick="delAttendance('${row.empId}','${row.date}')">🗑️ Delete</button>
+                        </td>
+                    </tr>`;
+            });
+
+            if (list.innerHTML === "") {
+                list.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No records found</td></tr>`;
+            }
+        };
+
+        window.clearFilters = () => {
+            document.getElementById('filterEmpId').value = '';
+            document.getElementById('filterDate').value = '';
+            renderAttendanceTable();
+        };
+
+        window.editAttendance = (emp, day, punchIn, punchOut) => {
+            document.getElementById('attEmpId').value = emp;
+            document.getElementById('attDate').value = day;
+            document.getElementById('attIn').value = punchIn;
+            document.getElementById('attOut').value = punchOut;
+            setTimeout(() => {
+                document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        };
+
+        window.delAttendance = (emp, day) => {
+            if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp)) {
+                alert("Access Denied");
+                return;
+            }
+            if (confirm('Delete this attendance record?')) {
+                remove(ref(db, `attendance/${emp}/${day}`));
+            }
+        };
+    </script>
+</body>
+
+</html>
