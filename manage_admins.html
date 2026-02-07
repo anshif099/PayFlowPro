@@ -348,6 +348,10 @@
                         <input id="adminName" placeholder="Admin Name">
                     </div>
                     <div class="form-group">
+                        <label>Admin ID</label>
+                        <input id="adminId" placeholder="e.g. BA01">
+                    </div>
+                    <div class="form-group">
                         <label>Email</label>
                         <input type="email" id="adminEmail" placeholder="Login Email">
                     </div>
@@ -370,6 +374,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>ID</th>
                                 <th>Email</th>
                                 <th>Password</th>
                                 <th>Branch</th>
@@ -420,25 +425,28 @@
 
         window.addAdmin = () => {
             const nameEl = document.getElementById('adminName');
+            const idEl = document.getElementById('adminId');
             const emailEl = document.getElementById('adminEmail');
             const passEl = document.getElementById('adminPass');
             const branchEl = document.getElementById('adminBranch');
 
             const name = nameEl.value;
+            const aid = idEl.value;
             const email = emailEl.value;
             const pass = passEl.value;
             const branch = branchEl.value;
 
-            if (!name || !email || !pass || !branch) {
+            if (!name || !email || !pass || !branch || !aid) {
                 alert("Please fill all fields");
                 return;
             }
 
             // Create a safe ID from email
-            const adminId = email.replace(/[^a-zA-Z0-9]/g, '_');
+            const keyId = email.replace(/[^a-zA-Z0-9]/g, '_');
 
-            set(ref(db, 'admins/' + adminId), {
+            set(ref(db, 'admins/' + keyId), {
                 name: name,
+                adminId: aid,
                 email: email,
                 password: pass,
                 branch: branch,
@@ -449,6 +457,7 @@
 
                 // Reset form
                 nameEl.value = '';
+                idEl.value = '';
                 emailEl.value = '';
                 passEl.value = '';
                 branchEl.value = '';
@@ -468,6 +477,7 @@
                     const id = child.key;
                     // Escape single quotes for safely passing strings
                     const safeName = admin.name.replace(/'/g, "\\'");
+                    const safeId = (admin.adminId || '-').replace(/'/g, "\\'");
                     const safeEmail = admin.email.replace(/'/g, "\\'");
                     const safePass = admin.password.replace(/'/g, "\\'");
                     const safeBranch = admin.branch.replace(/'/g, "\\'");
@@ -475,24 +485,40 @@
                     list.innerHTML += `
                         <tr>
                             <td>${admin.name}</td>
+                            <td>${admin.adminId || '-'}</td>
                             <td>${admin.email}</td>
                             <td>${admin.password}</td>
                             <td>${admin.branch}</td>
                             <td>
                                 <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                    onclick="editAdmin('${safeName}', '${safeEmail}', '${safePass}', '${safeBranch}')">✏️ Edit</button>
+                                    onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}')">🔑 Login</button>
+                                <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                    onclick="editAdmin('${safeName}', '${safeId}', '${safeEmail}', '${safePass}', '${safeBranch}')">✏️ Edit</button>
                                 <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ Delete</button>
                             </td>
                         </tr>
                     `;
                 });
             } else {
-                list.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No branch admins found</td></tr>";
+                list.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No branch admins found</td></tr>";
             }
         });
 
-        window.editAdmin = (name, email, pass, branch) => {
+        window.loginAs = (name, email, branch, adminId) => {
+            if (confirm(`Login as ${name}?`)) {
+                localStorage.setItem('role', 'branch_admin');
+                localStorage.setItem('name', name);
+                localStorage.setItem('branch', branch);
+                // Also set admin=true just in case, though it should be set
+                localStorage.setItem('admin', 'true');
+
+                location.href = "dashboard.html";
+            }
+        };
+
+        window.editAdmin = (name, aid, email, pass, branch) => {
             document.getElementById('adminName').value = name;
+            document.getElementById('adminId').value = aid === '-' ? '' : aid;
             document.getElementById('adminEmail').value = email;
             document.getElementById('adminPass').value = pass;
             document.getElementById('adminBranch').value = branch;

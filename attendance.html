@@ -677,23 +677,26 @@
 
         onValue(ref(db, "attendance"), s => {
             allAttendanceData = [];
-            s.forEach(emp => {
-                // FILTER
-                if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp.key)) return;
+            if (s.exists()) {
+                s.forEach(emp => {
+                    // FILTER: Skip employees not in whitelist (if branch admin)
+                    // allowedEmpIds is populated based on employee branch in previous listener
+                    if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp.key)) return;
 
-                emp.forEach(day => {
-                    const r = day.val();
-                    allAttendanceData.push({
-                        empId: emp.key,
-                        date: day.key,
-                        punchIn: r.punchIn?.time || "-",
-                        punchOut: r.punchOut?.time || "-",
-                        status: r.status,
-                        punchInRaw: r.punchIn?.time || '',
-                        punchOutRaw: r.punchOut?.time || ''
+                    emp.forEach(day => {
+                        const r = day.val();
+                        allAttendanceData.push({
+                            empId: emp.key,
+                            date: day.key,
+                            punchIn: r.punchIn?.time || "-",
+                            punchOut: r.punchOut?.time || "-",
+                            status: r.status,
+                            punchInRaw: r.punchIn?.time || '',
+                            punchOutRaw: r.punchOut?.time || ''
+                        });
                     });
                 });
-            });
+            }
             // Sort by Date Descending
             allAttendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
             renderAttendanceTable();

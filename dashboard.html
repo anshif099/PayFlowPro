@@ -201,7 +201,7 @@
     .stat-label {
       font-size: 14px;
       color: var(--text-muted);
-      fontweight: 500
+      font-weight: 500
     }
 
     .btn-logout {
@@ -326,7 +326,7 @@
 
     ::-webkit-scrollbar-thumb {
       background: var(--border);
-      borderradius: 4px
+      border-radius: 4px
     }
 
     ::-webkit-scrollbar-thumb:hover {
@@ -465,101 +465,84 @@
       get(ref(db, "attendance"))
     ]).then(([empSnap, attSnap]) => {
       const employees = [];
-      let totalEmployees = 0;
 
       // Process Employees
       if (empSnap.exists()) {
         empSnap.forEach(c => {
           const e = c.val();
           // Filter by Branch
-          if (adminRole === 'branch_admin' && e.branch !== adminBranch) return;
-
+          if (adminRole !== 'super_admin' && e.branch !== adminBranch) {
+            return;
+          }
+          e.empId = c.key; // Ensure ID is present
           employees.push(e);
-          totalEmployees++;
         });
       }
-      document.getElementById('totalEmployees').textContent = totalEmployees;
+
+      const totalEmpCount = employees.length;
+      document.getElementById('totalEmployees').textContent = totalEmpCount;
 
       // Process Attendance for Today
       let totalRecords = 0;
       let presentToday = 0;
       let absentToday = 0;
       const today = new Date().toISOString().split('T')[0];
-
-      // Calculate Days in Month for daily price
       const now = new Date();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-      const reportData = employees.map(emp => {
+      const tbody = document.getElementById('recentAttendance');
+      tbody.innerHTML = "";
+
+      employees.forEach(emp => {
         let status = 'absent';
         let punchIn = '-';
         let punchOut = '-';
-        let rawStatus = 'absent';  // for badge class
+        let rawStatus = 'absent';
+        let hasRecord = false;
 
+        // Check Attendance
         if (attSnap.exists()) {
           const empRecord = attSnap.child(emp.empId);
           if (empRecord.exists() && empRecord.child(today).exists()) {
             const r = empRecord.child(today).val();
-            status = r.status;
-            rawStatus = r.status;
+            status = r.status || 'absent';
+            rawStatus = status.toLowerCase();
             punchIn = r.punchIn?.time || '-';
             punchOut = r.punchOut?.time || '-';
+            hasRecord = true;
             totalRecords++;
 
-            if (status === 'in') presentToday++;
-            // Note: 'absent' status in DB vs derived absent. 
-            // If DB says 'absent', count it. If no record, we count as absent for stats too?
-            // Usually 'absent' is explicitly marked or inferred.
-            // For the counter, let's count Explicit Absents + No Record? 
-            // The prompt asks "how many employees present absent". 
-            // If status is NOT 'in', they are absent/leave/etc.
+            if (rawStatus === 'in' || rawStatus === 'out') {
+              presentToday++;
+            }
           }
         }
 
         // Calculate Daily Price
         const salary = parseFloat(emp.salary || 0);
         const dailyPrice = Math.round(salary / daysInMonth);
+        const priceDisplay = (status === 'in' || status === 'halfday' || status === 'paid-leave' || status === 'out')
+          ? `<span style="color:#00ffc3">₹${dailyPrice}</span>`
+          : `<span style="color:gray">₹0</span>`;
 
-        return {
-          name: emp.name,
-          status: status,
-          rawStatus: rawStatus,
-          punchIn: punchIn,
-          punchOut: punchOut,
-          dailyPrice: dailyPrice
-        };
-      });
-
-      // Update Counters
-      // Recalculate absent based on logic: Total - Present = Absent (roughly)
-      // Or just check status != 'in'
-      absentToday = reportData.filter(d => d.rawStatus !== 'in').length;
-
-      document.getElementById('totalRecords').textContent = totalRecords; // Records found for today
-      document.getElementById('presentToday').textContent = presentToday;
-      document.getElementById('absentToday').textContent = absentToday;
-
-      // Render Table
-      const tbody = document.getElementById('recentAttendance');
-      tbody.innerHTML = "";
-
-      reportData.forEach(item => {
-        // Format daily price
-        const priceDisplay = item.status === 'in' || item.status === 'halfday' || item.status === 'paid-leave'
-          ? `<span style="color:#00ffc3">₹${item.dailyPrice}</span>`
-          : `<span style="color:gray">₹${item.dailyPrice}</span>`; // Grey if not earned today? 
-        // User just asked "current day price". I'll show the potential earning.
-
+        // Render Row
         tbody.innerHTML += `
             <tr>
-                <td>${item.name}</td>
-                <td><span class="badge-${item.rawStatus}">${item.status}</span></td>
-                <td>${item.punchIn}</td>
-                <td>${item.punchOut}</td>
+                <td>${emp.name}</td>
+                <td><span class="badge-${rawStatus === 'in' ? 'in' : (rawStatus === 'out' ? 'out' : 'absent')}">${status}</span></td>
+                <td>${punchIn}</td>
+                <td>${punchOut}</td>
                 <td>${priceDisplay}</td>
             </tr>`;
       });
-    });
+
+      absentToday = totalEmpCount - presentToday;
+
+      document.getElementById('totalRecords').textContent = totalRecords;
+      document.getElementById('presentToday').textContent = presentToday;
+      document.getElementById('absentToday').textContent = absentToday;
+
+    }).catch(e => console.error(e));
   </script>
 </body>
 

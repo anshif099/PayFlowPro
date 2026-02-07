@@ -86,17 +86,17 @@
         const SUPER_ADMIN_PASS = "Payflowpro";
 
         window.login = async () => {
-            const e = document.getElementById("email").value;
+            const input = document.getElementById("email").value;
             const p = document.getElementById("password").value;
             const errorEl = document.getElementById("error");
 
             errorEl.innerText = "Checking...";
 
             // 1. Check Hardcoded Super Admin
-            if (e === SUPER_ADMIN_EMAIL && p === SUPER_ADMIN_PASS) {
+            if (input === SUPER_ADMIN_EMAIL && p === SUPER_ADMIN_PASS) {
                 localStorage.setItem("admin", "true");
                 localStorage.setItem("role", "super_admin");
-                window.location = "dashboard.html";
+                location.href = "dashboard.html";
                 return;
             }
 
@@ -108,13 +108,14 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const admin = child.val();
-                        if (admin.email === e && admin.password === p) {
+                        // Check if input matches Email OR Admin ID
+                        if ((admin.email === input || admin.adminId === input) && admin.password === p) {
                             localStorage.setItem("admin", "true");
                             localStorage.setItem("role", admin.role || 'branch_admin');
                             localStorage.setItem("branch", admin.branch || '');
-                            localStorage.setItem("adminName", admin.name || 'Admin');
+                            localStorage.setItem("name", admin.name || 'Admin');
 
-                            window.location = "dashboard.html";
+                            location.href = "dashboard.html";
                             found = true;
                         }
                     });
