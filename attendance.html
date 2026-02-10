@@ -404,12 +404,25 @@
                             <option value="in">Present</option>
                             <option value="absent">Absent</option>
                         </select></div>
-                    <div class="form-group" id="attInGroup" style="display:none"><label>Punch In (Optional - uses office
-                            time if empty)</label><input type="time" id="attIn"
-                            placeholder="Leave empty for office time"></div>
-                    <div class="form-group" id="attOutGroup" style="display:none"><label>Punch Out (Optional - uses
-                            office time if empty)</label><input type="time" id="attOut"
-                            placeholder="Leave empty for office time"></div>
+                    <div class="form-group" id="attInGroup" style="display:none">
+                        <label>Punch In (Optional - uses office time if empty)</label>
+                        <input type="time" id="attIn" placeholder="Leave empty for office time">
+                        <label style="margin-top:8px;">Punch In Image</label>
+                        <input type="file" id="attInImg" accept="image/*" onchange="convertBase64(this, 'attInBase64')">
+                        <input type="hidden" id="attInBase64">
+                        <img id="previewAttIn"
+                            style="max-width:100px; display:none; margin-top:5px; border-radius:5px;">
+                    </div>
+                    <div class="form-group" id="attOutGroup" style="display:none">
+                        <label>Punch Out (Optional - uses office time if empty)</label>
+                        <input type="time" id="attOut" placeholder="Leave empty for office time">
+                        <label style="margin-top:8px;">Punch Out Image</label>
+                        <input type="file" id="attOutImg" accept="image/*"
+                            onchange="convertBase64(this, 'attOutBase64')">
+                        <input type="hidden" id="attOutBase64">
+                        <img id="previewAttOut"
+                            style="max-width:100px; display:none; margin-top:5px; border-radius:5px;">
+                    </div>
                 </div>
                 <button onclick="markAttendance()">✅ Save Attendance</button>
             </div>
@@ -594,6 +607,51 @@
         };
 
         // --- ACTIONS ---
+        window.convertBase64 = (input, targetId) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // Compress image logic could go here but simple base64 for now
+                    // Ideally resize on client side to avoid huge strings
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        // Max dimension 800
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        document.getElementById(targetId).value = dataUrl.split(',')[1];
+
+                        // Show preview
+                        const previewId = targetId === 'attInBase64' ? 'previewAttIn' : 'previewAttOut';
+                        const preview = document.getElementById(previewId);
+                        preview.src = dataUrl;
+                        preview.style.display = 'block';
+                    };
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
         window.markAttendance = () => {
             const empId = document.getElementById('attEmpId').value;
             if (adminRole === 'branch_admin' && !allowedEmpIds.has(empId)) {
@@ -606,6 +664,9 @@
             let punchInTime = document.getElementById('attIn').value;
             let punchOutTime = document.getElementById('attOut').value;
 
+            const punchInBase64 = document.getElementById('attInBase64').value;
+            const punchOutBase64 = document.getElementById('attOutBase64').value;
+
             if (!empId || !date) {
                 alert("Please fill required fields");
                 return;
@@ -617,8 +678,16 @@
             }
 
             set(ref(db, `attendance/${empId}/${date}`), {
-                punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
-                punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
+                punchIn: punchInTime ? {
+                    time: punchInTime,
+                    admin: true,
+                    imageBase64: punchInBase64 || null
+                } : null,
+                punchOut: punchOutTime ? {
+                    time: punchOutTime,
+                    admin: true,
+                    imageBase64: punchOutBase64 || null
+                } : null,
                 status
             });
 
@@ -627,6 +696,12 @@
             document.getElementById('attDate').value = '';
             document.getElementById('attIn').value = '';
             document.getElementById('attOut').value = '';
+            document.getElementById('attInBase64').value = '';
+            document.getElementById('attOutBase64').value = '';
+            document.getElementById('attInImg').value = '';
+            document.getElementById('attOutImg').value = '';
+            document.getElementById('previewAttIn').style.display = 'none';
+            document.getElementById('previewAttOut').style.display = 'none';
             document.getElementById('attStatus').value = 'in';
             toggleAttendanceTimes();
         };
@@ -692,7 +767,9 @@
                             punchOut: r.punchOut?.time || "-",
                             status: r.status,
                             punchInRaw: r.punchIn?.time || '',
-                            punchOutRaw: r.punchOut?.time || ''
+                            punchOutRaw: r.punchOut?.time || '',
+                            punchInImg: r.punchIn?.imageBase64 || null,
+                            punchOutImg: r.punchOut?.imageBase64 || null
                         });
                     });
                 });
@@ -701,6 +778,13 @@
             allAttendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
             renderAttendanceTable();
         });
+
+        window.viewImage = (base64, title) => {
+            if (!base64) return;
+            const win = window.open("", "_blank");
+            win.document.write(`<img src="data:image/jpeg;base64,${base64}" style="width:100%;height:auto;">`);
+            win.document.title = title;
+        };
 
         window.renderAttendanceTable = () => {
             const filterEmp = document.getElementById('filterEmpId').value.toLowerCase();
@@ -768,11 +852,22 @@
                     }
                 }
 
+                // Image Buttons
+                let punchInImgBtn = '';
+                if (row.punchInImg) {
+                    punchInImgBtn = `<button class="btn-small" style="margin-left:8px;padding:2px 8px;font-size:11px;background:#00ffc3;color:black;" onclick="viewImage('${row.punchInImg}', 'Punch In - ${row.empId}')">📸 View</button>`;
+                }
+
+                let punchOutImgBtn = '';
+                if (row.punchOutImg) {
+                    punchOutImgBtn = `<button class="btn-small" style="margin-left:8px;padding:2px 8px;font-size:11px;background:#00ffc3;color:black;" onclick="viewImage('${row.punchOutImg}', 'Punch Out - ${row.empId}')">📸 View</button>`;
+                }
+
                 list.innerHTML += `<tr>
                         <td>${row.empId}</td>
                         <td>${row.date}</td>
-                        <td>${row.punchIn}</td>
-                        <td>${row.punchOut}</td>
+                        <td>${row.punchIn} ${punchInImgBtn}</td>
+                        <td>${row.punchOut} ${punchOutImgBtn}</td>
                         <td>
                             <span class="badge-${row.status}">${row.status}</span>
                             ${lateBadge}
@@ -801,6 +896,35 @@
             document.getElementById('attDate').value = day;
             document.getElementById('attIn').value = punchIn;
             document.getElementById('attOut').value = punchOut;
+            document.getElementById('attStatus').value = 'in';
+
+            // Find record to get images
+            const record = allAttendanceData.find(r => r.empId === emp && r.date === day);
+            if (record) {
+                document.getElementById('attStatus').value = record.status;
+
+                if (record.punchInImg) {
+                    document.getElementById('attInBase64').value = record.punchInImg;
+                    document.getElementById('previewAttIn').src = `data:image/jpeg;base64,${record.punchInImg}`;
+                    document.getElementById('previewAttIn').style.display = 'block';
+                } else {
+                    document.getElementById('attInBase64').value = '';
+                    document.getElementById('previewAttIn').style.display = 'none';
+                }
+
+                if (record.punchOutImg) {
+                    document.getElementById('attOutBase64').value = record.punchOutImg;
+                    document.getElementById('previewAttOut').src = `data:image/jpeg;base64,${record.punchOutImg}`;
+                    document.getElementById('previewAttOut').style.display = 'block';
+                } else {
+                    document.getElementById('attOutBase64').value = '';
+                    document.getElementById('previewAttOut').style.display = 'none';
+                }
+            }
+
+            toggleAttendanceTimes();
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => {
                 document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
