@@ -457,14 +457,14 @@
                         <thead>
                             <tr>
                                 <th>Sl No</th>
-                                <th>Name</th>
-                                <th>ID</th>
+                                <th>Name/ID</th>
                                 <th>Mobile</th>
                                 <th>Role</th>
                                 <th>Branch</th>
                                 <th>Salary</th>
                                 <th>Punch Mode</th>
                                 <th>Shift Type</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -477,7 +477,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -574,7 +574,8 @@
                 salary: salaryVal,
                 punchMode: punchModeValue,
                 shiftType: shiftTypeValue,
-                branch: branchVal
+                branch: branchVal,
+                status: 'active' // Default status
             };
 
             // Add shift times only for rotating shift
@@ -583,27 +584,46 @@
                 employeeData.shiftEnd = shiftEndValue;
             }
 
-            set(ref(db, "employees/" + empIdVal), employeeData);
+            update(ref(db, "employees/" + empIdVal), employeeData)
+                .then(() => {
+                    alert('Employee saved successfully!');
 
-            alert('Employee saved successfully!');
+                    // Clear form (but keep branch if branch admin)
+                    document.getElementById('name').value = '';
+                    document.getElementById('empid').value = '';
+                    document.getElementById('mobile').value = '';
+                    document.getElementById('role').value = '';
+                    document.getElementById('salary').value = '';
+                    document.getElementById('punchMode').value = 'office';
+                    document.getElementById('shiftType').value = 'fixed';
+                    document.getElementById('shiftStart').value = '';
+                    document.getElementById('shiftEnd').value = '';
 
-            // Clear form (but keep branch if branch admin)
-            document.getElementById('name').value = '';
-            document.getElementById('empid').value = '';
-            document.getElementById('mobile').value = '';
-            document.getElementById('role').value = '';
-            document.getElementById('salary').value = '';
-            document.getElementById('punchMode').value = 'office';
-            document.getElementById('shiftType').value = 'fixed';
-            document.getElementById('shiftStart').value = '';
-            document.getElementById('shiftEnd').value = '';
+                    if (role === 'super_admin') {
+                        document.getElementById('branch').value = '';
+                    } else {
+                        document.getElementById('branch').value = adminBranch || '';
+                    }
+                    toggleShiftTimes();
+                })
+                .catch(error => {
+                    alert('Error saving employee: ' + error.message);
+                });
+        };
 
-            if (role === 'super_admin') {
-                document.getElementById('branch').value = '';
-            } else {
-                document.getElementById('branch').value = adminBranch || '';
+        window.toggleStatus = (empId, currentStatus) => {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const action = newStatus === 'active' ? 'Activate' : 'Deactivate';
+
+            if (confirm(`Are you sure you want to ${action} this employee?`)) {
+                update(ref(db, "employees/" + empId), { status: newStatus })
+                    .then(() => {
+                        // Status updated automatically by listener
+                    })
+                    .catch(error => {
+                        alert(`Error ${action}ing employee: ` + error.message);
+                    });
             }
-            toggleShiftTimes();
         };
 
         onValue(ref(db, "employees"), s => {
@@ -622,6 +642,14 @@
                     employeeCount++;
 
                     const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
+                    const status = e.status || 'active'; // Default to active for existing users
+
+                    const statusBadge = status === 'active'
+                        ? `<span style="background: rgba(0, 255, 195, 0.15); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
+                        : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
+
+                    const toggleBtnText = status === 'active' ? '🛑 Deactivate' : '✅ Activate';
+                    const toggleBtnColor = status === 'active' ? 'color: #ff5c5c;' : 'color: #00ffc3;';
 
                     // Determine shift label
                     let shiftLabel = '🕒 Fixed';
@@ -634,11 +662,20 @@
 
                     data.innerHTML += `<tr>
         <td>${employeeCount}</td>
-        <td>${e.name}</td><td>${e.empId}</td><td>${e.mobile}</td>
-        <td>${e.role}</td><td>${e.branch || '-'}</td><td>₹${e.salary}</td><td>${punchModeLabel}</td><td>${shiftLabel}</td>
+        <td>${e.name}<br><span style="font-size: 11px; color: #8b92a0;">${e.empId}</span></td>
+        <td>${e.mobile}</td>
+        <td>${e.role}</td>
+        <td>${e.branch || '-'}</td>
+        <td>₹${e.salary}</td>
+        <td>${punchModeLabel}</td>
+        <td>${shiftLabel}</td>
+        <td>${statusBadge}</td>
         <td>
-          <button class="btn-small" style="margin-right: 4px;" onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}')">✏️ Edit</button>
-          <button class="btn-danger btn-small" onclick="delEmp('${e.empId}')">🗑️ Delete</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}')">✏️ Edit</button>
+            <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
+            <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
+          </div>
         </td></tr>`;
                 });
             } else {
@@ -646,7 +683,7 @@
             }
         });
 
-        window.editEmployee = (name, empId, mobile, role, branch, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue) => {
+        window.editEmployee = (name, empId, mobile, role, branch, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status) => {
             // Pre-fill the employee form
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
@@ -659,6 +696,9 @@
             document.getElementById('shiftStart').value = shiftStartValue || '';
             document.getElementById('shiftEnd').value = shiftEndValue || '';
 
+            // Note: We are not exposing a status dropdown in the edit form to keep it simple, 
+            // the status can be toggled from the list action button.
+
             // Toggle shift time fields based on shift type
             toggleShiftTimes();
 
@@ -669,7 +709,7 @@
         };
 
         window.delEmp = id => {
-            if (confirm('Delete this employee?')) {
+            if (confirm('Delete this employee? This action cannot be undone.')) {
                 remove(ref(db, "employees/" + id));
             }
         };
