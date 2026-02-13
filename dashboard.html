@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PayFlowPro Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="lang.js"></script>
   <style>
     :root {
       --primary: #00ffc3;
@@ -339,17 +340,34 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h2>💼 PayFlowPro</h2>
+      <select id="langSelector" onchange="changeLanguage(this.value)"
+        style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+        <option value="de">Deutsch</option>
+        <option value="ml">Malayalam</option>
+      </select>
     </div>
     <nav class="sidebar-nav">
-      <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span><span>Dashboard</span></a>
-      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
-      <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span>Attendance</span></a>
-      <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span>Leave
-          Management</span></a>
-      <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span>Branch Admins</span></a>
-      <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary Settings</span></a>
-      <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly Report</span></a>
-      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+      <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span><span
+          data-i18n="dashboard">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span
+          data-i18n="employees">Employees</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span
+          data-i18n="attendance">Attendance</span></a>
+      <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span
+          data-i18n="leave_management">Leave Management</span></a>
+      <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span
+          data-i18n="branch_admins">Branch Admins</span></a>
+      <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span
+          data-i18n="salary_settings">Salary Settings</span></a>
+      <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span
+          data-i18n="monthly_report">Monthly Report</span></a>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span
+          data-i18n="settings">Settings</span></a>
     </nav>
   </div>
 
@@ -357,10 +375,12 @@
     <div class="top-bar">
       <div style="display:flex;align-items:center;gap:16px">
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-        <h1>Dashboard</h1>
+        <h1 data-i18n="dashboard">Dashboard</h1>
       </div>
       <div class="top-bar-actions">
-        <button class="btn-logout" onclick="logout()">Logout</button>
+        <button onclick="toggleTheme()"
+          style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+        <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
       </div>
     </div>
 
@@ -371,42 +391,42 @@
             <div class="stat-icon">👥</div>
           </div>
           <div class="stat-value" id="totalEmployees">0</div>
-          <div class="stat-label">Total Employees</div>
+          <div class="stat-label" data-i18n="total_employees">Total Employees</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
             <div class="stat-icon" style="background:rgba(0,255,195,.1);color:var(--success)">✅</div>
           </div>
           <div class="stat-value" id="presentToday">0</div>
-          <div class="stat-label">Present Today</div>
+          <div class="stat-label" data-i18n="present_today">Present Today</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
             <div class="stat-icon" style="background:rgba(255,92,92,.1);color:var(--danger)">❌</div>
           </div>
           <div class="stat-value" id="absentToday">0</div>
-          <div class="stat-label">Absent Today</div>
+          <div class="stat-label" data-i18n="on_leave">Absent Today</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
             <div class="stat-icon" style="background:rgba(255,167,38,.1);color:var(--warning)">📋</div>
           </div>
           <div class="stat-value" id="totalRecords">0</div>
-          <div class="stat-label">Total Records</div>
+          <div class="stat-label" data-i18n="total_records">Total Records</div>
         </div>
       </div>
 
       <div class="card">
-        <h3>Today's Report</h3>
+        <h3 data-i18n="todays_report">Today's Report</h3>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Employee Name</th>
-                <th>Status</th>
-                <th>Punch In</th>
-                <th>Punch Out</th>
-                <th>Daily Price</th>
+                <th data-i18n="employee_name">Employee Name</th>
+                <th data-i18n="status">Status</th>
+                <th data-i18n="punch_in">Punch In</th>
+                <th data-i18n="punch_out">Punch Out</th>
+                <th data-i18n="daily_price">Daily Price</th>
               </tr>
             </thead>
             <tbody id="recentAttendance"></tbody>

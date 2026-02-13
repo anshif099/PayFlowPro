@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Management - PayFlowPro Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -19,7 +20,16 @@
             --success: #00ffc3;
             --danger: #ff5c5c;
             --warning: #ffa726;
-            --sidebar-width: 260px
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -290,6 +300,16 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 PayFlowPro</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
@@ -311,51 +331,57 @@
         <div class="top-bar">
             <div style="display:flex;align-items:center;gap:16px">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>Leave Management</h1>
+                <h1 data-i18n="leave_management">Leave Management</h1>
             </div>
             <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Leave Configuration</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Configure monthly paid leave
+                <h3 data-i18n="leave_configuration">Leave Configuration</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="leave_config_desc">
+                    Configure monthly paid leave
                     settings for all employees</p>
                 <div
                     style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
                     <div style="display:flex;flex-direction:column;gap:8px">
-                        <label style="font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:4px">Paid
+                        <label style="font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:4px"
+                            data-i18n="paid_leaves_per_month">Paid
                             Leaves Per Month</label>
                         <input type="number" id="paidLeavesPerMonth" placeholder="e.g., 2" min="0" max="31"
                             style="width:100%;padding:12px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;transition:all .2s ease;font-family:inherit">
                     </div>
                 </div>
-                <button onclick="saveLeaveConfig()">💾 Save Leave Configuration</button>
+                <button onclick="saveLeaveConfig()" data-i18n="save_leave_config">💾 Save Leave Configuration</button>
             </div>
 
             <div class="card">
-                <h3>Pending Leave Requests</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Review and manage employee leave
+                <h3 data-i18n="pending_requests">Pending Leave Requests</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="pending_requests_desc">
+                    Review and manage employee leave
                     requests</p>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Employee</th>
-                                <th>Leave Type</th>
-                                <th>From Date</th>
-                                <th>To Date</th>
-                                <th>Days</th>
-                                <th>Reason</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th data-i18n="employee_name">Employee</th>
+                                <th data-i18n="leave_type">Leave Type</th>
+                                <th data-i18n="start_date">From Date</th>
+                                <th data-i18n="end_date">To Date</th>
+                                <th data-i18n="days">Days</th>
+                                <th data-i18n="reason">Reason</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
                             </tr>
                         </thead>
                         <tbody id="pendingLeavesData">
                             <tr>
-                                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)"
+                                    data-i18n="no_pending_requests">
                                     No pending leave requests
                                 </td>
                             </tr>
@@ -365,23 +391,24 @@
             </div>
 
             <div class="card">
-                <h3>Leave History</h3>
+                <h3 data-i18n="leave_history">Leave History</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Employee</th>
-                                <th>Leave Type</th>
-                                <th>From Date</th>
-                                <th>To Date</th>
-                                <th>Days</th>
-                                <th>Status</th>
-                                <th>Action Date</th>
+                                <th data-i18n="employee_name">Employee</th>
+                                <th data-i18n="leave_type">Leave Type</th>
+                                <th data-i18n="start_date">From Date</th>
+                                <th data-i18n="end_date">To Date</th>
+                                <th data-i18n="days">Days</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action_date">Action Date</th>
                             </tr>
                         </thead>
                         <tbody id="leaveHistoryData">
                             <tr>
-                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)"
+                                    data-i18n="no_leave_history">
                                     No leave history available
                                 </td>
                             </tr>

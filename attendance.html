@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance - PayFlowPro Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -19,7 +20,16 @@
             --success: #00ffc3;
             --danger: #ff5c5c;
             --warning: #ffa726;
-            --sidebar-width: 260px
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -362,6 +372,16 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 PayFlowPro</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
@@ -383,40 +403,43 @@
         <div class="top-bar">
             <div style="display:flex;align-items:center;gap:16px">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>Attendance</h1>
+                <h1 data-i18n="attendance">Attendance</h1>
             </div>
             <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Mark Attendance (Single Day)</h3>
-                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">💡 Tip: When marking as Present,
+                <h3 data-i18n="mark_single_day">Mark Attendance (Single Day)</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px" data-i18n="tip_attendance">💡 Tip:
+                    When marking as Present,
                     office times will be used automatically (leave time fields empty)</p>
                 <div class="form-grid">
-                    <div class="form-group"><label>Employee ID</label><input id="attEmpId"
-                            placeholder="Enter employee ID"></div>
-                    <div class="form-group"><label>Date</label><input type="date" id="attDate"></div>
-                    <div class="form-group"><label>Status</label><select id="attStatus"
+                    <div class="form-group"><label data-i18n="employee_id">Employee ID</label><input id="attEmpId"
+                            placeholder="Enter employee ID" data-i18n="employee_id"></div>
+                    <div class="form-group"><label data-i18n="date">Date</label><input type="date" id="attDate"></div>
+                    <div class="form-group"><label data-i18n="status">Status</label><select id="attStatus"
                             onchange="toggleAttendanceTimes()">
-                            <option value="in">Present</option>
-                            <option value="absent">Absent</option>
+                            <option value="in" data-i18n="active">Present</option>
+                            <option value="absent" data-i18n="inactive">Absent</option>
                         </select></div>
                     <div class="form-group" id="attInGroup" style="display:none">
-                        <label>Punch In (Optional - uses office time if empty)</label>
+                        <label data-i18n="punch_in_optional">Punch In (Optional - uses office time if empty)</label>
                         <input type="time" id="attIn" placeholder="Leave empty for office time">
-                        <label style="margin-top:8px;">Punch In Image</label>
+                        <label style="margin-top:8px;" data-i18n="punch_in_img">Punch In Image</label>
                         <input type="file" id="attInImg" accept="image/*" onchange="convertBase64(this, 'attInBase64')">
                         <input type="hidden" id="attInBase64">
                         <img id="previewAttIn"
                             style="max-width:100px; display:none; margin-top:5px; border-radius:5px;">
                     </div>
                     <div class="form-group" id="attOutGroup" style="display:none">
-                        <label>Punch Out (Optional - uses office time if empty)</label>
+                        <label data-i18n="punch_out_optional">Punch Out (Optional - uses office time if empty)</label>
                         <input type="time" id="attOut" placeholder="Leave empty for office time">
-                        <label style="margin-top:8px;">Punch Out Image</label>
+                        <label style="margin-top:8px;" data-i18n="punch_out_img">Punch Out Image</label>
                         <input type="file" id="attOutImg" accept="image/*"
                             onchange="convertBase64(this, 'attOutBase64')">
                         <input type="hidden" id="attOutBase64">
@@ -424,63 +447,72 @@
                             style="max-width:100px; display:none; margin-top:5px; border-radius:5px;">
                     </div>
                 </div>
-                <button onclick="markAttendance()">✅ Save Attendance</button>
+                <button onclick="markAttendance()" data-i18n="save">✅ Save Attendance</button>
             </div>
 
             <div class="card">
-                <h3>Bulk Attendance (Date Range)</h3>
-                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">💡 Tip: When marking as Present,
+                <h3 data-i18n="bulk_attendance">Bulk Attendance (Date Range)</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px" data-i18n="tip_attendance">💡 Tip:
+                    When marking as Present,
                     office times will be used automatically (leave time fields empty)</p>
                 <div class="form-grid">
-                    <div class="form-group"><label>Employee ID</label><input id="bulkEmpId"
-                            placeholder="Enter employee ID"></div>
-                    <div class="form-group"><label>From Date</label><input type="date" id="bulkFrom"></div>
-                    <div class="form-group"><label>To Date</label><input type="date" id="bulkTo"></div>
-                    <div class="form-group"><label>Status</label><select id="bulkStatus" onchange="toggleBulkTimes()">
-                            <option value="in">Present</option>
-                            <option value="absent">Absent</option>
+                    <div class="form-group"><label data-i18n="employee_id">Employee ID</label><input id="bulkEmpId"
+                            placeholder="Enter employee ID" data-i18n="employee_id"></div>
+                    <div class="form-group"><label data-i18n="from_date">From Date</label><input type="date"
+                            id="bulkFrom"></div>
+                    <div class="form-group"><label data-i18n="to_date">To Date</label><input type="date" id="bulkTo">
+                    </div>
+                    <div class="form-group"><label data-i18n="status">Status</label><select id="bulkStatus"
+                            onchange="toggleBulkTimes()">
+                            <option value="in" data-i18n="active">Present</option>
+                            <option value="absent" data-i18n="inactive">Absent</option>
                         </select></div>
-                    <div class="form-group" id="bulkInGroup" style="display:none"><label>Punch In (Optional - uses
+                    <div class="form-group" id="bulkInGroup" style="display:none"><label
+                            data-i18n="punch_in_optional">Punch In (Optional - uses
                             office time if empty)</label><input type="time" id="bulkIn"
                             placeholder="Leave empty for office time"></div>
-                    <div class="form-group" id="bulkOutGroup" style="display:none"><label>Punch Out (Optional - uses
+                    <div class="form-group" id="bulkOutGroup" style="display:none"><label
+                            data-i18n="punch_out_optional">Punch Out (Optional - uses
                             office time if empty)</label><input type="time" id="bulkOut"
                             placeholder="Leave empty for office time"></div>
                 </div>
-                <button onclick="markBulkAttendance()">📅 Mark Bulk Attendance</button>
+                <button onclick="markBulkAttendance()" data-i18n="mark_bulk">📅 Mark Bulk Attendance</button>
             </div>
 
             <div class="card">
-                <h3>Attendance Records</h3>
+                <h3 data-i18n="attendance_log">Attendance Records</h3>
                 <!-- Filters -->
                 <div style="display:flex;gap:16px;margin-bottom:16px;align-items:flex-end;">
                     <div style="flex:1">
                         <label
-                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px">Filter
+                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px"
+                            data-i18n="filter_emp_id">Filter
                             by Employee ID</label>
                         <input id="filterEmpId" list="empList" placeholder="Search or Select Employee ID..."
-                            oninput="renderAttendanceTable()">
+                            oninput="renderAttendanceTable()" data-i18n="search_select_emp">
                         <datalist id="empList"></datalist>
                     </div>
                     <div style="flex:1">
                         <label
-                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px">Filter
+                            style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px"
+                            data-i18n="filter_date">Filter
                             by Date</label>
                         <input type="date" id="filterDate" onchange="renderAttendanceTable()">
                     </div>
-                    <button onclick="clearFilters()" class="btn-logout" style="height:42px;">Clear Filters</button>
+                    <button onclick="clearFilters()" class="btn-logout" style="height:42px;"
+                        data-i18n="clear_filters">Clear Filters</button>
                 </div>
 
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Employee</th>
-                                <th>Date</th>
-                                <th>Punch In</th>
-                                <th>Punch Out</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th data-i18n="employee_name">Employee</th>
+                                <th data-i18n="date">Date</th>
+                                <th data-i18n="punch_in">Punch In</th>
+                                <th data-i18n="punch_out">Punch Out</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
                             </tr>
                         </thead>
                         <tbody id="attendanceData"></tbody>

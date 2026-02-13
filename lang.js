@@ -1,0 +1,1384 @@
+const translations = {
+    en: {
+        // Sidebar
+        dashboard: "Dashboard",
+        employees: "Employees",
+        attendance: "Attendance",
+        leave_management: "Leave Management",
+        branch_admins: "Branch Admins",
+        salary_settings: "Salary Settings",
+        monthly_report: "Monthly Report",
+        settings: "Settings",
+        logout: "Logout",
+
+        // Attendance - New
+        mark_single_day: "Mark Attendance (Single Day)",
+        bulk_attendance: "Bulk Attendance (Date Range)",
+        attendance_log: "Attendance Records",
+        tip_attendance: "💡 Tip: When marking as Present, office times will be used automatically (leave time fields empty)",
+        from_date: "From Date",
+        to_date: "To Date",
+        punch_in_img: "Punch In Image",
+        punch_out_img: "Punch Out Image",
+        punch_in_optional: "Punch In (Optional - uses office time if empty)",
+        punch_out_optional: "Punch Out (Optional - uses office time if empty)",
+        mark_bulk: "Mark Bulk Attendance",
+        filter_emp_id: "Filter by Employee ID",
+        filter_date: "Filter by Date",
+        clear_filters: "Clear Filters",
+        search_select_emp: "Search or Select Employee ID...",
+
+        // Leave Management
+        leave_configuration: "Leave Configuration",
+        leave_config_desc: "Configure monthly paid leave settings for all employees",
+        paid_leaves_per_month: "Paid Leaves Per Month",
+        save_leave_config: "Save Leave Configuration",
+        pending_requests: "Pending Leave Requests",
+        pending_requests_desc: "Review and manage employee leave requests",
+        leave_history: "Leave History",
+        days: "Days",
+        action_date: "Action Date",
+        no_pending_requests: "No pending leave requests",
+        no_leave_history: "No leave history available",
+        start_date: "Start Date",
+        end_date: "End Date",
+        leave_type: "Leave Type",
+        approve_paid: "✓ Approve as Paid",
+        approve_unpaid: "✓ Approve as Unpaid",
+
+        // Manage Admins
+        admin_name: "Admin Name",
+        branch_name: "Branch Name",
+        login_email: "Login Email",
+        save_admin: "Save Admin",
+        update_admin: "Update Admin",
+        no_admins_found: "No branch admins found",
+        login_as: "Login",
+        login: "Login",
+
+        // Monthly Report
+        select_month: "Select Month",
+        generate_report: "Generate Report",
+        employee_id: "Employee ID",
+        total_days: "Total Days",
+        present: "Present",
+        leaves: "Leaves",
+        week_offs: "Week Offs",
+        holidays: "Holidays",
+        attendance_percent: "Attendance %",
+        net_salary: "Net Salary",
+        loading_report: "Loading report...",
+        no_employees_found: "No employees found",
+        select_month_click: "Select a month and click Generate Report",
+        no_matching_records: "No matching records found",
+        error_loading_report: "Error loading report",
+
+        // Salary Settings
+        salary_settings_title: "Salary Settings",
+        select_employee: "Select Employee",
+        calculate: "Calculate",
+        total_payable_salary: "Total Payable Salary",
+        base_salary: "Base",
+        total_days_in_month: "Total Days in Month",
+        calculating: "Calculating...",
+
+        // Settings (General)
+        language_settings: "Language Settings",
+        select_language_desc: "Select the language for the admin panel",
+        office_time_settings: "Office Time Settings",
+        office_start_time: "Office Start Time",
+        office_end_time: "Office End Time",
+        save_office_time: "Save Office Time",
+        week_off_days: "Week-Off Days",
+        week_off_desc: "Select recurring weekly off days where employees get paid",
+        special_week_off: "Special Week-Off Configuration",
+        second_saturday: "Second Saturday of Every Month",
+        save_week_offs: "Save Week-Offs",
+        holiday_management: "Holiday Management",
+        holiday_management_desc: "Add holidays where employees get paid without attendance",
+        holiday_date: "Holiday Date",
+        holiday_description: "Holiday Description",
+        add_holiday: "Add Holiday",
+        office_location_settings: "Office Location Settings",
+        office_location_desc: "Set office GPS coordinates for location-based attendance",
+        latitude: "Latitude",
+        longitude: "Longitude",
+        allowed_radius: "Allowed Radius (meters)",
+        save_office_location: "Save Office Location",
+        no_holidays_configured: "No holidays configured",
+
+        // Days
+        sunday: "Sunday",
+        monday: "Monday",
+        tuesday: "Tuesday",
+        wednesday: "Wednesday",
+        thursday: "Thursday",
+        friday: "Friday",
+        saturday: "Saturday",
+
+        // Common
+        welcome: "Welcome",
+        action: "Action",
+        status: "Status",
+        active: "Active",
+        inactive: "Inactive",
+        save: "Save",
+        cancel: "Cancel",
+        edit: "Edit",
+        delete: "Delete",
+        search: "Search",
+
+        // Dashboard
+        total_employees: "Total Employees",
+        present_today: "Present Today",
+        on_leave: "Absent Today",
+        total_records: "Total Records",
+        todays_report: "Today's Report",
+        employee_name: "Employee Name",
+        punch_in: "Punch In",
+        punch_out: "Punch Out",
+        daily_price: "Daily Price",
+
+        // Employees
+        register_update_employee: "Register / Update Employee",
+        employee_id: "Employee ID",
+        mobile_number: "Mobile Number",
+        role: "Role",
+        salary: "Salary",
+        punch_mode: "Punch Mode",
+        office_only: "Office Only (GPS Required)",
+        anywhere: "Anywhere (No GPS Check)",
+        shift_type: "Shift Type",
+        fixed_shift: "Fixed Shift (Office Time)",
+        flexible_shift: "Flexible Shift (No Time Restriction)",
+        rotating_shift: "Rotating Shift (Custom Time)",
+        shift_start: "Shift Start Time",
+        shift_end: "Shift End Time",
+        branch: "Branch",
+        employee_list: "Employee List",
+        sl_no: "Sl No",
+        name_id: "Name/ID",
+        save_employee: "Save Employee",
+
+        // Admins
+        manage_branch_admins: "Manage Branch Admins",
+        add_new_admin: "Add New Branch Admin",
+        existing_admins: "Existing Admins",
+        admin_id: "Admin ID",
+        email: "Email",
+        password: "Password",
+
+        // Attendance
+        date: "Date",
+
+        // Leaves
+        leave_requests: "Leave Requests",
+        reason: "Reason",
+        approve: "Approve",
+        reject: "Reject",
+
+        // Salary
+        advance_salary: "Advance Salary",
+        amount: "Amount",
+
+        // Settings
+        app_settings: "App Settings",
+
+        // Validation/Messages
+        confirm_delete: "Are you sure you want to delete?",
+        saved_successfully: "Saved successfully!"
+    },
+    ml: {
+        dashboard: "ഡാഷ്ബോർഡ്",
+        employees: "ജീവനക്കാർ",
+        attendance: "ഹാജർ",
+        leave_management: "അവധി",
+        branch_admins: "അഡ്മിൻമാർ",
+        salary_settings: "ശമ്പളം",
+        monthly_report: "മാസ റിപ്പോർട്ട്",
+        settings: "ക്രമീകരണങ്ങൾ",
+        logout: "ലോഗൗട്ട്",
+
+        // Attendance - New
+        mark_single_day: "ഹാജർ രേഖപ്പെടുത്തുക (ഒരു ദിവസം)",
+        bulk_attendance: "മൊത്തത്തിലുള്ള ഹാജർ (തിയ്യതി വരെ)",
+        attendance_log: "ഹാജർ വിവരങ്ങൾ",
+        tip_attendance: "💡 ടിപ്പ്: ഓഫീസിലെ സമയം താനെ എടുക്കും, സമയം നൽകേണ്ടതില്ല",
+        from_date: "ഈ തിയ്യതി മുതൽ",
+        to_date: "ഈ തിയ്യതി വരെ",
+        punch_in_img: "പഞ്ച് ഇൻ ചിത്രം",
+        punch_out_img: "പഞ്ച് ഔട്ട് ചിത്രം",
+        punch_in_optional: "പഞ്ച് ഇൻ (ഓപ്ഷണൽ)",
+        punch_out_optional: "പഞ്ച് ഔട്ട് (ഓപ്ഷണൽ)",
+        mark_bulk: "മൊത്തത്തിലുള്ള ഹാജർ രേഖപ്പെടുത്തുക",
+        filter_emp_id: "ഐഡി വെച്ച് തിരയുക",
+        filter_date: "തിയ്യതി വെച്ച് തിരയുക",
+        clear_filters: "ഫിൽറ്ററുകൾ ക്ലിയർ ചെയ്യുക",
+        search_select_emp: "ഐഡി തിരഞ്ഞെടുക്കുക...",
+
+        // Leave Management
+        leave_configuration: "അവധി ക്രമീകരണങ്ങൾ",
+        leave_config_desc: "എല്ലാ ജീവനക്കാരുടെയും ശമ്പളമുള്ള അവധി ക്രമീകരിക്കുക",
+        paid_leaves_per_month: "മാസത്തെ ശമ്പളമുള്ള അവധി",
+        save_leave_config: "ക്രമീകരണം സേവ് ചെയ്യുക",
+        pending_requests: "തീർപ്പുകൽപ്പിക്കാത്ത അപേക്ഷകൾ",
+        pending_requests_desc: "ജീവനക്കാരുടെ അവധി അപേക്ഷകൾ പരിശോധിക്കുക",
+        leave_history: "അവധി ചരിത്രം",
+        days: "ദിവസങ്ങൾ",
+        action_date: "തീരുമാനമെടുത്ത തീയതി",
+        no_pending_requests: "അപേക്ഷകളൊന്നുമില്ല",
+        no_leave_history: "ചരിത്രമില്ല",
+        start_date: "തുടങ്ങുന്ന തീയതി",
+        end_date: "അവസാനിക്കുന്ന തീയതി",
+        leave_type: "അവധി തരം",
+        approve_paid: "✓ ശമ്പളത്തോടുകൂടി",
+        approve_unpaid: "✓ ശമ്പളമില്ലാതെ",
+
+        // Manage Admins
+        admin_name: "അഡ്മിൻ പേര്",
+        branch_name: "ബ്രാഞ്ച് പേര്",
+        login_email: "ലോഗിൻ ഇമെയിൽ",
+        save_admin: "അഡ്മിനെ ചേർക്കുക",
+        update_admin: "അഡ്മിനെ മാറ്റുക",
+        no_admins_found: "അഡ്മിൻമാർ ആരും ഇല്ല",
+        login_as: "ലോഗിൻ",
+        login: "ലോഗിൻ",
+
+        // Login Page
+        admin_login_title: "PayFlowPro അഡ്മിൻ ലോഗിൻ",
+        admin_login_header: "PayFlowPro അഡ്മിൻ",
+        email_placeholder: "ഇമെയിൽ",
+        password_placeholder: "പാസ്‌വേഡ്",
+        login_checking: "പരിശോധിക്കുന്നു...",
+        login_invalid: "ലോഗിൻ വിവരങ്ങൾ തെറ്റാണ്",
+        login_error: "ലോഗിൻ പിശക്",
+
+        // Monthly Report
+        select_month: "മാസം തിരഞ്ഞെടുക്കുക",
+        generate_report: "റിപ്പോർട്ട് തയ്യാറാക്കുക",
+        employee_id: "ഐഡി",
+        total_days: "ആകെ ദിവസങ്ങൾ",
+        present: "ഹാജർ",
+        leaves: "അവധി",
+        week_offs: "ആഴ്ച അവധി",
+        holidays: "പൊതു അവധി",
+        attendance_percent: "ഹാജർ %",
+        net_salary: "ശമ്പളം",
+        loading_report: "റിപ്പോർട്ട് ലോഡാകുന്നു...",
+        no_employees_found: "ജീവനക്കാരെ കണ്ടെത്തിയില്ല",
+        select_month_click: "ഒരു മാസം തിരഞ്ഞെടുത്തു റിപ്പോർട്ട് തയ്യാറാക്കുക ക്ലിക്ക് ചെയ്യുക",
+        no_matching_records: "വിവരങ്ങൾ ലഭ്യമല്ല",
+        error_loading_report: "റിപ്പോർട്ട് ലോഡ് ചെയ്യുന്നതിൽ പിശക്",
+
+        // Salary Settings
+        salary_settings_title: "ശമ്പള ക്രമീകരണങ്ങൾ",
+        select_employee: "ജീവനക്കാരനെ തിരഞ്ഞെടുക്കുക",
+        calculate: "കണക്കാക്കുക",
+        total_payable_salary: "നൽകേണ്ട ആകെ ശമ്പളം",
+        base_salary: "അടിസ്ഥാന ശമ്പളം",
+        total_days_in_month: "മാസത്തെ ആകെ ദിവസങ്ങൾ",
+        calculating: "കണക്കാക്കുന്നു...",
+
+        // Settings (General)
+        language_settings: "ഭാഷ ക്രമീകരണങ്ങൾ",
+        select_language_desc: "അഡ്മിൻ പാനലിന്റെ ഭാഷ തിരഞ്ഞെടുക്കുക",
+        office_time_settings: "ഓഫീസ് സമയ ക്രമീകരണങ്ങൾ",
+        office_start_time: "ഓഫീസ് തുടങ്ങുന്ന സമയം",
+        office_end_time: "ഓഫീസ് കഴിയുന്ന സമയം",
+        save_office_time: "സമയം സേവ് ചെയ്യുക",
+        week_off_days: "ആഴ്ച അവധി ദിവസങ്ങൾ",
+        week_off_desc: "ആഴ്ചയിലെ സ്ഥിരമായ അവധി ദിവസങ്ങൾ തിരഞ്ഞെടുക്കുക",
+        special_week_off: "പ്രത്യേക അവധി ക്രമീകരണം",
+        second_saturday: "എല്ലാ മാസത്തെയും രണ്ടാം ശനിയാഴ്ച",
+        save_week_offs: "അവധി സേവ് ചെയ്യുക",
+        holiday_management: "അവധി ദിനങ്ങൾ",
+        holiday_management_desc: "പൊതു അവധി ദിനങ്ങൾ ചേർക്കുക",
+        holiday_date: "അവധി തിയ്യതി",
+        holiday_description: "വിശദീകരണം",
+        add_holiday: "അവധി ചേർക്കുക",
+        office_location_settings: "ഓഫീസ് ലൊക്കേഷൻ",
+        office_location_desc: "ഓഫീസ് ലൊക്കേഷൻ ക്രമീകരിക്കുക",
+        latitude: "ലാറ്റിറ്റ്യൂഡ്",
+        longitude: "ലോഞ്ചിറ്റ്യൂഡ്",
+        allowed_radius: "അനുവദനീയമായ ദൂരം (മീറ്റർ)",
+        save_office_location: "ലൊക്കേഷൻ സേവ് ചെയ്യുക",
+        no_holidays_configured: "അവധി ദിനങ്ങൾ ചേർത്തിട്ടില്ല",
+
+        // Days
+        sunday: "ഞായർ",
+        monday: "തിങ്കൾ",
+        tuesday: "ചൊവ്വ",
+        wednesday: "ബുധൻ",
+        thursday: "വ്യാഴം",
+        friday: "വെള്ളി",
+        saturday: "ശനി",
+
+        welcome: "സ്വാഗതം",
+        action: "നടപടി",
+        status: "അവസ്ഥ",
+        active: "സജീവം",
+        inactive: "നിഷ്ക്രിയം",
+        save: "സേവ് ചെയ്യുക",
+        cancel: "റദ്ദാക്കുക",
+        edit: "എഡിറ്റ്",
+        delete: "നീക്കം",
+        search: "തിരയുക",
+
+        total_employees: "ആകെ ജീവനക്കാർ",
+        present_today: "ഇന്ന് ഹാജർ",
+        on_leave: "ഇന്ന് അവധി",
+        total_records: "ആകെ രേഖകൾ",
+        todays_report: "ഇന്നത്തെ റിപ്പോർട്ട്",
+        employee_name: "പേര്",
+        punch_in: "പഞ്ച് ഇൻ",
+        punch_out: "പഞ്ച് ഔട്ട്",
+        daily_price: "ദിവസ ക്കൂലി",
+
+        register_update_employee: "ജീവനക്കാരെ ചേർക്കുക / പുതുക്കുക",
+        employee_id: "ഐഡി",
+        mobile_number: "മൊബൈൽ",
+        role: "തസ്തിക",
+        salary: "ശമ്പളം",
+        punch_mode: "പഞ്ച് രീതി",
+        office_only: "ഓഫീസ് മാത്രം (GPS)",
+        anywhere: "എവിടെനിന്നും (No GPS)",
+        shift_type: "ഷിഫ്റ്റ് തരം",
+        fixed_shift: "ഫിക്സഡ് ഷിഫ്റ്റ്",
+        flexible_shift: "ഫ്ലെക്സിബിൾ ഷിഫ്റ്റ്",
+        rotating_shift: "റൊട്ടേറ്റിംഗ് ഷിഫ്റ്റ്",
+        shift_start: "തുടങ്ങുന്ന സമയം",
+        shift_end: "അവസാനിക്കുന്ന സമയം",
+        branch: "ബ്രാഞ്ച്",
+        employee_list: "ജീവനക്കാരുടെ ലിസ്റ്റ്",
+        sl_no: "നം.",
+        name_id: "പേര്/ഐഡി",
+        save_employee: "സേവ് ചെയ്യുക",
+
+        manage_branch_admins: "ബ്രാഞ്ച് അഡ്മിൻമാർ",
+        add_new_admin: "പുതിയ അഡ്മിനെ ചേർക്കുക",
+        existing_admins: "നിലവിലുള്ള അഡ്മിൻമാർ",
+        admin_id: "അഡ്മിൻ ഐഡി",
+        email: "ഇമെയിൽ",
+        password: "പാസ്‌വേഡ്",
+
+        attendance_log: "ഹാജർ വിവരങ്ങൾ",
+        date: "തീയതി",
+
+        leave_requests: "അവധി അപേക്ഷകൾ",
+        reason: "കാരണം",
+        approve: "അംഗീകരിക്കുക",
+        reject: "നിരസിക്കുക",
+
+        advance_salary: "അഡ്വാൻസ് ശമ്പളം",
+        amount: "തുക",
+
+        app_settings: "ആപ്പ് ക്രമീകരണങ്ങൾ",
+
+        confirm_delete: "നീക്കം ചെയ്യാൻ തീർച്ചയാണോ?",
+        saved_successfully: "വിജയകരമായി സേവ് ചെയ്തു!"
+    },
+    hi: {
+        dashboard: "डैशबोर्ड",
+        employees: "कर्मचारी",
+        attendance: "उपस्थिति",
+        leave_management: "छुट्टी प्रबंधन",
+        branch_admins: "शाखा व्यवस्थापक",
+        salary_settings: "वेतन सेटिंग्स",
+        monthly_report: "मासिक रिपोर्ट",
+        settings: "सेटिंग्स",
+        logout: "लॉग आउट",
+
+        // Attendance - New
+        mark_single_day: "उपस्थिति दर्ज करें (एक दिन)",
+        bulk_attendance: "थोक उपस्थिति (दिनांक सीमा)",
+        attendance_log: "उपस्थिति रिकॉर्ड",
+        tip_attendance: "💡 टिप: उपस्थित के रूप में चिह्नित करते समय, कार्यालय के समय का स्वचालित रूप से उपयोग किया जाएगा",
+        from_date: "आरंभ तिथि",
+        to_date: "अंतिम तिथि",
+        punch_in_img: "पंच इन छवि",
+        punch_out_img: "पंच आउट छवि",
+        punch_in_optional: "पंच इन (वैकल्पिक)",
+        punch_out_optional: "पंच आउट (वैकल्पिक)",
+        mark_bulk: "थोक उपस्थिति दर्ज करें",
+        filter_emp_id: "कर्मचारी आईडी से फ़िल्टर करें",
+        filter_date: "तारीख से फ़िल्टर करें",
+        clear_filters: "फ़िल्टर साफ़ करें",
+        search_select_emp: "कर्मचारी आईडी खोजें...",
+
+        // Leave Management
+        leave_configuration: "छुट्टी विन्यास",
+        leave_config_desc: "सभी कर्मचारियों के लिए मासिक सवैतनिक अवकाश सेटिंग्स कॉन्फ़िगर करें",
+        paid_leaves_per_month: "प्रति माह सवैतनिक अवकाश",
+        save_leave_config: "छुट्टी विन्यास सहेजें",
+        pending_requests: "लंबित छुट्टी अनुरोध",
+        pending_requests_desc: "कर्मचारी छुट्टी अनुरोधों की समीक्षा करें और प्रबंधित करें",
+        leave_history: "छुट्टी इतिहास",
+        days: "दिन",
+        action_date: "कार्रवाई की तारीख",
+        no_pending_requests: "कोई लंबित अनुरोध नहीं",
+        no_leave_history: "कोई इतिहास उपलब्ध नहीं",
+        start_date: "आरंभ तिथि",
+        end_date: "अंतिम तिथि",
+        leave_type: "छुट्टी का प्रकार",
+        approve_paid: "✓ भुगतान के साथ मंजूर",
+        approve_unpaid: "✓ बिना भुगतान मंजूर",
+
+        // Manage Admins
+        admin_name: "व्यवस्थापक का नाम",
+        branch_name: "शाखा का नाम",
+        login_email: "लॉगिन ईमेल",
+        save_admin: "व्यवस्थापक सहेजें",
+        update_admin: "व्यवस्थापक अपडेट करें",
+        no_admins_found: "कोई शाखा व्यवस्थापक नहीं मिला",
+        login_as: "लॉगिन",
+        login: "लॉगिन",
+
+        // Login Page
+        admin_login_title: "PayFlowPro एडमिन लॉगिन",
+        admin_login_header: "PayFlowPro एडमिन",
+        email_placeholder: "ईमेल",
+        password_placeholder: "पासवर्ड",
+        login_checking: "जाँच हो रही है...",
+        login_invalid: "गलत लॉगिन क्रेडेंशियल्स",
+        login_error: "लॉगिन त्रुटि",
+
+        // Monthly Report
+        select_month: "महीना चुनें",
+        generate_report: "रिपोर्ट तैयार करें",
+        employee_id: "कर्मचारी आईडी",
+        total_days: "कुल दिन",
+        present: "उपस्थित",
+        leaves: "छुट्टियां",
+        week_offs: "सप्ताहिक छुट्टी",
+        holidays: "सार्वजनिक छुट्टी",
+        attendance_percent: "उपस्थिति %",
+        net_salary: "कुल वेतन",
+        loading_report: "रिपोर्ट लोड हो रही है...",
+        no_employees_found: "कोई कर्मचारी नहीं मिला",
+        select_month_click: "महीना चुनें और रिपोर्ट तैयार करें पर क्लिक करें",
+        no_matching_records: "कोई रिकॉर्ड नहीं मिला",
+        error_loading_report: "रिपोर्ट लोड करने में त्रुटि",
+
+        // Salary Settings
+        salary_settings_title: "वेतन सेटिंग्स",
+        select_employee: "कर्मचारी चुनें",
+        calculate: "गणना करें",
+        total_payable_salary: "कुल देय वेतन",
+        base_salary: "मूल वेतन",
+        total_days_in_month: "महीने के कुल दिन",
+        calculating: "गणना हो रही है...",
+
+        // Settings (General)
+        language_settings: "भाषा सेटिंग्स",
+        select_language_desc: "एडमिन पैनल की भाषा चुनें",
+        office_time_settings: "कार्यालय समय सेटिंग्स",
+        office_start_time: "शुरू होने का समय",
+        office_end_time: "समाप्त होने का समय",
+        save_office_time: "समय सहेजें",
+        week_off_days: "सप्ताहिक छुट्टी के दिन",
+        week_off_desc: "सप्ताहिक छुट्टी के दिन चुनें",
+        special_week_off: "विशेष छुट्टी विन्यास",
+        second_saturday: "हर महीने का दूसरा शनिवार",
+        save_week_offs: "छुट्टी सहेजें",
+        holiday_management: "छुट्टी प्रबंधन",
+        holiday_management_desc: "सार्वजनिक छुट्टियां जोड़ें",
+        holiday_date: "छुट्टी की तारीख",
+        holiday_description: "विवरण",
+        add_holiday: "छुट्टी जोड़ें",
+        office_location_settings: "कार्यालय स्थान सेटिंग्स",
+        office_location_desc: "जीपीएस निर्देशांक सेट करें",
+        latitude: "अक्षांश",
+        longitude: "देशांतर",
+        allowed_radius: "अनुमत दायरा (मीटर)",
+        save_office_location: "स्थान सहेजें",
+        no_holidays_configured: "कोई छुट्टी नहीं जोड़ी गई",
+
+        // Days
+        sunday: "रविवार",
+        monday: "सोमवार",
+        tuesday: "मंगलवार",
+        wednesday: "बुधवार",
+        thursday: "गुरुवार",
+        friday: "शुक्रवार",
+        saturday: "शनिवार",
+
+        welcome: "स्वागत है",
+        action: "क्रिया",
+        status: "स्थिति",
+        active: "सक्रिय",
+        inactive: "निष्क्रिय",
+        save: "सहेजें",
+        cancel: "्रद्द करें",
+        edit: "संपादित करें",
+        delete: "हटाएं",
+        search: "खोजें",
+
+        total_employees: "कुल कर्मचारी",
+        present_today: "आज उपस्थित",
+        on_leave: "आज अनुपस्थित",
+        total_records: "कुल रिकॉर्ड",
+        todays_report: "आज की रिपोर्ट",
+        employee_name: "कर्मचारी का नाम",
+        punch_in: "पंच इन",
+        punch_out: "पंच आउट",
+        daily_price: "दैनिक वेतन",
+
+        register_update_employee: "कर्मचारी पंजीकृत / अपडेट करें",
+        employee_id: "कर्मचारी आईडी",
+        mobile_number: "मोबाइल नंबर",
+        role: "भूमिका",
+        salary: "वेतन",
+        punch_mode: "पंच मोड",
+        office_only: "केवल कार्यालय (GPS)",
+        anywhere: "कहीं भी (No GPS)",
+        shift_type: "शिफ्ट प्रकार",
+        fixed_shift: "निश्चित शिफ्ट",
+        flexible_shift: "लचीली शिफ्ट",
+        rotating_shift: "रोटेटिंग शिफ्ट",
+        shift_start: "शिफ्ट शुरू",
+        shift_end: "शिफ्ट समाप्त",
+        branch: "शाखा",
+        employee_list: "कर्मचारी सूची",
+        sl_no: "क्र.सं.",
+        name_id: "नाम/आईडी",
+        save_employee: "कर्मचारी सहेजें",
+
+        manage_branch_admins: "शाखा व्यवस्थापक प्रबंधित करें",
+        add_new_admin: "नया व्यवस्थापक जोड़ें",
+        existing_admins: "मौजूदा व्यवस्थापक",
+        admin_id: "व्यवस्थापक आईडी",
+        email: "ईमेल",
+        password: "पासवर्ड",
+
+        attendance_log: "उपस्थिति लॉग",
+        date: "तारीख",
+
+        leave_requests: "छुट्टी के अनुरोध",
+        reason: "कारण",
+        approve: "मंजूर",
+        reject: "अस्वीकार",
+
+        advance_salary: "अग्रिम वेतन",
+        amount: "राशि",
+
+        app_settings: "ऐप सेटिंग्स",
+
+        confirm_delete: "क्या आप वाकई हटाना चाहते हैं?",
+        saved_successfully: "सफलतापूर्वक सहेजा गया!"
+    },
+    es: {
+        dashboard: "Tablero",
+        employees: "Empleados",
+        attendance: "Asistencia",
+        leave_management: "Licencias",
+        branch_admins: "Admins",
+        salary_settings: "Salarios",
+        monthly_report: "Reporte Mensual",
+        settings: "Ajustes",
+        logout: "Salir",
+
+        // Attendance - New
+        mark_single_day: "Marcar Asistencia (Un Día)",
+        bulk_attendance: "Asistencia Masiva",
+        attendance_log: "Registros de Asistencia",
+        tip_attendance: "💡 Consejo: Al marcar Presente, se usarán los horarios de oficina automáticamente",
+        from_date: "Desde",
+        to_date: "Hasta",
+        punch_in_img: "Imagen Entrada",
+        punch_out_img: "Imagen Salida",
+        punch_in_optional: "Entrada (Opcional)",
+        punch_out_optional: "Salida (Opcional)",
+        mark_bulk: "Marcar Masivo",
+        filter_emp_id: "Filtrar por ID",
+        filter_date: "Filtrar por Fecha",
+        clear_filters: "Limpiar Filtros",
+        search_select_emp: "Buscar ID...",
+
+        // Leave Management
+        leave_configuration: "Configuración de Licencias",
+        leave_config_desc: "Configurar licencias pagadas mensuales",
+        paid_leaves_per_month: "Licencias Pagadas por Mes",
+        save_leave_config: "Guardar Configuración",
+        pending_requests: "Solicitudes Pendientes",
+        pending_requests_desc: "Revisar solicitudes de empleados",
+        leave_history: "Historial de Licencias",
+        days: "Días",
+        action_date: "Fecha Acción",
+        no_pending_requests: "No hay solicitudes pendientes",
+        no_leave_history: "No hay historial disponible",
+        start_date: "Fecha Inicio",
+        end_date: "Fecha Fin",
+        leave_type: "Tipo Licencia",
+        approve_paid: "✓ Aprobar Pagada",
+        approve_unpaid: "✓ Aprobar No Pagada",
+
+        // Manage Admins
+        admin_name: "Nombre Admin",
+        branch_name: "Nombre Sucursal",
+        login_email: "Email Login",
+        save_admin: "Guardar Admin",
+        update_admin: "Actualizar Admin",
+        no_admins_found: "No se encontraron admins",
+        login_as: "Ingresar",
+        login: "Ingresar",
+
+        // Login Page
+        admin_login_title: "PayFlowPro Admin - Ingreso",
+        admin_login_header: "PayFlowPro Admin",
+        email_placeholder: "Correo Electrónico",
+        password_placeholder: "Contraseña",
+        login_checking: "Verificando...",
+        login_invalid: "Credenciales inválidas",
+        login_error: "Error de ingreso",
+
+        // Monthly Report
+        select_month: "Seleccionar Mes",
+        generate_report: "Generar Reporte",
+        employee_id: "ID Empleado",
+        total_days: "Días Totales",
+        present: "Presente",
+        leaves: "Ausencias",
+        week_offs: "Fines de Semana",
+        holidays: "Feriados",
+        attendance_percent: "% Asistencia",
+        net_salary: "Salario Neto",
+        loading_report: "Cargando reporte...",
+        no_employees_found: "No se encontraron empleados",
+        select_month_click: "Seleccione un mes y haga clic en Generar",
+        no_matching_records: "No se encontraron registros",
+        error_loading_report: "Error cargando reporte",
+
+        // Salary Settings
+        salary_settings_title: "Configuración Salario",
+        select_employee: "Seleccionar Empleado",
+        calculate: "Calcular",
+        total_payable_salary: "Salario Total a Pagar",
+        base_salary: "Base",
+        total_days_in_month: "Días en el Mes",
+        calculating: "Calculando...",
+
+        // Settings (General)
+        language_settings: "Configuración de Idioma",
+        select_language_desc: "Seleccione el idioma del panel",
+        office_time_settings: "Horario de Oficina",
+        office_start_time: "Hora Entrada",
+        office_end_time: "Hora Salida",
+        save_office_time: "Guardar Horario",
+        week_off_days: "Días Libres Semanales",
+        week_off_desc: "Seleccione días libres recurrentes",
+        special_week_off: "Configuración Especial",
+        second_saturday: "Segundo Sábado del Mes",
+        save_week_offs: "Guardar Días Libres",
+        holiday_management: "Gestión de Feriados",
+        holiday_management_desc: "Agregar días feriados pagados",
+        holiday_date: "Fecha",
+        holiday_description: "Descripción",
+        add_holiday: "Agregar Feriado",
+        office_location_settings: "Ubicación de Oficina",
+        office_location_desc: "Configurar coordenadas GPS",
+        latitude: "Latitud",
+        longitude: "Longitud",
+        allowed_radius: "Radio Permitido (m)",
+        save_office_location: "Guardar Ubicación",
+        no_holidays_configured: "No hay feriados configurados",
+
+        // Days
+        sunday: "Domingo",
+        monday: "Lunes",
+        tuesday: "Martes",
+        wednesday: "Miércoles",
+        thursday: "Jueves",
+        friday: "Viernes",
+        saturday: "Sábado",
+
+        welcome: "Bienvenido",
+        action: "Acción",
+        status: "Estado",
+        active: "Activo",
+        inactive: "Inactivo",
+        save: "Guardar",
+        cancel: "Cancelar",
+        edit: "Editar",
+        delete: "Eliminar",
+        search: "Buscar",
+
+        total_employees: "Total Empleados",
+        present_today: "Presente Hoy",
+        on_leave: "Ausente Hoy",
+        total_records: "Registros Totales",
+        todays_report: "Reporte de Hoy",
+        employee_name: "Nombre Empleado",
+        punch_in: "Entrada",
+        punch_out: "Salida",
+        daily_price: "Salario Diario",
+        register_update_employee: "Registrar / Actualizar Empleado",
+        employee_id: "ID Empleado",
+        mobile_number: "Móvil",
+        role: "Rol",
+        salary: "Salario",
+        punch_mode: "Modo Fichaje",
+        office_only: "Solo Oficina",
+        anywhere: "Cualquier Lugar",
+        shift_type: "Tipo Turno",
+        fixed_shift: "Fijo",
+        flexible_shift: "Flexible",
+        rotating_shift: "Rotativo",
+        shift_start: "Inicio",
+        shift_end: "Fin",
+        branch: "Sucursal",
+        employee_list: "Lista Empleados",
+        sl_no: "#",
+        name_id: "Nombre/ID",
+        save_employee: "Guardar Empleado",
+        manage_branch_admins: "Administrar Admins",
+        add_new_admin: "Nuevo Admin",
+        existing_admins: "Admins Existentes",
+        admin_id: "Admin ID",
+        email: "Email",
+        password: "Password",
+
+        date: "Fecha",
+
+        leave_requests: "Solicitudes de Licencia",
+        reason: "Razón",
+        approve: "Aprobar",
+        reject: "Rechazar",
+
+        advance_salary: "Anticipo de Salario",
+        amount: "Monto",
+
+        app_settings: "Configuración App",
+
+        confirm_delete: "¿Seguro que desea eliminar?",
+        saved_successfully: "¡Guardado con éxito!"
+    },
+    fr: {
+        dashboard: "Tableau de bord",
+        employees: "Employés",
+        attendance: "Présence",
+        leave_management: "Congés",
+        branch_admins: "Admins",
+        salary_settings: "Salaires",
+        monthly_report: "Rapport",
+        settings: "Paramètres",
+        logout: "Déconnexion",
+
+        // Attendance - New
+        mark_single_day: "Marquer Présence (Jour Unique)",
+        bulk_attendance: "Présence Massive",
+        attendance_log: "Journal de Présence",
+        tip_attendance: "💡 Conseil: En marquant Présent, les horaires de bureau seront utilisés",
+        from_date: "Du",
+        to_date: "Au",
+        punch_in_img: "Image Entrée",
+        punch_out_img: "Image Sortie",
+        punch_in_optional: "Entrée (Optionnel)",
+        punch_out_optional: "Sortie (Optionnel)",
+        mark_bulk: "Marquer Massivement",
+        filter_emp_id: "Filtrer par ID",
+        filter_date: "Filtrer par Date",
+        clear_filters: "Effacer Filtres",
+        search_select_emp: "Chercher ID...",
+
+        // Leave Management
+        leave_configuration: "Configuration Congés",
+        leave_config_desc: "Configurer les congés payés mensuels",
+        paid_leaves_per_month: "Congés Payés par Mois",
+        save_leave_config: "Enregistrer Configuration",
+        pending_requests: "Demandes en Attente",
+        pending_requests_desc: "Gérer les demandes de congés",
+        leave_history: "Historique des Congés",
+        days: "Jours",
+        action_date: "Date Action",
+        no_pending_requests: "Aucune demande en attente",
+        no_leave_history: "Aucun historique disponible",
+        start_date: "Date Début",
+        end_date: "Date Fin",
+        leave_type: "Type Congé",
+        approve_paid: "✓ Approuver Payé",
+        approve_unpaid: "✓ Approuver Non Payé",
+
+        // Manage Admins
+        admin_name: "Nom Admin",
+        branch_name: "Nom Succursale",
+        login_email: "Email Connexion",
+        save_admin: "Enregistrer Admin",
+        update_admin: "Mettre à jour Admin",
+        no_admins_found: "Aucun admin trouvé",
+        login_as: "Connexion",
+        login: "Connexion",
+
+        // Login Page
+        admin_login_title: "Connexion Admin PayFlowPro",
+        admin_login_header: "Admin PayFlowPro",
+        email_placeholder: "Email Admin",
+        password_placeholder: "Mot de passe",
+        login_checking: "Vérification in cours...",
+        login_invalid: "Identifiants invalides",
+        login_error: "Erreur de connexion",
+
+        // Monthly Report
+        select_month: "Sélectionner Mois",
+        generate_report: "Générer Rapport",
+        employee_id: "ID Employé",
+        total_days: "Jours Totaux",
+        present: "Présent",
+        leaves: "Congés",
+        week_offs: "Repos Hebdo",
+        holidays: "Fériés",
+        attendance_percent: "% Présence",
+        net_salary: "Salaire Net",
+        loading_report: "Chargement...",
+        no_employees_found: "Aucun employé trouvé",
+        select_month_click: "Sélectionnez un mois et cliquez sur Générer",
+        no_matching_records: "Aucun enregistrement trouvé",
+        error_loading_report: "Erreur de chargement",
+
+        // Salary Settings
+        salary_settings_title: "Paramètres Salaire",
+        select_employee: "Sélectionner Employé",
+        calculate: "Calculer",
+        total_payable_salary: "Salaire Total à Payer",
+        base_salary: "Base",
+        total_days_in_month: "Jours dans le Mois",
+        calculating: "Calcul en cours...",
+
+        // Settings (General)
+        language_settings: "Paramètres Langue",
+        select_language_desc: "Sélectionner la langue du panneau",
+        office_time_settings: "Horaires de Bureau",
+        office_start_time: "Heure Début",
+        office_end_time: "Heure Fin",
+        save_office_time: "Enregistrer Horaires",
+        week_off_days: "Jours de Repos Hebdomadaires",
+        week_off_desc: "Sélectionner les jours de repos récurrents",
+        special_week_off: "Configuration Spéciale",
+        second_saturday: "Deuxième Samedi du Mois",
+        save_week_offs: "Enregistrer Repos",
+        holiday_management: "Gestion des Fériés",
+        holiday_management_desc: "Ajouter des jours fériés payés",
+        holiday_date: "Date",
+        holiday_description: "Description",
+        add_holiday: "Ajouter Férié",
+        office_location_settings: "Emplacement Bureau",
+        office_location_desc: "Configurer coordonnées GPS",
+        latitude: "Latitude",
+        longitude: "Longitude",
+        allowed_radius: "Rayon Autorisé (m)",
+        save_office_location: "Enregistrer Emplacement",
+        no_holidays_configured: "Aucun férié configuré",
+
+        // Days
+        sunday: "Dimanche",
+        monday: "Lundi",
+        tuesday: "Mardi",
+        wednesday: "Mercredi",
+        thursday: "Jeudi",
+        friday: "Vendredi",
+        saturday: "Samedi",
+
+        welcome: "Bienvenue",
+        action: "Action",
+        status: "Statut",
+        active: "Actif",
+        inactive: "Inactif",
+        save: "Enregistrer",
+        cancel: "Annuler",
+        edit: "Modifier",
+        delete: "Supprimer",
+        search: "Chercher",
+
+        total_employees: "Total Employés",
+        present_today: "Présent",
+        on_leave: "Absent",
+        total_records: "Total Enregistrements",
+        todays_report: "Rapport du Jour",
+        employee_name: "Nom Employé",
+        punch_in: "Entrée",
+        punch_out: "Sortie",
+        daily_price: "Salaire Journalier",
+        register_update_employee: "Enregistrer / Mettre à jour",
+        employee_id: "ID Employé",
+        mobile_number: "Mobile",
+        role: "Rôle",
+        salary: "Salaire",
+        punch_mode: "Mode Pointage",
+        office_only: "Bureau Uniquement",
+        anywhere: "Partout",
+        shift_type: "Type Poste",
+        fixed_shift: "Fixe",
+        flexible_shift: "Flexible",
+        rotating_shift: "Rotatif",
+        shift_start: "Début",
+        shift_end: "Fin",
+        branch: "Succursale",
+        employee_list: "Liste Employés",
+        sl_no: "N°",
+        name_id: "Nom/ID",
+        save_employee: "Sauvegarder",
+        manage_branch_admins: "Gérer Admins",
+        add_new_admin: "Nouvel Admin",
+        existing_admins: "Admins Existants",
+        admin_id: "ID Admin",
+        email: "Email",
+        password: "Mot de passe",
+
+        date: "Date",
+
+        leave_requests: "Demandes de Congés",
+        reason: "Raison",
+        approve: "Approuver",
+        reject: "Rejeter",
+
+        advance_salary: "Avance sur Salaire",
+        amount: "Montant",
+
+        app_settings: "Paramètres App",
+
+        confirm_delete: "Êtes-vous sûr de vouloir supprimer ?",
+        saved_successfully: "Enregistré avec succès !"
+    },
+    ar: {
+        dashboard: "لوحة القيادة",
+        employees: "الموظفين",
+        attendance: "الحضور",
+        leave_management: "الإجازات",
+        branch_admins: "المسؤولين",
+        salary_settings: "الرواتب",
+        monthly_report: "التقرير الشهري",
+        settings: "الإعدادات",
+        logout: "خروج",
+
+        // Attendance - New
+        mark_single_day: "تسجيل الحضور (يوم واحد)",
+        bulk_attendance: "حضور جماعي",
+        attendance_log: "سجل الحضور",
+        tip_attendance: "💡 تلميح: عند التحديد كحاضر، سيتم استخدام أوقات المكتب تلقائيًا",
+        from_date: "من تاريخ",
+        to_date: "إلى تاريخ",
+        punch_in_img: "صورة الدخول",
+        punch_out_img: "صورة الخروج",
+        punch_in_optional: "دخول (اختياري)",
+        punch_out_optional: "خروج (اختياري)",
+        mark_bulk: "تسجيل جماعي",
+        filter_emp_id: "تصفية حسب المعرف",
+        filter_date: "تصفية حسب التاريخ",
+        clear_filters: "مسح التصفيات",
+        search_select_emp: "بحث عن معرف...",
+
+        // Leave Management
+        leave_configuration: "إعدادات الإجازة",
+        leave_config_desc: "تكوين إعدادات الإجازة المدفوعة",
+        paid_leaves_per_month: "الإجازات المدفوعة شهريًا",
+        save_leave_config: "حفظ الإعدادات",
+        pending_requests: "الطلبات المعلقة",
+        pending_requests_desc: "مراجعة طلبات الإجازة",
+        leave_history: "سجل الإجازات",
+        days: "أيام",
+        action_date: "تاريخ الإجراء",
+        no_pending_requests: "لا توجد طلبات معلقة",
+        no_leave_history: "لا يوجد سجل متاح",
+        start_date: "تاريخ البدء",
+        end_date: "تاريخ الانتهاء",
+        leave_type: "نوع الإجازة",
+        approve_paid: "✓ موافقة (مدفوعة)",
+        approve_unpaid: "✓ موافقة (غير مدفوعة)",
+
+        // Manage Admins
+        admin_name: "اسم المسؤول",
+        branch_name: "اسم الفرع",
+        login_email: "البريد الإلكتروني",
+        save_admin: "حفظ المسؤول",
+        update_admin: "تحديث المسؤول",
+        no_admins_found: "لم يتم العثور على مسؤولين",
+        login_as: "دخول",
+        login: "دخول",
+
+        // Login Page
+        admin_login_title: "تسجيل دخول المسؤول",
+        admin_login_header: "مسؤول PayFlowPro",
+        email_placeholder: "البريد الإلكتروني",
+        password_placeholder: "كلمة المرور",
+        login_checking: "جاري التحقق...",
+        login_invalid: "بيانات الدخول غير صحيحة",
+        login_error: "خطأ في تسجيل الدخول",
+
+        // Monthly Report
+        select_month: "اختر الشهر",
+        generate_report: "إنشاء تقرير",
+        employee_id: "معرف الموظف",
+        total_days: "إجمالي الأيام",
+        present: "حضور",
+        leaves: "إجازات",
+        week_offs: "عطلات أسبوعية",
+        holidays: "عطلات رسمية",
+        attendance_percent: "نسبة الحضور",
+        net_salary: "صافي الراتب",
+        loading_report: "جاري تحميل التقرير...",
+        no_employees_found: "لم يتم العثور على موظفين",
+        select_month_click: "اختر شهرًا واضغط على إنشاء تقرير",
+        no_matching_records: "لا توجد سجلات مطابقة",
+        error_loading_report: "خطأ في تحميل التقرير",
+
+        // Salary Settings
+        salary_settings_title: "إعدادات الراتب",
+        select_employee: "اختر الموظف",
+        calculate: "حساب",
+        total_payable_salary: "إجمالي الراتب المستحق",
+        base_salary: "الأساسي",
+        total_days_in_month: "أيام الشهر",
+        calculating: "جاري الحساب...",
+
+        // Settings (General)
+        language_settings: "إعدادات اللغة",
+        select_language_desc: "اختر لغة لوحة التحكم",
+        office_time_settings: "إعدادات وقت المكتب",
+        office_start_time: "وقت البدء",
+        office_end_time: "وقت الانتهاء",
+        save_office_time: "حفظ الوقت",
+        week_off_days: "أيام العطلة الأسبوعية",
+        week_off_desc: "اختر أيام العطلة المتكررة",
+        special_week_off: "إعدادات خاصة",
+        second_saturday: "السبت الثاني من كل شهر",
+        save_week_offs: "حفظ العطلات",
+        holiday_management: "إدارة العطلات",
+        holiday_management_desc: "إضافة عطلات رسمية مدفوعة",
+        holiday_date: "التاريخ",
+        holiday_description: "الوصف",
+        add_holiday: "إضافة عطلة",
+        office_location_settings: "إعدادات موقع المكتب",
+        office_location_desc: "تعيين إحداثيات GPS",
+        latitude: "خط العرض",
+        longitude: "خط الطول",
+        allowed_radius: "نطاق المسموح (متر)",
+        save_office_location: "حفظ الموقع",
+        no_holidays_configured: "لا توجد عطلات",
+
+        // Days
+        sunday: "الأحد",
+        monday: "الاثنين",
+        tuesday: "الثلاثاء",
+        wednesday: "الأربعاء",
+        thursday: "الخميس",
+        friday: "الجمعة",
+        saturday: "السبت",
+
+        welcome: "أهلا بك",
+        action: "إجراء",
+        status: "الحالة",
+        active: "نشط",
+        inactive: "غير نشط",
+        save: "حفظ",
+        cancel: "إلغاء",
+        edit: "تعديل",
+        delete: "حذف",
+        search: "بحث",
+
+        total_employees: "إجمالي الموظفين",
+        present_today: "حاضر اليوم",
+        on_leave: "غائب اليوم",
+        total_records: "إجمالي السجلات",
+        todays_report: "تقرير اليوم",
+        employee_name: "اسم الموظف",
+        punch_in: "دخول",
+        punch_out: "خروج",
+        daily_price: "الراتب اليومي",
+        register_update_employee: "تسجيل / تحديث موظف",
+        employee_id: "معرف الموظف",
+        mobile_number: "رقم الجوال",
+        role: "الوظيفة",
+        salary: "الراتب",
+        punch_mode: "نظام الدوام",
+        office_only: "المكتب فقط",
+        anywhere: "أي مكان",
+        shift_type: "نظام الشفت",
+        fixed_shift: "ثابت",
+        flexible_shift: "مرن",
+        rotating_shift: "متناوب",
+        shift_start: "بداية",
+        shift_end: "نهاية",
+        branch: "الفرع",
+        employee_list: "قائمة الموظفين",
+        sl_no: "رقم",
+        name_id: "الاسم/المعرف",
+        save_employee: "حفظ الكوظف",
+        manage_branch_admins: "إدارة المسؤولين",
+        add_new_admin: "إضافة مسؤول جديد",
+        existing_admins: "المسؤولين الحاليين",
+        admin_id: "معرف المسؤول",
+        email: "البريد الإلكتروني",
+        password: "كلمة المرور",
+
+        attendance_log: "سجل الحضور",
+        date: "تاريخ",
+
+        leave_requests: "طلبات الإجازة",
+        reason: "السبب",
+        approve: "موافقة",
+        reject: "رفض",
+
+        advance_salary: "سلفة الراتب",
+        amount: "المبلغ",
+
+        app_settings: "إعدادات التطبيق",
+
+        confirm_delete: "هل أنت متأكد أنك تريد الحذف؟",
+        saved_successfully: "تم الحفظ بنجاح!"
+    },
+    de: {
+        dashboard: "Dashboard",
+        employees: "Mitarbeiter",
+        attendance: "Anwesenheit",
+        leave_management: "Urlaub",
+        branch_admins: "Admins",
+        salary_settings: "Gehalt",
+        monthly_report: "Bericht",
+        settings: "Einstellungen",
+        logout: "Abmelden",
+
+        // Attendance - New
+        mark_single_day: "Anwesenheit (Einzeln)",
+        bulk_attendance: "Massenanwesenheit",
+        attendance_log: "Anwesenheitsprotokoll",
+        tip_attendance: "💡 Tipp: Bei Anwesend werden Bürozeiten automatisch verwendet",
+        from_date: "Von",
+        to_date: "Bis",
+        punch_in_img: "Bild Kommen",
+        punch_out_img: "Bild Gehen",
+        punch_in_optional: "Kommen (Optional)",
+        punch_out_optional: "Gehen (Optional)",
+        mark_bulk: "Massen Markieren",
+        filter_emp_id: "Filter nach ID",
+        filter_date: "Filter nach Datum",
+        clear_filters: "Filter Löschen",
+        search_select_emp: "ID Suchen...",
+
+        // Leave Management
+        leave_configuration: "Urlaubskonfiguration",
+        leave_config_desc: "Monatliche bezahlte Urlaubstage konfigurieren",
+        paid_leaves_per_month: "Bezahlter Urlaub pro Monat",
+        save_leave_config: "Konfiguration Speichern",
+        pending_requests: "Ausstehende Anfragen",
+        pending_requests_desc: "Urlaubsanträge überprüfen",
+        leave_history: "Urlaubshistorie",
+        days: "Tage",
+        action_date: "Aktionsdatum",
+        no_pending_requests: "Keine ausstehenden Anfragen",
+        no_leave_history: "Keine Historie verfügbar",
+        start_date: "Startdatum",
+        end_date: "Enddatum",
+        leave_type: "Urlaubsart",
+        approve_paid: "✓ Genehmigen (Bezahlt)",
+        approve_unpaid: "✓ Genehmigen (Unbezahlt)",
+
+        // Manage Admins
+        admin_name: "Admin Name",
+        branch_name: "Filialname",
+        login_email: "Login E-Mail",
+        save_admin: "Admin Speichern",
+        update_admin: "Admin Aktualisieren",
+        no_admins_found: "Keine Admins gefunden",
+        login_as: "Login",
+        login: "Login",
+
+        // Monthly Report
+        select_month: "Monat Wählen",
+        generate_report: "Bericht Erstellen",
+        employee_id: "Mitarbeiter ID",
+        total_days: "Gesamttage",
+        present: "Anwesend",
+        leaves: "Urlaub",
+        week_offs: "Wochenende",
+        holidays: "Feiertage",
+        attendance_percent: "Anwesenheit %",
+        net_salary: "Nettogehalt",
+        loading_report: "Lade Bericht...",
+        no_employees_found: "Keine Mitarbeiter gefunden",
+        select_month_click: "Wählen Sie einen Monat",
+        no_matching_records: "Keine Datensätze gefunden",
+        error_loading_report: "Fehler beim Laden",
+
+        // Salary Settings
+        salary_settings_title: "Gehaltseinstellungen",
+        select_employee: "Mitarbeiter Wählen",
+        calculate: "Berechnen",
+        total_payable_salary: "Zahlbarer Gesamtbetrag",
+        base_salary: "Basis",
+        total_days_in_month: "Tage im Monat",
+        calculating: "Berechne...",
+
+        // Settings (General)
+        language_settings: "Spracheinstellungen",
+        select_language_desc: "Sprache wählen",
+        office_time_settings: "Bürozeiten",
+        office_start_time: "Startzeit",
+        office_end_time: "Endzeit",
+        save_office_time: "Zeit Speichern",
+        week_off_days: "Wöchentliche Ruhetage",
+        week_off_desc: "Wiederkehrende freie Tage wählen",
+        special_week_off: "Spezielle Konfiguration",
+        second_saturday: "Zweiter Samstag im Monat",
+        save_week_offs: "Speichern",
+        holiday_management: "Feiertagsmanagement",
+        holiday_management_desc: "Bezahlte Feiertage hinzufügen",
+        holiday_date: "Datum",
+        holiday_description: "Beschreibung",
+        add_holiday: "Feiertag Hinzufügen",
+        office_location_settings: "Bürostandort",
+        office_location_desc: "GPS-Koordinaten festlegen",
+        latitude: "Breitengrad",
+        longitude: "Längengrad",
+        allowed_radius: "Erlaubter Radius (m)",
+        save_office_location: "Standort Speichern",
+        no_holidays_configured: "Keine Feiertage konfiguriert",
+
+        // Days
+        sunday: "Sonntag",
+        monday: "Montag",
+        tuesday: "Dienstag",
+        wednesday: "Mittwoch",
+        thursday: "Donnerstag",
+        friday: "Freitag",
+        saturday: "Samstag",
+
+        welcome: "Willkommen",
+        action: "Aktion",
+        status: "Status",
+        active: "Aktiv",
+        inactive: "Inaktiv",
+        save: "Speichern",
+        cancel: "Abbrechen",
+        edit: "Bearbeiten",
+        delete: "Löschen",
+        search: "Suchen",
+
+        total_employees: "Mitarbeiter Gesamt",
+        present_today: "Heute Anwesend",
+        on_leave: "Heute Abwesend",
+        total_records: "Gesamteinträge",
+        todays_report: "Heutiger Bericht",
+        employee_name: "Name",
+        punch_in: "Kommen",
+        punch_out: "Gehen",
+        daily_price: "Tageslohn",
+        register_update_employee: "Mitarbeiter Registrieren",
+        employee_id: "Mitarbeiter ID",
+        mobile_number: "Handynummer",
+        role: "Rolle",
+        salary: "Gehalt",
+        punch_mode: "Stempelmodus",
+        office_only: "Nur Büro",
+        anywhere: "Überall",
+        shift_type: "Schichtart",
+        fixed_shift: "Fest",
+        flexible_shift: "Flexibel",
+        rotating_shift: "Wechselnd",
+        shift_start: "Start",
+        shift_end: "Ende",
+        branch: "Filiale",
+        employee_list: "Mitarbeiterliste",
+        sl_no: "Nr.",
+        name_id: "Name/ID",
+        save_employee: "Speichern",
+        manage_branch_admins: "Admins Verwalten",
+        add_new_admin: "Neuer Admin",
+        existing_admins: "Vorhandene Admins",
+
+        confirm_delete: "Sind Sie sicher?",
+        saved_successfully: "Erfolgreich gespeichert!"
+    }
+};
+
+function changeLanguage(lang) {
+    localStorage.setItem('language', lang);
+    applyLanguage(lang);
+}
+
+function applyLanguage(lang) {
+    const t = translations[lang];
+    if (!t) return;
+
+    // 1. Text Content Replacement
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = t[key];
+            } else {
+                el.innerText = t[key];
+            }
+        }
+    });
+
+    // 2. Update Selectors
+    const selectors = document.querySelectorAll('select[onchange="changeLanguage(this.value)"]');
+    selectors.forEach(s => s.value = lang);
+
+    // 3. Update HTML "lang" attribute
+    document.documentElement.lang = lang;
+
+    // 4. Update Direction for Arabic
+    if (lang === 'ar') {
+        document.body.style.direction = 'rtl';
+        document.body.style.textAlign = 'right';
+        // Fix sidebar toggle for RTL
+        document.querySelectorAll('.sidebar').forEach(s => s.style.right = '0');
+        document.querySelectorAll('.main-content').forEach(m => m.style.marginRight = 'var(--sidebar-width)');
+        document.querySelectorAll('.main-content').forEach(m => m.style.marginLeft = '0');
+    } else {
+        document.body.style.direction = 'ltr';
+        document.body.style.textAlign = 'left';
+        document.querySelectorAll('.main-content').forEach(m => m.style.marginLeft = 'var(--sidebar-width)');
+        document.querySelectorAll('.main-content').forEach(m => m.style.marginRight = '0');
+    }
+}
+
+// Helper to get translation for dynamic content
+function t(key) {
+    const lang = localStorage.getItem('language') || 'en';
+    const tr = translations[lang] || translations['en'];
+    return tr[key] || key;
+}
+
+// --- Theme Handling ---
+const themeStyles = `
+body.light-mode {
+    --bg-dark: #f0f2f5;
+    --bg-card: #ffffff;
+    --bg-input: #f8f9fa;
+    --text: #1a1d21;
+    --text-muted: #6c757d;
+    --border: #e9ecef;
+}
+`;
+
+function injectThemeStyles() {
+    if (!document.getElementById('theme-styles')) {
+        const styleSheet = document.createElement("style");
+        styleSheet.id = 'theme-styles';
+        styleSheet.innerText = themeStyles;
+        document.head.appendChild(styleSheet);
+    }
+}
+
+window.toggleTheme = function () {
+    const isLight = document.body.classList.toggle('light-mode');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+function applyTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+}
+
+// Initial Load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('language') || 'en';
+    applyLanguage(savedLang);
+    injectThemeStyles();
+    applyTheme();
+});

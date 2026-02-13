@@ -3,6 +3,7 @@
 
 <head>
     <title>PayFlowPro Admin Login</title>
+    <script src="lang.js"></script>
     <style>
         body {
             margin: 0;
@@ -58,10 +59,22 @@
 <body>
 
     <div class="box">
-        <h2>PayFlowPro Admin</h2>
-        <input type="email" id="email" placeholder="Admin Email">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+        <h2 data-i18n="admin_login_header">PayFlowPro Admin</h2>
+
+        <select id="langSelector" onchange="changeLanguage(this.value)"
+            style="width:100%; padding:10px; margin-bottom:15px; background:#0f151d; color:white; border:none; border-radius:8px;">
+            <option value="en">English</option>
+            <option value="hi">हिंदी</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="ml">Malayalam</option>
+        </select>
+
+        <input type="email" id="email" data-i18n="email_placeholder" placeholder="Admin Email">
+        <input type="password" id="password" data-i18n="password_placeholder" placeholder="Password">
+        <button onclick="login()" data-i18n="login">Login</button>
         <p class="error" id="error"></p>
     </div>
 
@@ -90,7 +103,7 @@
             const p = document.getElementById("password").value;
             const errorEl = document.getElementById("error");
 
-            errorEl.innerText = "Checking...";
+            errorEl.innerText = t('login_checking');
 
             // 1. Check Hardcoded Super Admin
             if (input === SUPER_ADMIN_EMAIL && p === SUPER_ADMIN_PASS) {
@@ -122,10 +135,10 @@
                 }
 
                 if (!found) {
-                    errorEl.innerText = "Invalid login credentials";
+                    errorEl.innerText = t('login_invalid');
                 }
             } catch (err) {
-                errorEl.innerText = "Login error: " + err.message;
+                errorEl.innerText = t('login_error') + ": " + err.message;
                 console.error(err);
             }
         }

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employees - PayFlowPro Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -348,6 +349,16 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 PayFlowPro</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
@@ -387,85 +398,88 @@
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>Employees</h1>
+                <h1 data-i18n="employees">Employees</h1>
             </div>
             <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <!-- ============ EMPLOYEES SECTION ============ -->
         <div class="dashboard-section">
             <div class="card">
-                <h3>Register / Update Employee</h3>
+                <h3 data-i18n="register_update_employee">Register / Update Employee</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Employee Name</label>
-                        <input id="name" placeholder="Enter employee name">
+                        <label data-i18n="employee_name">Employee Name</label>
+                        <input id="name" placeholder="Enter employee name" data-i18n="employee_name">
                     </div>
                     <div class="form-group">
-                        <label>Employee ID</label>
-                        <input id="empid" placeholder="Enter employee ID">
+                        <label data-i18n="employee_id">Employee ID</label>
+                        <input id="empid" placeholder="Enter employee ID" data-i18n="employee_id">
                     </div>
                     <div class="form-group">
-                        <label>Mobile Number</label>
-                        <input id="mobile" placeholder="Enter mobile number">
+                        <label data-i18n="mobile_number">Mobile Number</label>
+                        <input id="mobile" placeholder="Enter mobile number" data-i18n="mobile_number">
                     </div>
                     <div class="form-group">
-                        <label>Role</label>
-                        <input id="role" placeholder="Enter role">
+                        <label data-i18n="role">Role</label>
+                        <input id="role" placeholder="Enter role" data-i18n="role">
                     </div>
                     <div class="form-group">
-                        <label>Salary</label>
-                        <input id="salary" placeholder="Enter salary">
+                        <label data-i18n="salary">Salary</label>
+                        <input id="salary" placeholder="Enter salary" data-i18n="salary">
                     </div>
                     <div class="form-group">
-                        <label>Punch Mode</label>
+                        <label data-i18n="punch_mode">Punch Mode</label>
                         <select id="punchMode">
-                            <option value="office">Office Only (GPS Required)</option>
-                            <option value="anywhere">Anywhere (No GPS Check)</option>
+                            <option value="office" data-i18n="office_only">Office Only (GPS Required)</option>
+                            <option value="anywhere" data-i18n="anywhere">Anywhere (No GPS Check)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Shift Type</label>
+                        <label data-i18n="shift_type">Shift Type</label>
                         <select id="shiftType" onchange="toggleShiftTimes()">
-                            <option value="fixed">Fixed Shift (Office Time)</option>
-                            <option value="flexible">Flexible Shift (No Time Restriction)</option>
-                            <option value="rotating">Rotating Shift (Custom Time)</option>
+                            <option value="fixed" data-i18n="fixed_shift">Fixed Shift (Office Time)</option>
+                            <option value="flexible" data-i18n="flexible_shift">Flexible Shift (No Time Restriction)
+                            </option>
+                            <option value="rotating" data-i18n="rotating_shift">Rotating Shift (Custom Time)</option>
                         </select>
                     </div>
                     <div class="form-group" id="shiftStartGroup" style="display: none;">
-                        <label>Shift Start Time</label>
+                        <label data-i18n="shift_start">Shift Start Time</label>
                         <input type="time" id="shiftStart" placeholder="e.g., 09:00">
                     </div>
                     <div class="form-group" id="shiftEndGroup" style="display: none;">
-                        <label>Shift End Time</label>
+                        <label data-i18n="shift_end">Shift End Time</label>
                         <input type="time" id="shiftEnd" placeholder="e.g., 18:00">
                     </div>
                     <div class="form-group">
-                        <label>Branch</label>
-                        <input id="branch" placeholder="Branch Name">
+                        <label data-i18n="branch">Branch</label>
+                        <input id="branch" placeholder="Branch Name" data-i18n="branch">
                     </div>
                 </div>
-                <button onclick="addEmployee()">💾 Save Employee</button>
+                <button onclick="addEmployee()" data-i18n="save_employee">💾 Save Employee</button>
             </div>
 
             <div class="card">
-                <h3>Employee List</h3>
+                <h3 data-i18n="employee_list">Employee List</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Sl No</th>
-                                <th>Name/ID</th>
-                                <th>Mobile</th>
-                                <th>Role</th>
-                                <th>Branch</th>
-                                <th>Salary</th>
-                                <th>Punch Mode</th>
-                                <th>Shift Type</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th data-i18n="sl_no">Sl No</th>
+                                <th data-i18n="name_id">Name/ID</th>
+                                <th data-i18n="mobile_number">Mobile</th>
+                                <th data-i18n="role">Role</th>
+                                <th data-i18n="branch">Branch</th>
+                                <th data-i18n="salary">Salary</th>
+                                <th data-i18n="punch_mode">Punch Mode</th>
+                                <th data-i18n="shift_type">Shift Type</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
                             </tr>
                         </thead>
                         <tbody id="data"></tbody>

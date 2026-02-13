@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - PayFlowPro Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -19,7 +20,16 @@
             --success: #00ffc3;
             --danger: #ff5c5c;
             --warning: #ffa726;
-            --sidebar-width: 260px
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -330,6 +340,16 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 PayFlow Pro</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
@@ -351,76 +371,107 @@
         <div class="top-bar">
             <div style="display:flex;align-items:center;gap:16px">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>Settings</h1>
+                <h1 data-i18n="settings">Settings</h1>
             </div>
             <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Office Time Settings</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>Office Start Time</label><input type="time" id="officeIn"></div>
-                    <div class="form-group"><label>Office End Time</label><input type="time" id="officeOut"></div>
+                <h3 data-i18n="language_settings">Language Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="select_language_desc">
+                    Select the language for the admin
+                    panel</p>
+                <div class="form-group">
+                    <label data-i18n="language">Language</label>
+                    <select onchange="changeLanguage(this.value)"
+                        style="background:var(--bg-input); color:var(--text); border:1px solid var(--border); padding:10px; border-radius:8px; width:100%">
+                        <option value="en">English</option>
+                        <option value="hi">हिंदी</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                        <option value="de">Deutsch</option>
+                        <option value="ml">Malayalam</option>
+                    </select>
                 </div>
-                <button onclick="saveOfficeTime()">💾 Save Office Time</button>
             </div>
 
             <div class="card">
-                <h3>Week-Off Days</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Select recurring weekly off days
+                <h3 data-i18n="office_time_settings">Office Time Settings</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input
+                            type="time" id="officeIn"></div>
+                    <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
+                            id="officeOut"></div>
+                </div>
+                <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="week_off_days">Week-Off Days</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
+                    recurring weekly off days
                     where employees get paid without attendance</p>
                 <div
                     style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span>Sunday</span></label>
+                            id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
+                            data-i18n="sunday">Sunday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span>Monday</span></label>
+                            id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
+                            data-i18n="monday">Monday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-tuesday" value="Tuesday"
-                            style="width:auto;margin:0"><span>Tuesday</span></label>
+                            id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
+                            data-i18n="tuesday">Tuesday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-wednesday" value="Wednesday"
-                            style="width:auto;margin:0"><span>Wednesday</span></label>
+                            id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
+                            data-i18n="wednesday">Wednesday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-thursday" value="Thursday"
-                            style="width:auto;margin:0"><span>Thursday</span></label>
+                            id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
+                            data-i18n="thursday">Thursday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span>Friday</span></label>
+                            id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
+                            data-i18n="friday">Friday</span></label>
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-saturday" value="Saturday"
-                            style="width:auto;margin:0"><span>Saturday</span></label>
+                            id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
+                            data-i18n="saturday">Saturday</span></label>
                 </div>
-                <p
-                    style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
+                    data-i18n="special_week_off">
                     Special Week-Off Configuration</p>
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
                             id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
-                            style="font-weight:500">🗓️ Second Saturday of Every Month</span></label>
+                            style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
+                            Month</span></label>
                 </div>
-                <button onclick="saveWeekOffs()">💾 Save Week-Offs</button>
+                <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
             </div>
 
             <div class="card">
-                <h3>Holiday Management</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Add holidays where employees get
+                <h3 data-i18n="holiday_management">Holiday Management</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px"
+                    data-i18n="holiday_management_desc">Add holidays where employees get
                     paid without attendance</p>
                 <div class="form-grid">
-                    <div class="form-group"><label>Holiday Date</label><input type="date" id="holidayDate"></div>
-                    <div class="form-group"><label>Holiday Description</label><input id="holidayDesc"
-                            placeholder="e.g., Republic Day, Christmas"></div>
+                    <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
+                            id="holidayDate"></div>
+                    <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
+                            id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
                 </div>
-                <button onclick="addHoliday()">➕ Add Holiday</button>
+                <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
                 <div class="table-container" style="margin-top:24px">
                     <table>
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Action</th>
+                                <th data-i18n="holiday_date">Date</th>
+                                <th data-i18n="holiday_description">Description</th>
+                                <th data-i18n="action">Action</th>
                             </tr>
                         </thead>
                         <tbody id="holidaysData"></tbody>
@@ -429,18 +480,19 @@
             </div>
 
             <div class="card">
-                <h3>Office Location Settings</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Set office GPS coordinates for
+                <h3 data-i18n="office_location_settings">Office Location Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
+                    Set office GPS coordinates for
                     location-based attendance verification</p>
                 <div class="form-grid">
-                    <div class="form-group"><label>Latitude</label><input type="number" step="0.000001" id="officeLat"
-                            placeholder="e.g., 11.2588"></div>
-                    <div class="form-group"><label>Longitude</label><input type="number" step="0.000001" id="officeLng"
-                            placeholder="e.g., 75.7804"></div>
-                    <div class="form-group"><label>Allowed Radius (meters)</label><input type="number" id="officeRadius"
-                            placeholder="e.g., 100"></div>
+                    <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number"
+                            step="0.000001" id="officeLat" placeholder="e.g., 11.2588"></div>
+                    <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number"
+                            step="0.000001" id="officeLng" placeholder="e.g., 75.7804"></div>
+                    <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
+                            type="number" id="officeRadius" placeholder="e.g., 100"></div>
                 </div>
-                <button onclick="saveOfficeLocation()">📍 Save Office Location</button>
+                <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
             </div>
         </div>
     </div>
@@ -500,10 +552,10 @@
             if (s.exists()) {
                 s.forEach(c => {
                     const h = c.val();
-                    holidaysData.innerHTML += `<tr><td>${h.date}</td><td>${h.description}</td><td><button class="btn-danger btn-small" onclick="delHoliday('${c.key}')">🗑️ Delete</button></td></tr>`
+                    holidaysData.innerHTML += `<tr><td>${h.date}</td><td>${h.description}</td><td><button class="btn-danger btn-small" onclick="delHoliday('${c.key}')">🗑️ ${t('delete')}</button></td></tr>`
                 })
             } else {
-                holidaysData.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">No holidays configured</td></tr>`;
+                holidaysData.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">${t('no_holidays_configured')}</td></tr>`;
             }
         });
         window.addHoliday = () => { const date = holidayDate.value; const desc = holidayDesc.value; if (!date || !desc) { alert('Please fill both fields'); return } push(ref(db, `${settingsRoot}/holidays`), { date, description: desc }); holidayDate.value = ''; holidayDesc.value = ''; };

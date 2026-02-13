@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Branch Admins - PayFlowPro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -19,6 +20,15 @@
             --success: #00ffc3;
             --danger: #ff5c5c;
             --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -290,6 +300,16 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 PayFlowPro</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
@@ -332,53 +352,60 @@
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>Manage Branch Admins</h1>
+                <h1 data-i18n="manage_branch_admins">Manage Branch Admins</h1>
             </div>
             <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Add New Branch Admin</h3>
+                <h3 data-i18n="add_new_admin">Add New Branch Admin</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Name</label>
-                        <input id="adminName" placeholder="Admin Name">
+                        <label data-i18n="admin_name">Name</label>
+                        <input id="adminName" placeholder="Admin Name" data-i18n="admin_name">
                     </div>
                     <div class="form-group">
-                        <label>Admin ID</label>
-                        <input id="adminId" placeholder="e.g. BA01">
+                        <label data-i18n="admin_id">Admin ID</label>
+                        <input id="adminId" placeholder="e.g. BA01" data-i18n="admin_id">
                     </div>
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="adminEmail" placeholder="Login Email">
+                        <label data-i18n="login_email">Email</label>
+                        <input type="email" id="adminEmail" placeholder="Login Email" data-i18n="login_email">
+                    </div>
+                    <!-- Password removed - created by user on login -->
+                    <div class="form-group">
+                        <label data-i18n="branch_name">Branch Name</label>
+                        <input id="adminBranch" placeholder="e.g. New York Office" data-i18n="branch_name">
                     </div>
                     <div class="form-group">
-                        <label>Password</label>
-                        <input id="adminPass" placeholder="Login Password">
-                    </div>
-                    <div class="form-group">
-                        <label>Branch Name</label>
-                        <input id="adminBranch" placeholder="e.g. New York Office">
+                        <label data-i18n="status">Status</label>
+                        <select id="adminStatus"
+                            style="width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px;">
+                            <option value="active" data-i18n="active">Active</option>
+                            <option value="inactive" data-i18n="inactive">Inactive</option>
+                        </select>
                     </div>
                 </div>
-                <button id="saveBtn" onclick="addAdmin()">💾 Save Admin</button>
+                <button id="saveBtn" onclick="addAdmin()" data-i18n="save_admin">💾 Save Admin</button>
             </div>
 
             <div class="card">
-                <h3>Existing Admins</h3>
+                <h3 data-i18n="existing_admins">Existing Admins</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>ID</th>
-                                <th>Email</th>
-                                <th>Password</th>
-                                <th>Branch</th>
-                                <th>Action</th>
+                                <th data-i18n="admin_name">Name</th>
+                                <th data-i18n="admin_id">ID</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="login_email">Email</th>
+                                <th data-i18n="branch">Branch</th>
+                                <th data-i18n="action">Action</th>
                             </tr>
                         </thead>
                         <tbody id="adminList"></tbody>
@@ -390,7 +417,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -427,16 +454,15 @@
             const nameEl = document.getElementById('adminName');
             const idEl = document.getElementById('adminId');
             const emailEl = document.getElementById('adminEmail');
-            const passEl = document.getElementById('adminPass');
             const branchEl = document.getElementById('adminBranch');
 
             const name = nameEl.value;
             const aid = idEl.value;
             const email = emailEl.value;
-            const pass = passEl.value;
             const branch = branchEl.value;
+            const status = document.getElementById('adminStatus').value;
 
-            if (!name || !email || !pass || !branch || !aid) {
+            if (!name || !email || !branch || !aid) {
                 alert("Please fill all fields");
                 return;
             }
@@ -444,13 +470,13 @@
             // Create a safe ID from email
             const keyId = email.replace(/[^a-zA-Z0-9]/g, '_');
 
-            set(ref(db, 'admins/' + keyId), {
+            update(ref(db, 'admins/' + keyId), {
                 name: name,
                 adminId: aid,
                 email: email,
-                password: pass,
                 branch: branch,
-                role: 'branch_admin'
+                role: 'branch_admin',
+                status: status
             }).then(() => {
                 const isEdit = emailEl.disabled;
                 alert(isEdit ? "Admin Updated!" : "Branch Admin Added!");
@@ -459,10 +485,10 @@
                 nameEl.value = '';
                 idEl.value = '';
                 emailEl.value = '';
-                passEl.value = '';
                 branchEl.value = '';
+                document.getElementById('adminStatus').value = 'active';
                 emailEl.disabled = false; // Re-enable for next add
-                document.getElementById('saveBtn').innerText = "💾 Save Admin";
+                document.getElementById('saveBtn').innerText = "💾 " + t('save_admin');
 
             }).catch(e => alert("Error: " + e.message));
         };
@@ -479,28 +505,30 @@
                     const safeName = admin.name.replace(/'/g, "\\'");
                     const safeId = (admin.adminId || '-').replace(/'/g, "\\'");
                     const safeEmail = admin.email.replace(/'/g, "\\'");
-                    const safePass = admin.password.replace(/'/g, "\\'");
                     const safeBranch = admin.branch.replace(/'/g, "\\'");
+                    const status = admin.status || 'active';
+                    const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
+                    const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${t(status).toUpperCase()}</span>`;
 
                     list.innerHTML += `
                         <tr>
                             <td>${admin.name}</td>
                             <td>${admin.adminId || '-'}</td>
+                            <td>${statusBadge}</td>
                             <td>${admin.email}</td>
-                            <td>${admin.password}</td>
                             <td>${admin.branch}</td>
                             <td>
                                 <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                    onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}')">🔑 Login</button>
+                                    onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}')">🔑 ${t('login')}</button>
                                 <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                    onclick="editAdmin('${safeName}', '${safeId}', '${safeEmail}', '${safePass}', '${safeBranch}')">✏️ Edit</button>
-                                <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ Delete</button>
+                                    onclick="editAdmin('${safeName}', '${safeId}', '${safeEmail}', '${safeBranch}', '${status}')">✏️ ${t('edit')}</button>
+                                <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ ${t('delete')}</button>
                             </td>
                         </tr>
                     `;
                 });
             } else {
-                list.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No branch admins found</td></tr>";
+                list.innerHTML = `<tr><td colspan='6' style='text-align:center;'>${t('no_admins_found')}</td></tr>`;
             }
         });
 
@@ -516,16 +544,16 @@
             }
         };
 
-        window.editAdmin = (name, aid, email, pass, branch) => {
+        window.editAdmin = (name, aid, email, branch, status) => {
             document.getElementById('adminName').value = name;
             document.getElementById('adminId').value = aid === '-' ? '' : aid;
             document.getElementById('adminEmail').value = email;
-            document.getElementById('adminPass').value = pass;
             document.getElementById('adminBranch').value = branch;
+            if (status) document.getElementById('adminStatus').value = status;
 
             // Lock email to prevent ID change (simplifies update logic)
             document.getElementById('adminEmail').disabled = true;
-            document.getElementById('saveBtn').innerText = "🔄 Update Admin";
+            document.getElementById('saveBtn').innerText = "🔄 " + t('update_admin');
 
             document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
