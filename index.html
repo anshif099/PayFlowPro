@@ -59,7 +59,7 @@
 <body>
 
     <div class="box">
-        <h2 data-i18n="admin_login_header">PayFlowPro Admin</h2>
+        <h2 id="loginTitle" data-i18n="admin_login_header">PayFlowPro Admin</h2>
 
         <select id="langSelector" onchange="changeLanguage(this.value)"
             style="width:100%; padding:10px; margin-bottom:15px; background:#0f151d; color:white; border:none; border-radius:8px;">
@@ -72,15 +72,32 @@
             <option value="ml">Malayalam</option>
         </select>
 
-        <input type="email" id="email" data-i18n="email_placeholder" placeholder="Admin Email">
-        <input type="password" id="password" data-i18n="password_placeholder" placeholder="Password">
-        <button onclick="login()" data-i18n="login">Login</button>
+        <div id="idStep">
+            <input type="text" id="adminIdInput" placeholder="Admin ID / Email">
+            <button onclick="verifyId()">Continue</button>
+        </div>
+
+        <div id="passwordStep" style="display:none;">
+            <p id="welcomeMsg" style="color: #00ffc3; text-align: center; margin-bottom: 15px; font-weight: 500;"></p>
+            <input type="password" id="password" data-i18n="password_placeholder" placeholder="Password">
+            <button onclick="login()" data-i18n="login">Login</button>
+            <button onclick="resetFlow()" style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different ID</button>
+        </div>
+
+        <div id="createPasswordStep" style="display:none;">
+            <p id="createMsg" style="color: #00ffc3; text-align: center; margin-bottom: 15px; font-weight: 500;">Set your password</p>
+            <input type="password" id="newPassword" placeholder="New Password">
+            <input type="password" id="confirmPassword" placeholder="Confirm Password">
+            <button onclick="createPassword()">Create Password</button>
+            <button onclick="resetFlow()" style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different ID</button>
+        </div>
+
         <p class="error" id="error"></p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -95,25 +112,40 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const SUPER_ADMIN_EMAIL = "Payflow@gmail.com";
-        const SUPER_ADMIN_PASS = "Payflowpro";
+        const SUPER_ADMIN_ID = "Teamsive";
+        const SUPER_ADMIN_PASS = "Teamsive@123";
 
-        window.login = async () => {
-            const input = document.getElementById("email").value;
-            const p = document.getElementById("password").value;
+        let verifiedAdmin = null;
+        let verifiedKey = null;
+
+        window.resetFlow = () => {
+            document.getElementById("idStep").style.display = "block";
+            document.getElementById("passwordStep").style.display = "none";
+            document.getElementById("createPasswordStep").style.display = "none";
+            document.getElementById("error").innerText = "";
+            document.getElementById("adminIdInput").value = "";
+            verifiedAdmin = null;
+            verifiedKey = null;
+        }
+
+        window.verifyId = async () => {
+            const input = document.getElementById("adminIdInput").value.trim();
             const errorEl = document.getElementById("error");
+            if (!input) return;
 
             errorEl.innerText = t('login_checking');
 
             // 1. Check Hardcoded Super Admin
-            if (input === SUPER_ADMIN_EMAIL && p === SUPER_ADMIN_PASS) {
-                localStorage.setItem("admin", "true");
-                localStorage.setItem("role", "super_admin");
-                location.href = "dashboard.html";
+            if (input === SUPER_ADMIN_ID) {
+                document.getElementById("idStep").style.display = "none";
+                document.getElementById("passwordStep").style.display = "block";
+                document.getElementById("welcomeMsg").innerText = "Welcome, Super Admin";
+                errorEl.innerText = "";
+                verifiedAdmin = { role: 'super_admin', name: 'RAINHOPES' };
                 return;
             }
 
-            // 2. Check Firebase Admins
+            // 2. Check Firebase
             try {
                 const snapshot = await get(ref(db, 'admins'));
                 let found = false;
@@ -121,25 +153,90 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const admin = child.val();
-                        // Check if input matches Email OR Admin ID
-                        if ((admin.email === input || admin.adminId === input) && admin.password === p) {
-                            localStorage.setItem("admin", "true");
-                            localStorage.setItem("role", admin.role || 'branch_admin');
-                            localStorage.setItem("branch", admin.branch || '');
-                            localStorage.setItem("name", admin.name || 'Admin');
-
-                            location.href = "dashboard.html";
+                        if (admin.email === input || admin.adminId === input) {
                             found = true;
+                            verifiedAdmin = admin;
+                            verifiedKey = child.key;
+                            
+                            if (admin.status === 'inactive') {
+                                errorEl.innerText = "Account Disabled. Contact Super Admin.";
+                                return;
+                            }
+
+                            document.getElementById("idStep").style.display = "none";
+                            
+                            if (admin.password) {
+                                document.getElementById("passwordStep").style.display = "block";
+                                document.getElementById("welcomeMsg").innerText = "Welcome, " + (admin.name || "Admin");
+                            } else {
+                                document.getElementById("createPasswordStep").style.display = "block";
+                            }
+                            errorEl.innerText = "";
                         }
                     });
                 }
 
                 if (!found) {
-                    errorEl.innerText = t('login_invalid');
+                    errorEl.innerText = "Admin ID not found";
                 }
             } catch (err) {
-                errorEl.innerText = t('login_error') + ": " + err.message;
-                console.error(err);
+                errorEl.innerText = "Error: " + err.message;
+            }
+        }
+
+        window.login = async () => {
+            const p = document.getElementById("password").value;
+            const errorEl = document.getElementById("error");
+
+            if (verifiedAdmin.role === 'super_admin') {
+                if (p === SUPER_ADMIN_PASS) {
+                    localStorage.setItem("admin", "true");
+                    localStorage.setItem("role", "super_admin");
+                    localStorage.setItem("name", "RAINHOPES");
+                    location.href = "dashboard.html";
+                } else {
+                    errorEl.innerText = "Invalid Password";
+                }
+                return;
+            }
+
+            if (verifiedAdmin && verifiedAdmin.password === p) {
+                localStorage.setItem("admin", "true");
+                localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
+                localStorage.setItem("branch", verifiedAdmin.branch || '');
+                localStorage.setItem("name", verifiedAdmin.name || 'Admin');
+                location.href = "dashboard.html";
+            } else {
+                errorEl.innerText = "Invalid Password";
+            }
+        }
+
+        window.createPassword = async () => {
+            const p1 = document.getElementById("newPassword").value;
+            const p2 = document.getElementById("confirmPassword").value;
+            const errorEl = document.getElementById("error");
+
+            if (!p1 || p1.length < 6) {
+                errorEl.innerText = "Password must be at least 6 characters";
+                return;
+            }
+            if (p1 !== p2) {
+                errorEl.innerText = "Passwords do not match";
+                return;
+            }
+
+            try {
+                errorEl.innerText = "Setting password...";
+                await update(ref(db, 'admins/' + verifiedKey), { password: p1 });
+                errorEl.innerText = "Password set! Logging in...";
+                
+                localStorage.setItem("admin", "true");
+                localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
+                localStorage.setItem("branch", verifiedAdmin.branch || '');
+                localStorage.setItem("name", verifiedAdmin.name || 'Admin');
+                location.href = "dashboard.html";
+            } catch (err) {
+                errorEl.innerText = "Error: " + err.message;
             }
         }
     </script>
