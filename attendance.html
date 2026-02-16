@@ -419,13 +419,19 @@
                     When marking as Present,
                     office times will be used automatically (leave time fields empty)</p>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="employee_id">Employee ID</label><input id="attEmpId"
-                            placeholder="Enter employee ID" data-i18n="employee_id"></div>
+                    <div class="form-group">
+                        <label data-i18n="employee_id">Employee ID</label>
+                        <input id="attEmpId" list="empList" placeholder="Enter Employee Name or ID"
+                            data-i18n="employee_id" oninput="updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay')">
+                        <div id="attEmpNameDisplay"
+                            style="color: #00ffc3; font-size: 12px; margin-top: 4px; font-weight: bold; min-height: 16px;">
+                        </div>
+                    </div>
                     <div class="form-group"><label data-i18n="date">Date</label><input type="date" id="attDate"></div>
                     <div class="form-group"><label data-i18n="status">Status</label><select id="attStatus"
                             onchange="toggleAttendanceTimes()">
-                            <option value="in" data-i18n="active">Present</option>
-                            <option value="absent" data-i18n="inactive">Absent</option>
+                            <option value="in" data-i18n="present">Present</option>
+                            <option value="absent" data-i18n="absent">Absent</option>
                         </select></div>
                     <div class="form-group" id="attInGroup" style="display:none">
                         <label data-i18n="punch_in_optional">Punch In (Optional - uses office time if empty)</label>
@@ -456,16 +462,22 @@
                     When marking as Present,
                     office times will be used automatically (leave time fields empty)</p>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="employee_id">Employee ID</label><input id="bulkEmpId"
-                            placeholder="Enter employee ID" data-i18n="employee_id"></div>
+                    <div class="form-group">
+                        <label data-i18n="employee_id">Employee ID</label>
+                        <input id="bulkEmpId" list="empList" placeholder="Enter Employee Name or ID"
+                            data-i18n="employee_id" oninput="updateEmpNameDisplay('bulkEmpId', 'bulkEmpNameDisplay')">
+                        <div id="bulkEmpNameDisplay"
+                            style="color: #00ffc3; font-size: 12px; margin-top: 4px; font-weight: bold; min-height: 16px;">
+                        </div>
+                    </div>
                     <div class="form-group"><label data-i18n="from_date">From Date</label><input type="date"
                             id="bulkFrom"></div>
                     <div class="form-group"><label data-i18n="to_date">To Date</label><input type="date" id="bulkTo">
                     </div>
                     <div class="form-group"><label data-i18n="status">Status</label><select id="bulkStatus"
                             onchange="toggleBulkTimes()">
-                            <option value="in" data-i18n="active">Present</option>
-                            <option value="absent" data-i18n="inactive">Absent</option>
+                            <option value="in" data-i18n="present">Present</option>
+                            <option value="absent" data-i18n="absent">Absent</option>
                         </select></div>
                     <div class="form-group" id="bulkInGroup" style="display:none"><label
                             data-i18n="punch_in_optional">Punch In (Optional - uses
@@ -566,10 +578,15 @@
         }
 
         // Fetch Employees to build whitelist and populate datalist
+        const empMap = {}; // Map ID -> Name for quick lookup
+
         onValue(ref(db, "employees"), s => {
             allowedEmpIds.clear();
             const empList = document.getElementById('empList');
             empList.innerHTML = '';
+
+            // Clear map
+            for (const key in empMap) delete empMap[key];
 
             if (s.exists()) {
                 s.forEach(c => {
@@ -580,15 +597,33 @@
                     }
                     if (allow) {
                         allowedEmpIds.add(e.empId);
-                        // Populate datalist
+                        empMap[e.empId] = e.name;
+
+                        // Populate datalist with Value=ID, Label=Name
+                        // This allows searching by Name but selecting fills ID
                         const option = document.createElement('option');
                         option.value = e.empId;
-                        option.label = e.name;
+                        option.label = e.name; // Chrome shows this on right, matches both
                         empList.appendChild(option);
                     }
                 });
             }
         });
+
+        window.updateEmpNameDisplay = (inputId, displayId) => {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            const val = input.value.trim();
+
+            if (empMap[val]) {
+                display.textContent = empMap[val];
+                display.style.color = "#00ffc3";
+            } else {
+                // Try reverse lookup if they typed exact name? 
+                // No, datalist handles typing name -> selecting ID
+                display.textContent = "";
+            }
+        };
 
         // --- OFFICE SETTINGS ---
         let storedOfficeStart = '';
@@ -604,6 +639,9 @@
             if (s.exists()) {
                 storedOfficeStart = s.val().start;
                 storedOfficeEnd = s.val().end;
+                // Update UI triggers to show/fill times if default is Present
+                toggleAttendanceTimes();
+                toggleBulkTimes();
             }
         });
 
@@ -613,13 +651,19 @@
             const inGroup = document.getElementById('attInGroup');
             const outGroup = document.getElementById('attOutGroup');
             if (status === 'in') {
+                inGroup.style.display = 'block';
+                outGroup.style.display = 'block';
+
+                // Pre-fill with Office Time if empty
+                const inInput = document.getElementById('attIn');
+                const outInput = document.getElementById('attOut');
+                if (!inInput.value) inInput.value = storedOfficeStart;
+                if (!outInput.value) outInput.value = storedOfficeEnd;
+            } else {
                 inGroup.style.display = 'none';
                 outGroup.style.display = 'none';
                 document.getElementById('attIn').value = '';
                 document.getElementById('attOut').value = '';
-            } else {
-                inGroup.style.display = 'block';
-                outGroup.style.display = 'block';
             }
         };
 
@@ -628,13 +672,19 @@
             const inGroup = document.getElementById('bulkInGroup');
             const outGroup = document.getElementById('bulkOutGroup');
             if (status === 'in') {
+                inGroup.style.display = 'block';
+                outGroup.style.display = 'block';
+
+                // Pre-fill with Office Time if empty
+                const inInput = document.getElementById('bulkIn');
+                const outInput = document.getElementById('bulkOut');
+                if (!inInput.value) inInput.value = storedOfficeStart;
+                if (!outInput.value) outInput.value = storedOfficeEnd;
+            } else {
                 inGroup.style.display = 'none';
                 outGroup.style.display = 'none';
                 document.getElementById('bulkIn').value = '';
                 document.getElementById('bulkOut').value = '';
-            } else {
-                inGroup.style.display = 'block';
-                outGroup.style.display = 'block';
             }
         };
 

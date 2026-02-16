@@ -409,6 +409,20 @@
         </div>
         <div class="stat-card">
           <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(255,167,38,.1);color:var(--warning)">🏖️</div>
+          </div>
+          <div class="stat-value" id="leavesToday">0</div>
+          <div class="stat-label" data-i18n="leaves">Leaves Today</div>
+        </div>
+        <div class="stat-card" onclick="location.href='leave_management.html'" style="cursor:pointer">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(0,188,212,.1);color:#00bcd4">⏳</div>
+          </div>
+          <div class="stat-value" id="pendingRequests">0</div>
+          <div class="stat-label" data-i18n="pending_requests">Pending Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
             <div class="stat-icon" style="background:rgba(255,167,38,.1);color:var(--warning)">📋</div>
           </div>
           <div class="stat-value" id="totalRecords">0</div>
@@ -479,11 +493,12 @@
       });
     }
 
-    // 1. Fetch Employees & Attendance
+    // 1. Fetch Employees, Attendance, & Leave Requests
     Promise.all([
       get(ref(db, "employees")),
-      get(ref(db, "attendance"))
-    ]).then(([empSnap, attSnap]) => {
+      get(ref(db, "attendance")),
+      get(ref(db, "leaveRequests"))
+    ]).then(([empSnap, attSnap, leaveSnap]) => {
       const employees = [];
 
       // Process Employees
@@ -506,6 +521,8 @@
       let totalRecords = 0;
       let presentToday = 0;
       let absentToday = 0;
+      let leavesToday = 0;
+      let pendingRequests = 0;
       const today = new Date().toISOString().split('T')[0];
       const now = new Date();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -534,6 +551,8 @@
 
             if (rawStatus === 'in' || rawStatus === 'out') {
               presentToday++;
+            } else if (rawStatus.includes('leave')) {
+              leavesToday++;
             }
           }
         }
@@ -556,11 +575,20 @@
             </tr>`;
       });
 
-      absentToday = totalEmpCount - presentToday;
+      // Calculate Pending Requests separately
+      if (leaveSnap.exists()) {
+        leaveSnap.forEach(c => {
+          if (c.val().status === 'pending') pendingRequests++;
+        });
+      }
+
+      absentToday = totalEmpCount - presentToday - leavesToday;
 
       document.getElementById('totalRecords').textContent = totalRecords;
       document.getElementById('presentToday').textContent = presentToday;
       document.getElementById('absentToday').textContent = absentToday;
+      document.getElementById('leavesToday').textContent = leavesToday;
+      document.getElementById('pendingRequests').textContent = pendingRequests;
 
     }).catch(e => console.error(e));
   </script>

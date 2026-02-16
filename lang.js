@@ -122,6 +122,7 @@ const translations = {
         status: "Status",
         active: "Active",
         inactive: "Inactive",
+        absent: "Absent",
         save: "Save",
         cancel: "Cancel",
         edit: "Edit",
