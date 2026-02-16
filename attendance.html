@@ -523,6 +523,8 @@
                                 <th data-i18n="date">Date</th>
                                 <th data-i18n="punch_in">Punch In</th>
                                 <th data-i18n="punch_out">Punch Out</th>
+                                <th data-i18n="punch_out">Punch Out</th>
+                                <th data-i18n="time_analysis">Time Analysis</th>
                                 <th data-i18n="status">Status</th>
                                 <th data-i18n="action">Action</th>
                             </tr>
@@ -578,8 +580,14 @@
         }
 
         // Fetch Employees to build whitelist and populate datalist
-        const empMap = {}; // Map ID -> Name for quick lookup
+        const empMap = {}; // Map ID -> Name
+        // Initialize date inputs to max today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('attDate').max = today;
+        document.getElementById('bulkFrom').max = today;
+        document.getElementById('bulkTo').max = today;
 
+        // Load Emp List
         onValue(ref(db, "employees"), s => {
             allowedEmpIds.clear();
             const empList = document.getElementById('empList');
@@ -879,60 +887,110 @@
                 if (filterEmp && !row.empId.toLowerCase().includes(filterEmp)) return;
                 if (filterDate && row.date !== filterDate) return;
 
-                // Calculate Late Status
-                let lateBadge = '';
+                // Calculate Time Analysis
+                let lateInMins = 0;
+                let earlyInMins = 0;
+                let lateOutMins = 0;
+                let earlyOutMins = 0;
+                let analysisHtml = '';
+
+                // 1. Analyze Punch In (9:00 AM = 540)
                 if (row.punchIn && row.punchIn !== '-') {
                     const timeParts = row.punchIn.match(/(\d+):(\d+)\s*(AM|PM)/i);
                     if (timeParts) {
                         let hours = parseInt(timeParts[1]);
                         const minutes = parseInt(timeParts[2]);
                         const period = timeParts[3].toUpperCase();
-
-                        // Convert to 24h
                         if (period === 'PM' && hours < 12) hours += 12;
                         if (period === 'AM' && hours === 12) hours = 0;
-
                         const totalMinutes = hours * 60 + minutes;
-                        // 9:00 AM = 540 minutes
+
                         if (totalMinutes > 540) {
-                            const diff = totalMinutes - 540;
-                            let timeStr = `${diff} min`;
-                            if (diff >= 60) {
-                                const h = Math.floor(diff / 60);
-                                const m = diff % 60;
-                                timeStr = `${h}hr ${m}min`;
-                            }
-                            lateBadge = `<span style="display:inline-block;margin-left:8px;font-size:11px;color:#ff5c5c;background:rgba(255,92,92,0.1);padding:2px 8px;border-radius:12px;font-weight:600;">+${timeStr} Late</span>`;
+                            lateInMins = totalMinutes - 540;
+                        } else {
+                            earlyInMins = 540 - totalMinutes;
                         }
                     }
                 }
 
-                // Calculate Early Left Status
-                let earlyBadge = '';
+                // 2. Analyze Punch Out (6:00 PM = 1080)
                 if (row.punchOut && row.punchOut !== '-') {
                     const timeParts = row.punchOut.match(/(\d+):(\d+)\s*(AM|PM)/i);
                     if (timeParts) {
                         let hours = parseInt(timeParts[1]);
                         const minutes = parseInt(timeParts[2]);
                         const period = timeParts[3].toUpperCase();
-
                         if (period === 'PM' && hours < 12) hours += 12;
                         if (period === 'AM' && hours === 12) hours = 0;
-
                         const totalMinutes = hours * 60 + minutes;
-                        // 6:00 PM = 18 * 60 = 1080 minutes
+
                         if (totalMinutes < 1080) {
-                            const diff = 1080 - totalMinutes;
-                            let timeStr = `${diff} min`;
-                            if (diff >= 60) {
-                                const h = Math.floor(diff / 60);
-                                const m = diff % 60;
-                                timeStr = `${h}hr ${m}min`;
-                            }
-                            earlyBadge = `<span style="display:inline-block;margin-left:8px;font-size:11px;color:#ffa726;background:rgba(255,167,38,0.1);padding:2px 8px;border-radius:12px;font-weight:600;">-${timeStr} Early</span>`;
+                            earlyOutMins = 1080 - totalMinutes;
+                        } else {
+                            lateOutMins = totalMinutes - 1080;
                         }
                     }
                 }
+
+                // Row 1: Late In OR Early In
+                if (lateInMins > 0) {
+                    const h = Math.floor(lateInMins / 60);
+                    const m = lateInMins % 60;
+                    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    analysisHtml += `<div style="font-size:11px;color:#ff5c5c;background:rgba(255,92,92,0.1);padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px;">+${timeStr} Late Arrival</div><br>`;
+                } else if (earlyInMins > 0) {
+                    const h = Math.floor(earlyInMins / 60);
+                    const m = earlyInMins % 60;
+                    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    analysisHtml += `<div style="font-size:11px;color:#2ecc71;background:rgba(46,204,113,0.1);padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px;">+${timeStr} Early Arrival</div><br>`;
+                }
+
+                // Row 2: Early Out OR Late Out
+                if (earlyOutMins > 0) {
+                    const h = Math.floor(earlyOutMins / 60);
+                    const m = earlyOutMins % 60;
+                    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    analysisHtml += `<div style="font-size:11px;color:#ffa726;background:rgba(255,167,38,0.1);padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px;">+${timeStr} Early Departure</div><br>`;
+                } else if (lateOutMins > 0) {
+                    const h = Math.floor(lateOutMins / 60);
+                    const m = lateOutMins % 60;
+                    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    analysisHtml += `<div style="font-size:11px;color:#2ecc71;background:rgba(46,204,113,0.1);padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:2px;">+${timeStr} Late Departure</div><br>`;
+                }
+
+                const rawTotalLate = lateInMins + earlyOutMins;
+                const rawTotalExtra = earlyInMins + lateOutMins;
+
+                // Net Calculation
+                // If late 10, extra 7 => Net Late 3
+                // If late 5, extra 20 => Net Extra 15
+                let netLate = 0;
+                let netExtra = 0;
+
+                if (rawTotalLate > rawTotalExtra) {
+                    netLate = rawTotalLate - rawTotalExtra;
+                } else if (rawTotalExtra > rawTotalLate) {
+                    netExtra = rawTotalExtra - rawTotalLate;
+                }
+
+                if (netLate > 0 || netExtra > 0) {
+                    analysisHtml += `<div style="margin-top:4px;border-top:1px solid rgba(255,255,255,0.1);padding-top:4px;">`;
+                    if (netLate > 0) {
+                        const h = Math.floor(netLate / 60);
+                        const m = netLate % 60;
+                        const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                        analysisHtml += `<div style="font-size:10px;color:#ff5c5c;font-weight:600;">Total Late: ${timeStr}</div>`;
+                    }
+                    if (netExtra > 0) {
+                        const h = Math.floor(netExtra / 60);
+                        const m = netExtra % 60;
+                        const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                        analysisHtml += `<div style="font-size:10px;color:#2ecc71;font-weight:600;">Total Extra: ${timeStr}</div>`;
+                    }
+                    analysisHtml += `</div>`;
+                }
+
+                if (analysisHtml === '') analysisHtml = '<span style="color:var(--text-muted);font-size:11px;">-</span>';
 
                 // Image Buttons
                 let punchInImgBtn = '';
@@ -950,10 +1008,9 @@
                         <td>${row.date}</td>
                         <td>${row.punchIn} ${punchInImgBtn}</td>
                         <td>${row.punchOut} ${punchOutImgBtn}</td>
+                        <td>${analysisHtml}</td>
                         <td>
                             <span class="badge-${row.status}">${row.status}</span>
-                            ${lateBadge}
-                            ${earlyBadge}
                         </td>
                         <td>
                             <button class="btn-small" style="margin-right:4px" onclick="editAttendance('${row.empId}','${row.date}','${row.punchInRaw}','${row.punchOutRaw}')">✏️ Edit</button>
