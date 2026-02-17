@@ -391,6 +391,8 @@
                     Management</span></a>
             <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span>Branch
                     Admins</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+                    Management</span></a>
             <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary
                     Settings</span></a>
             <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
@@ -582,10 +584,12 @@
         // Fetch Employees to build whitelist and populate datalist
         const empMap = {}; // Map ID -> Name
         // Initialize date inputs to max today
+        // Initialize date inputs to max today AND set default filter to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('attDate').max = today;
         document.getElementById('bulkFrom').max = today;
         document.getElementById('bulkTo').max = today;
+        document.getElementById('filterDate').value = today; // Default to today
 
         // Load Emp List
         onValue(ref(db, "employees"), s => {
@@ -615,6 +619,8 @@
                         empList.appendChild(option);
                     }
                 });
+                // Re-render table if data is already loaded to show names
+                if (allAttendanceData.length > 0) renderAttendanceTable();
             }
         });
 
@@ -1004,7 +1010,7 @@
                 }
 
                 list.innerHTML += `<tr>
-                        <td>${row.empId}</td>
+                        <td>${row.empId} <br><span style="font-size:11px;color:var(--text-muted)">${empMap[row.empId] || ''}</span></td>
                         <td>${row.date}</td>
                         <td>${row.punchIn} ${punchInImgBtn}</td>
                         <td>${row.punchOut} ${punchOutImgBtn}</td>

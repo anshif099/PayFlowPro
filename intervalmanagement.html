@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Teamsive Admin</title>
+    <title>Interval Management - Teamsive Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="lang.js"></script>
     <style>
@@ -286,6 +286,32 @@
             background: rgba(0, 255, 195, .03)
         }
 
+        /* Summary Box */
+        .summary-box {
+            background: rgba(0, 255, 195, 0.05);
+            border: 1px solid rgba(0, 255, 195, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .summary-item.total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
         @media(max-width:768px) {
             .sidebar {
                 transform: translateX(-100%)
@@ -359,13 +385,13 @@
                     Management</span></a>
             <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span>Branch
                     Admins</span></a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+            <a href="intervalmanagement.html" class="nav-item active"><span class="nav-icon">⏲️</span><span>Interval
                     Management</span></a>
             <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary
                     Settings</span></a>
             <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
                     Report</span></a>
-            <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
         </nav>
     </div>
 
@@ -373,129 +399,77 @@
         <div class="top-bar">
             <div style="display:flex;align-items:center;gap:16px">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1 data-i18n="settings">Settings</h1>
+                <h1>Interval Management</h1>
             </div>
             <div class="top-bar-actions">
                 <button onclick="toggleTheme()"
                     style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
-                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
-            <div class="card">
-                <h3 data-i18n="language_settings">Language Settings</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="select_language_desc">
-                    Select the language for the admin
-                    panel</p>
-                <div class="form-group">
-                    <label data-i18n="language">Language</label>
-                    <select onchange="changeLanguage(this.value)"
-                        style="background:var(--bg-input); color:var(--text); border:1px solid var(--border); padding:10px; border-radius:8px; width:100%">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                        <option value="ar">العربية</option>
-                        <option value="de">Deutsch</option>
-                        <option value="ml">Malayalam</option>
-                    </select>
-                </div>
-            </div>
 
+            <!-- Office Time Section -->
             <div class="card">
-                <h3 data-i18n="office_time_settings">Office Time Settings</h3>
+                <h3>Office Time</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Set the standard office hours.</p>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input
-                            type="time" id="officeIn"></div>
-                    <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
-                            id="officeOut"></div>
+                    <div class="form-group"><label>Office Start Time</label><input type="time" id="officeIn"></div>
+                    <div class="form-group"><label>Office End Time</label><input type="time" id="officeOut"></div>
                 </div>
-                <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
+                <button onclick="saveOfficeTime()">💾 Save Office Time</button>
             </div>
 
+            <!-- Intervals Section -->
             <div class="card">
-                <h3 data-i18n="week_off_days">Week-Off Days</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
-                    recurring weekly off days
-                    where employees get paid without attendance</p>
-                <div
-                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
-                            data-i18n="sunday">Sunday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
-                            data-i18n="monday">Monday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
-                            data-i18n="tuesday">Tuesday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
-                            data-i18n="wednesday">Wednesday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
-                            data-i18n="thursday">Thursday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
-                            data-i18n="friday">Friday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
-                            data-i18n="saturday">Saturday</span></label>
-                </div>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
-                    data-i18n="special_week_off">
-                    Special Week-Off Configuration</p>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
-                            style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
-                            Month</span></label>
-                </div>
-                <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
-            </div>
+                <h3>Manage Intervals</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Add breaks like Lunch, Tea Break,
+                    etc.</p>
 
-            <div class="card">
-                <h3 data-i18n="holiday_management">Holiday Management</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px"
-                    data-i18n="holiday_management_desc">Add holidays where employees get
-                    paid without attendance</p>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
-                            id="holidayDate"></div>
-                    <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
-                            id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
+                    <div class="form-group"><label>Interval Name</label><input id="intervalName"
+                            placeholder="e.g., Lunch Break"></div>
+                    <div class="form-group"><label>Start Time</label><input type="time" id="intervalStart"></div>
+                    <div class="form-group"><label>End Time</label><input type="time" id="intervalEnd"></div>
                 </div>
-                <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
+                <button onclick="addInterval()">➕ Add Interval</button>
+
                 <div class="table-container" style="margin-top:24px">
                     <table>
                         <thead>
                             <tr>
-                                <th data-i18n="holiday_date">Date</th>
-                                <th data-i18n="holiday_description">Description</th>
-                                <th data-i18n="action">Action</th>
+                                <th>Name</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="holidaysData"></tbody>
+                        <tbody id="intervalsData"></tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- Calculation Summary -->
             <div class="card">
-                <h3 data-i18n="office_location_settings">Office Location Settings</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
-                    Set office GPS coordinates for
-                    location-based attendance verification</p>
-                <div class="form-grid">
-                    <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number"
-                            step="0.000001" id="officeLat" placeholder="e.g., 11.2588"></div>
-                    <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number"
-                            step="0.000001" id="officeLng" placeholder="e.g., 75.7804"></div>
-                    <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
-                            type="number" id="officeRadius" placeholder="e.g., 100"></div>
+                <h3>Time Calculation</h3>
+                <div class="summary-box">
+                    <div class="summary-item">
+                        <span>Gross Office Time</span>
+                        <span id="grossTimeDisplay">0 Hr 0 Min</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Total Intervals</span>
+                        <span id="totalIntervalDisplay" style="color: #ff5c5c;">- 0 Hr 0 Min</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Net Office Time</span>
+                        <span id="netTimeDisplay">0 Hr 0 Min</span>
+                    </div>
                 </div>
-                <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
             </div>
+
         </div>
     </div>
 
@@ -525,55 +499,136 @@
             });
         }
 
-        // Office Time
-        onValue(ref(db, `${settingsRoot}/officeTime`), s => { if (s.exists()) { officeIn.value = s.val().start || ''; officeOut.value = s.val().end || '' } else { officeIn.value = ''; officeOut.value = ''; } });
-        window.saveOfficeTime = () => { set(ref(db, `${settingsRoot}/officeTime`), { start: officeIn.value, end: officeOut.value }); alert('Office time saved!') };
+        // Data holders for calculation
+        let officeStart = null;
+        let officeEnd = null;
+        let intervals = [];
 
-        // Week-Offs
-        const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        onValue(ref(db, `${settingsRoot}/weekOffs`), s => {
-            weekDays.forEach(day => { document.getElementById(`weekoff-${day}`).checked = false });
-            if (s.exists()) { const weekOffs = s.val() || []; weekOffs.forEach(day => { const checkbox = document.getElementById(`weekoff-${day.toLowerCase()}`); if (checkbox) checkbox.checked = true }) }
-        });
-        onValue(ref(db, `${settingsRoot}/secondSaturday`), s => {
-            document.getElementById('weekoff-second-saturday').checked = (s.exists() && s.val() === true);
+        // 1. Load Office Time
+        onValue(ref(db, `${settingsRoot}/officeTime`), s => {
+            if (s.exists()) {
+                officeIn.value = s.val().start || '';
+                officeOut.value = s.val().end || '';
+                officeStart = s.val().start;
+                officeEnd = s.val().end;
+            } else {
+                officeIn.value = '';
+                officeOut.value = '';
+                officeStart = null;
+                officeEnd = null;
+            }
+            calculateTimes();
         });
 
-        window.saveWeekOffs = () => {
-            const selectedDays = [];
-            weekDays.forEach(day => { if (document.getElementById(`weekoff-${day}`).checked) { selectedDays.push(day.charAt(0).toUpperCase() + day.slice(1)) } });
-            const secondSat = document.getElementById('weekoff-second-saturday').checked;
-            set(ref(db, `${settingsRoot}/weekOffs`), selectedDays);
-            set(ref(db, `${settingsRoot}/secondSaturday`), secondSat);
-            alert(`Week-offs saved!`)
+        window.saveOfficeTime = () => {
+            set(ref(db, `${settingsRoot}/officeTime`), { start: officeIn.value, end: officeOut.value });
+            alert('Office time saved!');
         };
 
-        // Holidays
-        onValue(ref(db, `${settingsRoot}/holidays`), s => {
-            holidaysData.innerHTML = "";
+        // 2. Load Intervals
+        onValue(ref(db, `${settingsRoot}/intervals`), s => {
+            intervalsData.innerHTML = "";
+            intervals = [];
             if (s.exists()) {
                 s.forEach(c => {
-                    const h = c.val();
-                    holidaysData.innerHTML += `<tr><td>${h.date}</td><td>${h.description}</td><td><button class="btn-danger btn-small" onclick="delHoliday('${c.key}')">🗑️ ${t('delete')}</button></td></tr>`
-                })
-            } else {
-                holidaysData.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">${t('no_holidays_configured')}</td></tr>`;
-            }
-        });
-        window.addHoliday = () => { const date = holidayDate.value; const desc = holidayDesc.value; if (!date || !desc) { alert('Please fill both fields'); return } push(ref(db, `${settingsRoot}/holidays`), { date, description: desc }); holidayDate.value = ''; holidayDesc.value = ''; };
-        window.delHoliday = key => { if (confirm('Delete this holiday?')) { remove(ref(db, `${settingsRoot}/holidays/` + key)) } };
+                    const i = c.val();
+                    const key = c.key;
+                    intervals.push(i);
 
-        // Office Location
-        onValue(ref(db, `${settingsRoot}/officeLocation`), s => {
-            if (s.exists()) { const loc = s.val(); officeLat.value = loc.lat || ''; officeLng.value = loc.lng || ''; officeRadius.value = loc.radius || '' }
-            else { officeLat.value = ''; officeLng.value = ''; officeRadius.value = ''; }
+                    const duration = calculateDuration(i.start, i.end);
+
+                    intervalsData.innerHTML += `
+                        <tr>
+                            <td>${i.name}</td>
+                            <td>${to12Hour(i.start)}</td>
+                            <td>${to12Hour(i.end)}</td>
+                            <td>${formatDuration(duration)}</td>
+                            <td><button class="btn-danger btn-small" onclick="delInterval('${key}')">🗑️</button></td>
+                        </tr>`;
+                });
+            } else {
+                intervalsData.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No intervals added</td></tr>`;
+            }
+            calculateTimes();
         });
-        window.saveOfficeLocation = () => {
-            const lat = parseFloat(officeLat.value); const lng = parseFloat(officeLng.value); const radius = parseInt(officeRadius.value);
-            if (isNaN(lat) || isNaN(lng) || isNaN(radius)) { alert('Please enter valid values'); return }
-            set(ref(db, `${settingsRoot}/officeLocation`), { lat, lng, radius });
-            alert('Office location saved!')
+
+        window.addInterval = () => {
+            const name = intervalName.value;
+            const start = intervalStart.value;
+            const end = intervalEnd.value;
+
+            if (!name || !start || !end) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            if (start >= end) {
+                alert('Start time must be before end time');
+                return;
+            }
+
+            push(ref(db, `${settingsRoot}/intervals`), { name, start, end });
+            intervalName.value = '';
+            intervalStart.value = '';
+            intervalEnd.value = '';
         };
+
+        window.delInterval = key => {
+            if (confirm('Delete this interval?')) {
+                remove(ref(db, `${settingsRoot}/intervals/` + key));
+            }
+        };
+
+        // --- Helpers & Calculation ---
+
+        function to12Hour(timeStr) {
+            if (!timeStr) return "-";
+            let [h, m] = timeStr.split(':');
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12;
+            return `${h}:${m} ${ampm}`;
+        }
+
+        // Returns minutes
+        function calculateDuration(start, end) {
+            if (!start || !end) return 0;
+            const [h1, m1] = start.split(':').map(Number);
+            const [h2, m2] = end.split(':').map(Number);
+
+            const startDate = new Date(2000, 0, 1, h1, m1);
+            const endDate = new Date(2000, 0, 1, h2, m2);
+
+            let diff = (endDate - startDate) / 1000 / 60; // minutes
+            if (diff < 0) diff += 24 * 60; // Handle overnight if needed (though not expected for office day usually)
+            return diff;
+        }
+
+        function formatDuration(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${h} Hr ${m} Min`;
+        }
+
+        function calculateTimes() {
+            // Gross
+            let grossMinutes = calculateDuration(officeStart, officeEnd);
+
+            // Interval Total
+            let intervalMinutes = 0;
+            intervals.forEach(i => {
+                intervalMinutes += calculateDuration(i.start, i.end);
+            });
+
+            // Net
+            let netMinutes = grossMinutes - intervalMinutes;
+            if (netMinutes < 0) netMinutes = 0;
+
+            document.getElementById('grossTimeDisplay').textContent = formatDuration(grossMinutes);
+            document.getElementById('totalIntervalDisplay').textContent = "- " + formatDuration(intervalMinutes);
+            document.getElementById('netTimeDisplay').textContent = formatDuration(netMinutes);
+        }
+
     </script>
 </body>
 
