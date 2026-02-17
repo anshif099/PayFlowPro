@@ -503,6 +503,7 @@
         let officeStart = null;
         let officeEnd = null;
         let intervals = [];
+        let editIntervalKey = null; // Track if we are editing
 
         // 1. Load Office Time
         onValue(ref(db, `${settingsRoot}/officeTime`), s => {
@@ -543,7 +544,10 @@
                             <td>${to12Hour(i.start)}</td>
                             <td>${to12Hour(i.end)}</td>
                             <td>${formatDuration(duration)}</td>
-                            <td><button class="btn-danger btn-small" onclick="delInterval('${key}')">🗑️</button></td>
+                            <td>
+                                <button class="btn-small" style="background:var(--warning);color:black;margin-right:4px;" onclick="editInterval('${key}', '${i.name}', '${i.start}', '${i.end}')">✏️</button>
+                                <button class="btn-danger btn-small" onclick="delInterval('${key}')">🗑️</button>
+                            </td>
                         </tr>`;
                 });
             } else {
@@ -567,10 +571,57 @@
                 return;
             }
 
-            push(ref(db, `${settingsRoot}/intervals`), { name, start, end });
+            if (editIntervalKey) {
+                // UPDATE Existing
+                set(ref(db, `${settingsRoot}/intervals/${editIntervalKey}`), { name, start, end });
+                cancelEdit(); // Reset form
+            } else {
+                // ADD New
+                push(ref(db, `${settingsRoot}/intervals`), { name, start, end });
+                intervalName.value = '';
+                intervalStart.value = '';
+                intervalEnd.value = '';
+            }
+        };
+
+        window.editInterval = (key, name, start, end) => {
+            editIntervalKey = key;
+            intervalName.value = name;
+            intervalStart.value = start;
+            intervalEnd.value = end;
+
+            // Change Button Text
+            const btn = document.querySelector('button[onclick="addInterval()"]');
+            btn.innerHTML = "💾 Update Interval";
+            btn.style.background = "var(--warning)";
+
+            // Show Cancel Button
+            let cancelBtn = document.getElementById('cancelEditBtn');
+            if (!cancelBtn) {
+                cancelBtn = document.createElement('button');
+                cancelBtn.id = 'cancelEditBtn';
+                cancelBtn.innerHTML = "❌ Cancel";
+                cancelBtn.className = "btn-danger";
+                cancelBtn.style.marginLeft = "8px";
+                cancelBtn.onclick = cancelEdit;
+                btn.parentNode.insertBefore(cancelBtn, btn.nextSibling);
+            }
+        };
+
+        window.cancelEdit = () => {
+            editIntervalKey = null;
             intervalName.value = '';
             intervalStart.value = '';
             intervalEnd.value = '';
+
+            // Reset Button
+            const btn = document.querySelector('button[onclick="addInterval()"]');
+            btn.innerHTML = "➕ Add Interval";
+            btn.style.background = "var(--primary)";
+
+            // Remove Cancel Button
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) cancelBtn.remove();
         };
 
         window.delInterval = key => {
