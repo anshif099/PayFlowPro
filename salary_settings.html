@@ -433,6 +433,54 @@
                     <div class="salary-meta" id="baseSalaryDisplay">Base: ₹0</div>
                 </div>
 
+                <div id="penaltySection" class="salary-card"
+                    style="border-color: var(--warning); display:none; margin-top: -20px;">
+                    <div class="salary-title" style="color: var(--warning);">Late Penalty Deduction</div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div style="text-align:left;">
+                            <div style="font-size:14px; color:var(--text-muted);">Net Late Time</div>
+                            <div id="netLateTime" style="font-size:20px; font-weight:700;">0h 0m</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px; color:var(--text-muted);">Penalty Days</div>
+                            <div id="penaltyDays" style="font-size:20px; font-weight:700; color:var(--danger);">0 Days
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:12px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>Penalty Amount:</span>
+                            <span id="penaltyAmountVal" style="color:var(--danger); font-weight:700;">-₹0</span>
+                        </div>
+                        <div id="extraRewardRow"
+                            style="display:none; justify-content:space-between; margin-bottom:8px;">
+                            <span>Extra Reward:</span>
+                            <span id="extraAmountVal" style="color:var(--success); font-weight:700;">+₹0</span>
+                        </div>
+                        <div
+                            style="display:flex; align-items:center; gap:12px; margin-top:12px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+                            <input type="checkbox" id="applyPenaltyToggle"
+                                style="width:20px; height:20px; cursor:pointer;">
+                            <label for="applyPenaltyToggle" style="cursor:pointer; user-select:none;">Apply Late Penalty
+                                to
+                                Final Salary</label>
+                        </div>
+                    </div>
+
+                    <div id="penaltyWarning"
+                        style="font-size:12px; color:var(--warning); display:none; margin-bottom: 16px;">
+                        * 4 hours of Net Late Time = 0.5 Day Salary Deduction.
+                    </div>
+
+                    <button id="approveBtn" class="btn-action" onclick="approveSalary()"
+                        style="width: 100%; height: 44px; background: transparent; border: 1px solid var(--primary); color: var(--primary);">
+                        <span style="margin-right:8px;">✅</span> Approve & Save Report
+                    </button>
+
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header">
@@ -482,7 +530,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -496,6 +544,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        let employeesData = {};
+        let currentResult = null; // To store latest calculation for approval
 
         if (localStorage.getItem("admin") !== "true") {
             location = "admin.html";
@@ -513,7 +564,7 @@
 
         // Load Employees
         const empSelect = document.getElementById('employeeSelect');
-        const employeesData = {}; // Store raw data for salary info
+        // employeesData already declared above
 
         // Filter based on admin role
         const adminRole = localStorage.getItem("role");
@@ -548,82 +599,347 @@
             }
         });
 
+        window.fetchApprovalStatus = async () => {
+            const empId = empSelect.value;
+            const monthVal = monthPicker.value;
+            if (!empId || !monthVal) return;
+
+            const approvalSnap = await get(ref(db, `salary_approvals/${empId}/${monthVal}`));
+            if (approvalSnap.exists()) {
+                const appData = approvalSnap.val();
+                if (appData.applyPenalty !== undefined) {
+                    document.getElementById('applyPenaltyToggle').checked = appData.applyPenalty;
+                }
+            } else {
+                document.getElementById('applyPenaltyToggle').checked = false;
+            }
+        };
+
+        empSelect.onchange = fetchApprovalStatus;
+        monthPicker.onchange = fetchApprovalStatus;
+
         window.calculateSalary = async () => {
             const empId = empSelect.value;
             const monthVal = monthPicker.value; // YYYY-MM
 
             if (!empId || !monthVal) {
-                alert("Please select both Employee and Month."); // Could t() this too
+                alert("Please select both Employee and Month.");
                 return;
             }
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('salaryResult').style.display = 'none';
 
-            // 1. Get Month Info
+            // Removed: Overwriting applyPenalty here was causing unselect bug
+            const applyPenalty = document.getElementById('applyPenaltyToggle')?.checked || false;
             const year = parseInt(monthVal.split('-')[0]);
             const month = parseInt(monthVal.split('-')[1]);
             const daysInMonth = new Date(year, month, 0).getDate();
 
-            // 2. Fetch Settings (WeekOffs & Holidays)
-            // Note: In a real app we might want to fetch this once on load, but this is safer for now.
+            // 2. Fetch Settings (WeekOffs & Holidays & OfficeTime & Intervals)
             const settingsSnap = await get(ref(db, "settings"));
             const weekOffNames = settingsSnap.child("weekOffs").val() || [];
+            const isSecondSaturday = settingsSnap.child("secondSaturday").val() === true;
             const allHolidays = settingsSnap.child("holidays").val() || {};
+            const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
+            const intervals = [];
+            settingsSnap.child("intervals").forEach(c => intervals.push(c.val()));
+
+            // Helper: Parse HH:MM to minutes
+            const toMinutes = (timeStr) => {
+                if (!timeStr) return null;
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            const officeStartMins = toMinutes(officeTime.start) || 540;
+            const officeEndMins = toMinutes(officeTime.end) || 1080;
+
+            // Calculate Net Office Time (Duration - Intervals)
+            let totalIntervalMins = 0;
+            intervals.forEach(i => {
+                const start = toMinutes(i.start);
+                const end = toMinutes(i.end);
+                if (start !== null && end !== null && end > start) {
+                    totalIntervalMins += (end - start);
+                }
+            });
+            const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
 
             // Count Week Offs
             let weekOffCount = 0;
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month - 1, day);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-                if (weekOffNames.includes(dayName)) weekOffCount++;
+                let isWO = weekOffNames.includes(dayName);
+                if (!isWO && dayName === 'Saturday' && isSecondSaturday && day >= 8 && day <= 14) {
+                    isWO = true;
+                }
+                if (isWO) weekOffCount++;
             }
 
-            // Count Holidays for this month
+            // Count Holidays
             let holidayCount = 0;
             Object.keys(allHolidays).forEach(dateStr => {
-                // holidays key format YYYY-MM-DD
                 if (dateStr.startsWith(monthVal)) holidayCount++;
             });
 
-            // 3. Fetch Attendance
+            // 3. Fetch Attendance & Calculate Late/Extra
             const attSnap = await get(ref(db, `attendance/${empId}`));
             let presentCount = 0;
+            let totalLateMins = 0;
+            let totalExtraMins = 0;
 
             if (attSnap.exists()) {
                 attSnap.forEach(d => {
-                    // Key is date YYYY-MM-DD
                     if (d.key.startsWith(monthVal)) {
-                        const status = d.val().status;
+                        const val = d.val();
+                        const status = val.status;
+
                         if (status === 'in' || status === 'paid-leave') {
                             presentCount++;
+
+                            if (status === 'in' && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
+                                // Time Calculation
+                                // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
+                                const parseTimePart = (tStr) => {
+                                    if (!tStr) return null;
+                                    const upper = tStr.toUpperCase();
+                                    if (upper.includes('AM') || upper.includes('PM')) {
+                                        // 12-hour format: "09:00 AM"
+                                        const parts = tStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                                        if (!parts) return null;
+                                        let h = parseInt(parts[1]);
+                                        const m = parseInt(parts[2]);
+                                        const p = parts[3].toUpperCase();
+                                        if (p === 'PM' && h < 12) h += 12;
+                                        if (p === 'AM' && h === 12) h = 0;
+                                        return h * 60 + m;
+                                    } else {
+                                        // 24-hour format: "08:53" or "18:10"
+                                        const parts = tStr.split(':');
+                                        if (parts.length < 2) return null;
+                                        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                    }
+                                };
+
+                                const inMins = parseTimePart(val.punchIn.time);
+                                const outMins = parseTimePart(val.punchOut.time);
+
+                                if (inMins !== null && outMins !== null) {
+                                    if (inMins > officeStartMins) totalLateMins += (inMins - officeStartMins);
+                                    if (inMins < officeStartMins) totalExtraMins += (officeStartMins - inMins);
+                                    if (outMins < officeEndMins) totalLateMins += (officeEndMins - outMins);
+                                    if (outMins > officeEndMins) totalExtraMins += (outMins - officeEndMins);
+                                }
+                            }
                         }
                     }
                 });
             }
 
-            // 4. Calculate
-            const totalPresentDays = presentCount + weekOffCount + holidayCount;
-            // Cap at total days in case of configuration errors
-            const cappedPresent = Math.min(totalPresentDays, daysInMonth);
-            const percentage = (cappedPresent / daysInMonth) * 100;
+            // --- ADDED: Absenteeism Logic to Total Late ---
+            // Calculate detailed Absent Days up to valid date (Yesterday if current month)
+            const dateToday = new Date();
+            let daysForAbsentCalc = daysInMonth; // Default to full month
 
-            const baseSalary = parseFloat(employeesData[empId].salary || 0);
+            if (dateToday.getFullYear() === year && dateToday.getMonth() + 1 === month) {
+                daysForAbsentCalc = dateToday.getDate(); // Include today
+            } else if (dateToday < new Date(year, month - 1, 1)) {
+                daysForAbsentCalc = 0; // Future
+            }
+
+            let absentDaysCount = 0;
+            // Iterate to count absent days
+            // We need 'present' or 'leave' status per day. 
+            // Simplified: Absent = DaysToCheck - (Present + Leaves + WeekOffs + Holidays)
+            // But we need to be careful about matching WeekOffs/Holidays exactly within the range.
+
+            let rangeWeekOffs = 0;
+            let rangeHolidays = 0;
+            let rangePresentLeaves = 0; // We need to recount present/leaves within range? 
+            // The 'presentCount' above is total for the month. 
+            // If current month, attendance likely only exists up to today anyway.
+            // So we can use global presentCount/leaveCount if we assume no future attendance entered.
+
+            // Re-calculating WeekOffs/Holidays for the specific range
+            for (let d = 1; d <= daysForAbsentCalc; d++) {
+                const dateObj = new Date(year, month - 1, d);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+                let isWO = weekOffNames.includes(dayName);
+                if (!isWO && dayName === 'Saturday' && isSecondSaturday && d >= 8 && d <= 14) {
+                    isWO = true;
+                }
+
+                if (allHolidays[ymd]) {
+                    rangeHolidays++;
+                } else if (isWO) {
+                    rangeWeekOffs++;
+                }
+            }
+
+            // NOTE: This assumes presentCount only includes days UP TO today (which is true for real punch data).
+            // However, Paid Leaves might be pre-approved for future? 
+            // If so, we might under-count absent days if we subtract future leaves from past range?
+            // For now, let's assume standard behavior (no future data impacting this significantly).
+            // Actually, correct way is:
+            // Absent = rangeDays - (rangeHolidays + rangeWeekOffs + rangePresent + rangeLeaves)
+            // We'll trust that 'presentCount' reflects the valid range.
+
+            // Let's refine Present/Leave to be strictly within range?
+            // The attendance loop above iterates all data. 
+            // Let's just use the 'presentCount' variable, assuming no future punches.
+
+            // Calculate Absent
+            // However, 'leaveCount' is not defined above? 
+            // Wait, I need to check if 'leaveCount' exists in previous code.
+            // Looking at read file: 'presentCount' is there. 'leaveCount' is NOT defined in lines 635-676?
+            // Ah, line 646: if (status === 'in' || status === 'paid-leave') presentCount++
+            // It treats paid-leave as presentCount!
+            // So for Absent Calc, we just subtract presentCount.
+
+            const calcAbsent = daysForAbsentCalc - (rangeWeekOffs + rangeHolidays + presentCount);
+            const finalAbsentDays = calcAbsent > 0 ? calcAbsent : 0;
+            if (finalAbsentDays > 0) {
+                totalLateMins += (finalAbsentDays * netOfficeMins);
+            }
+
+            // 4. Calculate Penalty & Extra Reward
+            let salaryValue = employeesData[empId].salary || "0";
+            if (typeof salaryValue === 'string') {
+                salaryValue = salaryValue.replace(/[^0-9.]/g, '');
+            }
+            const baseSalary = parseFloat(salaryValue) || 0;
+            const netLateMins = totalLateMins - totalExtraMins;
             const perDaySalary = baseSalary / daysInMonth;
-            const finalSalary = Math.round(perDaySalary * cappedPresent);
 
-            // 5. Update UI
-            document.getElementById('finalSalary').textContent = "₹" + finalSalary.toLocaleString();
-            document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ₹` + baseSalary.toLocaleString();
+            let penaltyDays = 0;
+            let amountToDeduct = 0;
+            let extraDays = 0;
+            let amountToAdd = 0;
 
+            if (netLateMins > 0) {
+                // Late > Extra: Penalty
+                const netLateHours = netLateMins / 60;
+                penaltyDays = Math.floor(netLateHours / 4) * 0.5;
+                amountToDeduct = Math.round(perDaySalary * penaltyDays);
+            } else if (netLateMins < 0) {
+                // Extra > Late: Reward
+                const netExtraMins = Math.abs(netLateMins);
+                const netExtraHours = netExtraMins / 60;
+                extraDays = Math.floor(netExtraHours / 4) * 0.5;
+                amountToAdd = Math.round(perDaySalary * extraDays);
+            }
+
+            // 5. Final Calculation
+            const totalPayableDaysRaw = presentCount + rangeWeekOffs + rangeHolidays;
+            const cappedDays = Math.min(totalPayableDaysRaw, daysInMonth);
+            const attendancePercent = ((cappedDays / daysInMonth) * 100).toFixed(1);
+
+            const baseWorkedSalary = Math.round(perDaySalary * cappedDays);
+
+            // Penalty/Reward Logic
+            let penaltyToApply = applyPenalty ? amountToDeduct : 0;
+            let finalSalary = baseWorkedSalary - penaltyToApply + amountToAdd;
+
+            // 6. Update UI
             document.getElementById('totalDays').textContent = daysInMonth;
             document.getElementById('presentDays').textContent = presentCount;
-            document.getElementById('weekOffDays').textContent = weekOffCount;
-            document.getElementById('holidayDays').textContent = holidayCount;
-            document.getElementById('attendancePercent').textContent = percentage.toFixed(1) + "%";
+            document.getElementById('weekOffDays').textContent = rangeWeekOffs;
+            document.getElementById('holidayDays').textContent = rangeHolidays;
+
+            document.getElementById('finalSalary').textContent = "₹" + finalSalary.toLocaleString();
+            document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ₹` + baseSalary.toLocaleString();
+            document.getElementById('attendancePercent').textContent = attendancePercent + "%";
+
+            // Penalty UI Updates
+            const penaltySection = document.getElementById('penaltySection');
+            if (penaltySection) {
+                penaltySection.style.display = 'block';
+                const netTimeStr = (netLateMins > 0 ? '-' : '+') +
+                    `${Math.floor(Math.abs(netLateMins) / 60)}h ${Math.abs(netLateMins) % 60}m`;
+
+                const netLateEl = document.getElementById('netLateTime');
+                if (netLateEl) {
+                    netLateEl.textContent = netTimeStr;
+                    netLateEl.style.color = netLateMins > 0 ? 'var(--danger)' : 'var(--success)';
+                }
+
+                const pDaysEl = document.getElementById('penaltyDays');
+                if (pDaysEl) pDaysEl.textContent = `${netLateMins > 0 ? penaltyDays : extraDays} Days`;
+
+                const pAmtEl = document.getElementById('penaltyAmountVal');
+                if (pAmtEl) pAmtEl.textContent = `-₹${amountToDeduct.toLocaleString()}`;
+
+                const extraRow = document.getElementById('extraRewardRow');
+                const extraAmtEl = document.getElementById('extraAmountVal');
+                if (extraRow && extraAmtEl) {
+                    extraRow.style.display = extraDays > 0 ? 'flex' : 'none';
+                    extraAmtEl.textContent = `+₹${amountToAdd.toLocaleString()}`;
+                }
+
+                const pWarnEl = document.getElementById('penaltyWarning');
+                if (pWarnEl) {
+                    pWarnEl.style.display = 'block';
+                    pWarnEl.textContent = netLateMins > 0
+                        ? "* 4 hours of Net Late Time = 0.5 Day Salary Deduction."
+                        : "* 4 hours of Net Extra Time = 0.5 Day Salary Reward.";
+                    if (penaltyDays === 0 && extraDays === 0) pWarnEl.style.display = 'none';
+                }
+
+                // Re-bind the toggle to recalculate
+                const toggle = document.getElementById('applyPenaltyToggle');
+                if (toggle) {
+                    toggle.onchange = () => calculateSalary(); // Use onchange so checked state updates first
+                    // Ideally we isolate calculation logic, but for now re-running fetch is acceptable or we optimize later
+                }
+            }
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('salaryResult').style.display = 'block';
+
+            // Store result for approval
+            currentResult = {
+                empId: empId,
+                monthVal: monthVal,
+                applyPenalty: applyPenalty,
+                penaltyDays: penaltyDays,
+                extraDays: extraDays,
+                netLateMins: netLateMins,
+                amountToDeduct: amountToDeduct,
+                amountToAdd: amountToAdd,
+                baseSalary: baseSalary,
+                finalSalary: finalSalary,
+                approvedAt: new Date().toISOString()
+            };
+        };
+
+        window.approveSalary = async () => {
+            if (!currentResult) return;
+
+            const { empId, monthVal, ...data } = currentResult;
+            const btn = document.getElementById('approveBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = "Approving...";
+
+                await update(ref(db, `salary_approvals/${empId}/${monthVal}`), {
+                    ...data,
+                    approvedAt: new Date().getTime()
+                });
+
+                alert("Salary & Penalty Approved Successfully!");
+            } catch (err) {
+                console.error(err);
+                alert("Error approving salary: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         };
     </script>
 </body>

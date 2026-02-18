@@ -243,6 +243,62 @@
                 padding: 16px 20px
             }
         }
+
+        @media print {
+
+            .sidebar,
+            .top-bar,
+            .menu-toggle,
+            .btn-action,
+            .btn-logout,
+            .no-print {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                min-height: auto !important;
+            }
+
+            .dashboard-section {
+                padding: 0 !important;
+            }
+
+            .card {
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            table {
+                font-size: 10px !important;
+                border: 1px solid #ddd !important;
+            }
+
+            th,
+            td {
+                padding: 4px !important;
+                border: 1px solid #ddd !important;
+                color: black !important;
+            }
+
+            th {
+                background: #f0f0f0 !important;
+            }
+
+            /* Force landscape if supported */
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+        }
     </style>
 </head>
 
@@ -304,9 +360,14 @@
                         <input type="month" id="reportMonth"
                             style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg-input); color:white; font-family:inherit;">
                     </div>
-                    <div style="flex:0;">
+                    <div style="flex:0; display:flex; gap:10px;">
                         <button class="btn-action" onclick="generateReport()" data-i18n="generate_report">Generate
                             Report</button>
+                        <button class="btn-action no-print" onclick="downloadCSV()"
+                            style="background:var(--success); color:black;" title="Export to Excel">
+                            📊 Export Excel
+                        </button>
+
                     </div>
                 </div>
 
@@ -321,6 +382,10 @@
                                 <th data-i18n="leaves">Leaves</th>
                                 <th data-i18n="week_offs">Week Offs</th>
                                 <th data-i18n="holidays">Holidays</th>
+                                <th style="color:#ff5c5c" data-i18n="total_absent">Total Absent</th>
+                                <th style="color:#ff5c5c" data-i18n="total_late">Total Late</th>
+                                <th style="color:#00ffc3" data-i18n="total_extra">Total Extra</th>
+                                <th data-i18n="net_time">Net Time</th>
                                 <th data-i18n="attendance_percent">Attendance %</th>
                                 <th data-i18n="net_salary">Net Salary</th>
                             </tr>
@@ -359,6 +424,34 @@
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
         window.logout = () => { localStorage.clear(); location = "admin.html"; };
 
+        // Export Logic
+        window.downloadCSV = () => {
+            const table = document.getElementById("reportTable");
+            if (!table || table.rows.length < 2) return alert("Generate a report first!");
+
+            let csv = [];
+            for (let i = 0; i < table.rows.length; i++) {
+                let row = [], cols = table.rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) {
+                    // Clean text: remove newlines, commas
+                    let txt = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, " ");
+                    row.push(txt);
+                }
+                csv.push(row.join(","));
+            }
+
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = `Monthly_Report_${document.getElementById('reportMonth').value}.csv`;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        };
+
+
+
         // Default to current month
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
 
@@ -374,10 +467,11 @@
 
             try {
                 // 1. Fetch Basic Data
-                const [empSnap, settingsSnap, attendanceSnap] = await Promise.all([
+                const [empSnap, settingsSnap, attendanceSnap, approvalsSnap] = await Promise.all([
                     get(ref(db, "employees")),
                     get(ref(db, "settings")),
-                    get(ref(db, "attendance"))
+                    get(ref(db, "attendance")),
+                    get(ref(db, `salary_approvals`))
                 ]);
 
                 if (!empSnap.exists()) {
@@ -397,9 +491,36 @@
                 const month = parseInt(monthVal.split('-')[1]);
                 const daysInMonth = new Date(year, month, 0).getDate();
 
-                // 3. Settings (WeekOffs & Holidays)
+                // 3. Settings (WeekOffs & Holidays & OfficeTime)
                 const weekOffNames = settingsSnap.child("weekOffs").val() || [];
                 const allHolidays = settingsSnap.child("holidays").val() || {};
+                const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
+                const isSecondSaturday = settingsSnap.child("secondSaturday").val() === true;
+
+                // Helper: Parse HH:MM to minutes
+                const toMinutes = (timeStr) => {
+                    if (!timeStr) return null;
+                    const [h, m] = timeStr.split(':').map(Number);
+                    return h * 60 + m;
+                };
+
+                const officeStartMins = toMinutes(officeTime.start) || 540; // Default 9:00
+                const officeEndMins = toMinutes(officeTime.end) || 1080;   // Default 18:00
+
+                // Interval Calculation
+                const intervals = [];
+                settingsSnap.child("intervals").forEach(c => intervals.push(c.val()));
+
+                let totalIntervalMins = 0;
+                intervals.forEach(i => {
+                    const start = toMinutes(i.start);
+                    const end = toMinutes(i.end);
+                    if (start !== null && end !== null && end > start) {
+                        totalIntervalMins += (end - start);
+                    }
+                });
+
+                const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
 
                 let monthHolidayCount = 0;
                 Object.keys(allHolidays).forEach(dateStr => {
@@ -410,7 +531,12 @@
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month - 1, d);
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-                    if (weekOffNames.includes(dayName)) monthWeekOffCount++;
+                    let isWO = weekOffNames.includes(dayName);
+                    // Second Saturday: day 8-14 is the 2nd week
+                    if (!isWO && dayName === 'Saturday' && isSecondSaturday && d >= 8 && d <= 14) {
+                        isWO = true;
+                    }
+                    if (isWO) monthWeekOffCount++;
                 }
 
                 // 4. Calculate Rows
@@ -420,12 +546,64 @@
                     let presentCount = 0;
                     let leaveCount = 0;
 
+                    let totalLateMins = 0;
+                    let totalExtraMins = 0;
+
                     if (empAtt.exists()) {
                         empAtt.forEach(d => {
                             if (d.key.startsWith(monthVal)) {
-                                const status = d.val().status;
+                                const val = d.val();
+                                const status = val.status;
+
                                 if (status === 'in') {
                                     presentCount += 1;
+
+                                    // Time Calculation
+                                    /*
+                                        Late In: PunchIn > OfficeStart
+                                        Early In: PunchIn < OfficeStart
+                                        Late Out: PunchOut > OfficeEnd
+                                        Early Out: PunchOut < OfficeEnd
+                                    */
+                                    if (val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
+                                        // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
+                                        const parseTimePart = (tStr) => {
+                                            if (!tStr) return null;
+                                            const upper = tStr.toUpperCase();
+                                            if (upper.includes('AM') || upper.includes('PM')) {
+                                                // 12-hour format: "09:00 AM"
+                                                const parts = tStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                                                if (!parts) return null;
+                                                let h = parseInt(parts[1]);
+                                                const m = parseInt(parts[2]);
+                                                const p = parts[3].toUpperCase();
+                                                if (p === 'PM' && h < 12) h += 12;
+                                                if (p === 'AM' && h === 12) h = 0;
+                                                return h * 60 + m;
+                                            } else {
+                                                // 24-hour format: "08:53" or "18:10"
+                                                const parts = tStr.split(':');
+                                                if (parts.length < 2) return null;
+                                                return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                            }
+                                        };
+
+                                        const inMins = parseTimePart(val.punchIn.time);
+                                        const outMins = parseTimePart(val.punchOut.time);
+
+                                        if (inMins !== null && outMins !== null) {
+                                            // 1. Late In
+                                            if (inMins > officeStartMins) totalLateMins += (inMins - officeStartMins);
+                                            // 2. Early In
+                                            if (inMins < officeStartMins) totalExtraMins += (officeStartMins - inMins);
+
+                                            // 3. Early Out
+                                            if (outMins < officeEndMins) totalLateMins += (officeEndMins - outMins);
+                                            // 4. Late Out
+                                            if (outMins > officeEndMins) totalExtraMins += (outMins - officeEndMins);
+                                        }
+                                    }
+
                                 } else if (status === 'halfday') {
                                     presentCount += 0.5;
                                 } else if (status === 'paid-leave' || status === 'sick-leave') {
@@ -433,6 +611,61 @@
                                 }
                             }
                         });
+                    }
+
+                    const formatMins = (m) => {
+                        const absM = Math.abs(m);
+                        const h = Math.floor(absM / 60);
+                        const min = absM % 60;
+                        return `${h}h ${min}m`;
+                    };
+
+                    // Correct Absent Calculation
+                    // Rule: If current month, only count days up to YESTERDAY.
+                    const now = new Date();
+                    let daysForAbsentCalc = daysInMonth;
+
+                    const isCurrentMonth = (now.getFullYear() === year && now.getMonth() + 1 === month);
+                    if (isCurrentMonth) {
+                        daysForAbsentCalc = Math.max(0, now.getDate() - 1); // Use yesterday
+                    } else if (now < new Date(year, month - 1, 1)) {
+                        // Future month completely
+                        daysForAbsentCalc = 0;
+                    }
+
+                    // Optimized Approach:
+                    // absent = daysForAbsentCalc - (PresentSoFar + LeavesSoFar + WeekOffsSoFar + HolidaysSoFar)
+
+                    let weekOffsSoFar = 0;
+                    let holidaysSoFar = 0;
+
+                    for (let d = 1; d <= daysForAbsentCalc; d++) {
+                        const dateObj = new Date(year, month - 1, d);
+                        const y = dateObj.getFullYear();
+                        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const da = String(dateObj.getDate()).padStart(2, '0');
+                        const ymd = `${y}-${m}-${da}`;
+                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+                        let isWeekOff = weekOffNames.includes(dayName);
+                        // Second Saturday: day 8-14 is the 2nd week
+                        if (!isWeekOff && dayName === 'Saturday' && isSecondSaturday && dateObj.getDate() >= 8 && dateObj.getDate() <= 14) {
+                            isWeekOff = true;
+                        }
+
+                        if (allHolidays[ymd]) {
+                            holidaysSoFar++;
+                        } else if (isWeekOff) {
+                            weekOffsSoFar++;
+                        }
+                    }
+
+                    const absentCount = Math.max(0, daysForAbsentCalc - (presentCount + leaveCount + weekOffsSoFar + holidaysSoFar));
+
+                    // ADD ABSENT TIME TO TOTAL LATE
+                    // Logic: If Absent, they are "Late" by the full Net Office Time
+                    if (absentCount > 0) {
+                        totalLateMins += (absentCount * netOfficeMins);
                     }
 
                     const totalPayableDays = presentCount + leaveCount + monthWeekOffCount + monthHolidayCount;
@@ -443,24 +676,55 @@
                     const perDay = baseSalary / daysInMonth;
                     const netSalary = Math.round(perDay * cappedPresent);
 
+                    const netMins = totalLateMins - totalExtraMins;
+                    const sign = netMins > 0 ? "Late" : "Extra";
+                    const color = netMins > 0 ? "#ff5c5c" : "#00ffc3"; // Red for Late, Green for Extra
+
+                    // Handle reward for Extra time (Not approved case)
+                    let extraReward = 0;
+                    if (netMins < 0) {
+                        const netExtraHours = Math.abs(netMins) / 60;
+                        const extraDays = Math.floor(netExtraHours / 4) * 0.5;
+                        extraReward = Math.round(perDay * extraDays);
+                    }
+
+                    // Check for official approval
+                    const approval = approvalsSnap.child(`${emp.empId}/${monthVal}`).val();
+                    let displaySalary = netSalary + extraReward;
+                    let approvalBadge = "";
+
+                    if (approval) {
+                        displaySalary = approval.finalSalary ?? netSalary;
+                        approvalBadge = `<div style="font-size:10px; color:var(--primary); margin-top:4px;">✅ Approved</div>`;
+                    } else if (extraReward > 0) {
+                        approvalBadge = `<div style="font-size:10px; color:var(--success); margin-top:4px;">+ Extra Reward</div>`;
+                    }
+
                     html += `<tr>
                         <td>${emp.name}</td>
                         <td>${emp.empId}</td>
                         <td>${daysInMonth}</td>
                         <td><span style="color:#00ffc3;font-weight:600">${presentCount}</span></td>
                         <td><span style="color:#ffa726;font-weight:600">${leaveCount}</span></td>
-                        <td>${monthWeekOffCount}</td>
-                        <td>${monthHolidayCount}</td>
+                        <td>${weekOffsSoFar}</td>
+                        <td>${holidaysSoFar}</td>
+                        <td><span style="color:#ff5c5c;font-weight:600">${absentCount}</span></td>
+                        <td><span style="color:#ff5c5c">${formatMins(totalLateMins)}</span></td>
+                        <td><span style="color:#00ffc3">${formatMins(totalExtraMins)}</span></td>
+                        <td><span style="color:${color};font-weight:bold">${formatMins(netMins)} ${sign}</span></td>
                         <td>${percent}%</td>
-                        <td><span style="color:#00ffc3;font-weight:700">₹${netSalary.toLocaleString()}</span></td>
+                        <td>
+                            <span style="color:#00ffc3;font-weight:700">₹${displaySalary.toLocaleString()}</span>
+                            ${approvalBadge}
+                        </td>
                     </tr>`;
                 });
 
-                tbody.innerHTML = html || `<tr><td colspan="8" style="text-align:center;">${t('no_matching_records')}</td></tr>`;
+                tbody.innerHTML = html || `<tr><td colspan="12" style="text-align:center;">${t('no_matching_records')}</td></tr>`;
 
             } catch (e) {
                 console.error(e);
-                tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);text-align:center;">${t('error_loading_report')}: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" style="color:var(--danger);text-align:center;">${t('error_loading_report')}: ${e.message}</td></tr>`;
             }
         };
 
