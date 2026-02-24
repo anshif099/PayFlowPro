@@ -374,21 +374,39 @@
             </select>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
-            <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
-            <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span>Attendance</span></a>
-            <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span>Leave
-                    Management</span></a>
-            <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span
-                    data-i18n="branch_admins">Branch
-                    Admins</span></a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
-                    Management</span></a>
-            <a href="salary_settings.html" class="nav-item active"><span class="nav-icon">💰</span><span
-                    data-i18n="salary_settings">Salary
-                    Settings</span></a>
-            <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
-                    Report</span></a>
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span data-i18n="employees">Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span>Manage Branches</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="salary_settings.html" class="nav-item active">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
             <a href="documents.html" class="nav-item">
                 <span class="nav-icon">📄</span>
                 <span>Documents</span>
@@ -401,7 +419,7 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -582,13 +600,20 @@
         const adminRole = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
 
-        // Hide Branch Admin Link for non-super
-        if (adminRole !== 'super_admin') {
-            const navs = document.querySelectorAll('.nav-item');
-            navs.forEach(nav => {
-                if (nav.href.includes('manage_admins.html')) nav.style.display = 'none';
-            });
-        }
+        
+        // --- Sidebar Logic ---
+        (function(){
+            const r = localStorage.getItem("role");
+            if (r === 'super_admin') {
+                const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+            } else if (r === 'company_admin') {
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+            }
+        })();
+
 
         onValue(ref(db, "employees"), s => {
             empSelect.innerHTML = `<option value="">-- ${t('select_employee')} --</option>`;
@@ -980,6 +1005,8 @@
             }
         };
     </script>
+
+    <script src="sidebar.js"></script>
 </body>
 
 </html>

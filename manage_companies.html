@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Branches - Teamsive</title>
+    <title>Manage Companies - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="lang.js"></script>
     <style>
@@ -190,8 +190,7 @@
             margin-bottom: 4px;
         }
 
-        input,
-        select {
+        input {
             width: 100%;
             padding: 12px 16px;
             background: var(--bg-input);
@@ -201,8 +200,7 @@
             font-size: 14px;
         }
 
-        input:focus,
-        select:focus {
+        input:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -318,7 +316,7 @@
                 <span class="nav-icon">📊</span>
                 <span>Dashboard</span>
             </a>
-            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+            <a href="manage_companies.html" class="nav-item active" id="nav-manage-companies">
                 <span class="nav-icon">🏢</span>
                 <span>Manage Companies</span>
             </a>
@@ -334,14 +332,18 @@
                 <span class="nav-icon">🏖️</span>
                 <span>Leave Management</span>
             </a>
-            <a href="manage_admins.html" class="nav-item active" id="nav-manage-branches">
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;">
                 <span class="nav-icon">🛡️</span>
                 <span>Manage Branches</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
-                    Management</span></a>
-            <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span
-                    data-i18n="salary_settings">Salary Settings</span></a>
+            <a href="intervalmanagement.html" class="nav-item">
+                <span class="nav-icon">⏲️</span>
+                <span>Interval Management</span>
+            </a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
             <a href="monthly_report.html" class="nav-item">
                 <span class="nav-icon">📑</span>
                 <span>Monthly Report</span>
@@ -370,7 +372,7 @@
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1 data-i18n="manage_branch_admins">Manage Branches</h1>
+                <h1>Manage Companies</h1>
             </div>
             <div class="top-bar-actions">
                 <button onclick="toggleTheme()"
@@ -380,54 +382,55 @@
         </div>
 
         <div class="dashboard-section">
-
             <div class="card">
-                <h3 data-i18n="add_new_admin">Add New Branch Admin</h3>
+                <h3>Add New Company & Company Admin</h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label data-i18n="admin_name">Name</label>
-                        <input id="adminName" placeholder="Admin Name" data-i18n="admin_name">
+                        <label>Company Name</label>
+                        <input id="companyName" placeholder="e.g. Acme Corp">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="admin_id">Admin ID</label>
-                        <input id="adminId" placeholder="e.g. BA01" data-i18n="admin_id">
+                        <label>Company ID (Unique Alias)</label>
+                        <input id="companyIdAlias" placeholder="e.g. acme_corp">
+                    </div>
+                </div>
+                <div style="height: 1px; background: var(--border); margin: 20px 0;"></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Company Admin Name</label>
+                        <input id="adminName" placeholder="Admin Name">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="login_email">Email</label>
-                        <input type="email" id="adminEmail" placeholder="Login Email" data-i18n="login_email">
+                        <label>Admin Email (Login ID)</label>
+                        <input type="email" id="adminEmail" placeholder="Login Email">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="branch_name">Assigned Branch</label>
-                        <select id="adminBranch">
-                            <option value="">Select Branch</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="status">Status</label>
-                        <select id="adminStatus">
-                            <option value="active" data-i18n="active">Active</option>
-                            <option value="inactive" data-i18n="inactive">Inactive</option>
+                        <label>Status</label>
+                        <select id="adminStatus"
+                            style="width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px;">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
                     </div>
                 </div>
-                <button id="saveBtn" onclick="addAdmin()" data-i18n="save_admin">💾 Save Admin</button>
+                <button id="saveBtn" onclick="addCompany()">💾 Save Company</button>
             </div>
 
             <div class="card">
-                <h3 data-i18n="existing_admins">Existing Admins</h3>
+                <h3>Registered Companies</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th data-i18n="admin_name">Name</th>
-                                <th data-i18n="admin_id">ID</th>
-                                <th data-i18n="status">Status</th>
-                                <th data-i18n="login_email">Email</th>
-                                <th data-i18n="branch">Branch</th>
-                                <th data-i18n="action">Action</th>
+                                <th>Company ID</th>
+                                <th>Company Name</th>
+                                <th>Admin Name</th>
+                                <th>Admin Email</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="adminList"></tbody>
+                        <tbody id="companyList"></tbody>
                     </table>
                 </div>
             </div>
@@ -452,194 +455,157 @@
         const db = getDatabase(app);
 
         // Basic auth check
-        if (localStorage.getItem("admin") !== "true") { location = "admin.html"; }
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
 
-        const role = localStorage.getItem("role");
-        let companyId = localStorage.getItem("companyId");
-        let companyName = localStorage.getItem("companyName");
-
-        // Role Check: Only Super Admin & Company Admin can manage branch admins
-        if (role !== "super_admin" && role !== "company_admin") {
+        // Strict Role Check: ONLY Super Admin can manage companies
+        if (localStorage.getItem("role") !== "super_admin") {
             location = "dashboard.html";
         }
 
-        if (role === 'super_admin') {
-            document.getElementById('nav-manage-companies').style.display = 'flex';
-        }
-        if (role === 'company_admin' || role === 'super_admin') {
-            document.getElementById('nav-manage-branches').style.display = 'flex';
-        }
+        // Super Admin gets all links
+        document.getElementById('nav-manage-branches').style.display = 'flex';
 
-        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
-
-        // Super Admin: populate company selector (no banner needed, just populate branches)
-        if (role === 'super_admin') {
-            // Load all companies for branch dropdown use when adding admins
-            onValue(ref(db, 'companies'), snapshot => {
-                // We don't need a company selector, but load branches if companyId is set
-            });
-        }
-
-        window.onCompanySelected = (selectedId) => {
-            companyId = selectedId;
-            companyName = '';
-            loadBranches();
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
         };
 
-        function loadBranches() {
-            if (!companyId) return;
-            onValue(ref(db, `companies/${companyId}/branches`), snapshot => {
-                const dropdown = document.getElementById('adminBranch');
-                const currentVal = dropdown.value;
-                dropdown.innerHTML = '<option value="">Select Branch</option>';
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        const data = child.val();
-                        dropdown.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    });
-                    if (currentVal) dropdown.value = currentVal;
-                }
-            });
-        }
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
 
-        // Company Admin: load their branches immediately
-        if (role === 'company_admin' && companyId) {
-            loadBranches();
-        }
+        // --- MANAGE COMPANIES ---
 
-
-        // --- MANAGE ADMINS ---
-
-        window.addAdmin = () => {
+        window.addCompany = () => {
+            const companyNameEl = document.getElementById('companyName');
+            const companyIdAliasEl = document.getElementById('companyIdAlias');
             const nameEl = document.getElementById('adminName');
-            const idEl = document.getElementById('adminId');
             const emailEl = document.getElementById('adminEmail');
-            const branchEl = document.getElementById('adminBranch');
+            const statusEl = document.getElementById('adminStatus');
 
-            const name = nameEl.value;
-            const aid = idEl.value;
-            const email = emailEl.value;
-            const branch = branchEl.value;
-            const status = document.getElementById('adminStatus').value;
+            const cName = companyNameEl.value.trim();
+            let cId = companyIdAliasEl.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const aName = nameEl.value.trim();
+            const aEmail = emailEl.value.trim();
+            const status = statusEl.value;
 
-            if (!name || !email || !branch || !aid) {
-                alert("Please fill all fields and select a valid branch");
+            if (!cName || !cId || !aName || !aEmail) {
+                alert("Please fill all fields");
                 return;
             }
 
             // Create a safe ID from email
-            const keyId = email.replace(/[^a-zA-Z0-9]/g, '_');
+            const keyId = aEmail.replace(/[^a-zA-Z0-9]/g, '_');
 
-            update(ref(db, 'admins/' + keyId), {
-                name: name,
-                adminId: aid,
-                email: email,
-                branch: branch,
-                companyId: companyId,
-                companyName: companyName,
-                role: 'branch_admin',
-                status: status
+            // Save Company Details
+            update(ref(db, 'companies/' + cId), {
+                companyName: cName,
+                companyId: cId,
+                createdAt: new Date().toISOString()
             }).then(() => {
-                const isEdit = emailEl.disabled;
-                alert(isEdit ? "Admin Updated!" : "Branch Admin Added!");
+                // Save Admin Account mapping to this company
+                update(ref(db, 'admins/' + keyId), {
+                    name: aName,
+                    email: aEmail,
+                    companyId: cId,
+                    companyName: cName,
+                    role: 'company_admin',
+                    status: status
+                }).then(() => {
+                    alert("Company & Admin Account Saved Successfully!");
 
-                // Reset form
-                nameEl.value = '';
-                idEl.value = '';
-                emailEl.value = '';
-                branchEl.value = '';
-                document.getElementById('adminStatus').value = 'active';
-                emailEl.disabled = false; // Re-enable for next add
-                document.getElementById('saveBtn').innerText = "💾 " + t('save_admin');
-
-            }).catch(e => alert("Error: " + e.message));
+                    // Reset fields
+                    companyNameEl.value = '';
+                    companyIdAliasEl.value = '';
+                    nameEl.value = '';
+                    emailEl.value = '';
+                    statusEl.value = 'active';
+                    document.getElementById('saveBtn').innerText = "💾 Save Company";
+                    companyIdAliasEl.disabled = false; // re-enable if it was disabled
+                    emailEl.disabled = false;
+                }).catch(e => alert("Error saving admin: " + e.message));
+            }).catch(e => alert("Error saving company: " + e.message));
         };
 
-        function loadAdmins() {
-            onValue(ref(db, 'admins'), snapshot => {
-                const list = document.getElementById('adminList');
-                list.innerHTML = "";
+        onValue(ref(db, 'admins'), snapshot => {
+            const list = document.getElementById('companyList');
+            list.innerHTML = "";
 
-                let hasAdmins = false;
+            let hasCompanies = false;
 
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        const admin = child.val();
-                        const id = child.key;
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const admin = child.val();
+                    const id = child.key;
 
-                        // For company_admin: filter by their companyId
-                        // For super_admin: show ALL branch_admins
-                        if (admin.role === 'branch_admin') {
-                            if (role === 'company_admin' && admin.companyId !== companyId) return;
+                    // Only show company admins
+                    if (admin.role === 'company_admin') {
+                        hasCompanies = true;
 
-                            hasAdmins = true;
+                        const safeCName = (admin.companyName || '').replace(/'/g, "\\'");
+                        const safeCId = (admin.companyId || '').replace(/'/g, "\\'");
+                        const safeName = (admin.name || '').replace(/'/g, "\\'");
+                        const safeEmail = (admin.email || '').replace(/'/g, "\\'");
+                        const status = admin.status || 'active';
+                        const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
+                        const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${status.toUpperCase()}</span>`;
 
-                            const safeName = (admin.name || '').replace(/'/g, "\\'");
-                            const safeId = (admin.adminId || '-').replace(/'/g, "\\'");
-                            const safeEmail = (admin.email || '').replace(/'/g, "\\'");
-                            const safeBranch = (admin.branch || '').replace(/'/g, "\\'");
-                            const status = admin.status || 'active';
-                            const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
-                            const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${t(status).toUpperCase()}</span>`;
+                        list.innerHTML += `
+                            <tr>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${admin.companyId}</span></td>
+                                <td>${admin.companyName}</td>
+                                <td>${admin.name}</td>
+                                <td>${admin.email}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                        onclick="loginAs('${safeName}', '${safeEmail}', '${safeCId}', '${safeCName}')">🔑 Login</button>
+                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                        onclick="editCompany('${safeCName}', '${safeCId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
+                                    <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteCompany('${id}', '${safeCId}')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
 
-                            list.innerHTML += `
-                                <tr>
-                                    <td>${admin.name}</td>
-                                    <td>${admin.adminId || '-'}</td>
-                                    <td>${statusBadge}</td>
-                                    <td>${admin.email}</td>
-                                    <td>${admin.branch}</td>
-                                    <td>
-                                        <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                            onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}')">🔑 ${t('login')}</button>
-                                        <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                            onclick="editAdmin('${safeName}', '${safeId}', '${safeEmail}', '${safeBranch}', '${status}')">✏️ ${t('edit')}</button>
-                                        <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ ${t('delete')}</button>
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    });
-                }
+            if (!hasCompanies) {
+                list.innerHTML = `<tr><td colspan='6' style='text-align:center;'>No companies found</td></tr>`;
+            }
+        });
 
-                if (!hasAdmins) {
-                    list.innerHTML = `<tr><td colspan='6' style='text-align:center;'>${t('no_admins_found')}</td></tr>`;
-                }
-            });
-        }
-
-        // Load admins immediately for all roles
-        loadAdmins();
-
-        window.loginAs = (name, email, branch, adminId) => {
-            if (confirm(`Login as ${name}?`)) {
-                localStorage.setItem('role', 'branch_admin');
+        window.loginAs = (name, email, companyId, companyName) => {
+            if (confirm(`Login as ${name} for ${companyName}?`)) {
+                localStorage.setItem('role', 'company_admin');
                 localStorage.setItem('name', name);
-                localStorage.setItem('branch', branch);
+                localStorage.setItem('email', email);
+                localStorage.setItem('companyId', companyId);
+                localStorage.setItem('companyName', companyName);
                 localStorage.setItem('admin', 'true');
 
                 location.href = "dashboard.html";
             }
         };
 
-        window.editAdmin = (name, aid, email, branch, status) => {
-            document.getElementById('adminName').value = name;
-            document.getElementById('adminId').value = aid === '-' ? '' : aid;
+        window.editCompany = (cName, cId, aName, email, status) => {
+            document.getElementById('companyName').value = cName;
+            document.getElementById('companyIdAlias').value = cId;
+            document.getElementById('adminName').value = aName;
             document.getElementById('adminEmail').value = email;
-            document.getElementById('adminBranch').value = branch;
-            if (status) document.getElementById('adminStatus').value = status;
+            document.getElementById('adminStatus').value = status;
 
-            // Lock email to prevent ID change (simplifies update logic)
+            // Lock ID & Email to prevent breaking mapping
+            document.getElementById('companyIdAlias').disabled = true;
             document.getElementById('adminEmail').disabled = true;
-            document.getElementById('saveBtn').innerText = "🔄 " + t('update_admin');
+            document.getElementById('saveBtn').innerText = "🔄 Update Company";
 
             document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
-        window.deleteAdmin = (id) => {
-            if (confirm("Delete this admin?")) {
-                remove(ref(db, 'admins/' + id));
+        window.deleteCompany = (adminKey, companyId) => {
+            if (confirm("Delete this company admin and company record?")) {
+                remove(ref(db, 'admins/' + adminKey));
+                remove(ref(db, 'companies/' + companyId));
             }
         };
     </script>

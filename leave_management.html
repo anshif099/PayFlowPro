@@ -312,19 +312,40 @@
             </select>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
-            <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
-            <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span>Attendance</span></a>
-            <a href="leave_management.html" class="nav-item active"><span class="nav-icon">🏖️</span><span>Leave
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span data-i18n="employees">Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item active">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span>Manage Branches</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
                     Management</span></a>
-            <a href="manage_admins.html" class="nav-item"><span class="nav-icon">🛡️</span><span
-                    data-i18n="branch_admins">Branch Admins</span></a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span
-                    data-i18n="interval_management">Interval Management</span></a>
-            <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span
-                    data-i18n="salary_settings">Salary Settings</span></a>
-            <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
-                    Report</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
             <a href="documents.html" class="nav-item">
                 <span class="nav-icon">📄</span>
                 <span>Documents</span>
@@ -337,7 +358,8 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span
+                    data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -743,6 +765,8 @@
             } catch (e) { alert(e.message); }
         };
     </script>
+
+    <script src="sidebar.js"></script>
 </body>
 
 </html>

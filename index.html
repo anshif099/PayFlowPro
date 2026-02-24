@@ -81,15 +81,20 @@
             <p id="welcomeMsg" style="color: #00ffc3; text-align: center; margin-bottom: 15px; font-weight: 500;"></p>
             <input type="password" id="password" data-i18n="password_placeholder" placeholder="Password">
             <button onclick="login()" data-i18n="login">Login</button>
-            <button onclick="resetFlow()" style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different ID</button>
+            <button onclick="resetFlow()"
+                style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different
+                ID</button>
         </div>
 
         <div id="createPasswordStep" style="display:none;">
-            <p id="createMsg" style="color: #00ffc3; text-align: center; margin-bottom: 15px; font-weight: 500;">Set your password</p>
+            <p id="createMsg" style="color: #00ffc3; text-align: center; margin-bottom: 15px; font-weight: 500;">Set
+                your password</p>
             <input type="password" id="newPassword" placeholder="New Password">
             <input type="password" id="confirmPassword" placeholder="Confirm Password">
             <button onclick="createPassword()">Create Password</button>
-            <button onclick="resetFlow()" style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different ID</button>
+            <button onclick="resetFlow()"
+                style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different
+                ID</button>
         </div>
 
         <p class="error" id="error"></p>
@@ -157,14 +162,14 @@
                             found = true;
                             verifiedAdmin = admin;
                             verifiedKey = child.key;
-                            
+
                             if (admin.status === 'inactive') {
                                 errorEl.innerText = "Account Disabled. Contact Super Admin.";
                                 return;
                             }
 
                             document.getElementById("idStep").style.display = "none";
-                            
+
                             if (admin.password) {
                                 document.getElementById("passwordStep").style.display = "block";
                                 document.getElementById("welcomeMsg").innerText = "Welcome, " + (admin.name || "Admin");
@@ -205,6 +210,8 @@
                 localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
                 localStorage.setItem("branch", verifiedAdmin.branch || '');
                 localStorage.setItem("name", verifiedAdmin.name || 'Admin');
+                if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
+                if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
                 location.href = "dashboard.html";
             } else {
                 errorEl.innerText = "Invalid Password";
@@ -229,11 +236,13 @@
                 errorEl.innerText = "Setting password...";
                 await update(ref(db, 'admins/' + verifiedKey), { password: p1 });
                 errorEl.innerText = "Password set! Logging in...";
-                
+
                 localStorage.setItem("admin", "true");
                 localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
                 localStorage.setItem("branch", verifiedAdmin.branch || '');
                 localStorage.setItem("name", verifiedAdmin.name || 'Admin');
+                if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
+                if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
                 location.href = "dashboard.html";
             } catch (err) {
                 errorEl.innerText = "Error: " + err.message;
@@ -241,6 +250,8 @@
         }
     </script>
 
+
+    <script src="sidebar.js"></script>
 </body>
 
 </html>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employees - Teamsive Admin</title>
+    <title>Employees - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="lang.js"></script>
     <style>
@@ -19,8 +19,16 @@
             --border: #1e2530;
             --success: #00ffc3;
             --danger: #ff5c5c;
-            --warning: #ffa726;
             --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -142,7 +150,7 @@
             padding: 8px;
         }
 
-        /* ============ CONTENT SECTIONS ============ */
+        /* ============ CONTENT ============ */
         .dashboard-section {
             padding: 32px;
         }
@@ -162,7 +170,6 @@
             color: var(--text);
         }
 
-        /* ============ FORMS ============ */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -207,7 +214,6 @@
             color: var(--text-muted);
         }
 
-        /* ============ BUTTONS ============ */
         button {
             padding: 12px 24px;
             background: var(--primary);
@@ -256,42 +262,49 @@
             background: var(--danger);
             border-color: var(--danger);
             color: white;
+            box-shadow: 0 4px 12px rgba(255, 92, 92, 0.2);
         }
 
-        /* ============ TABLES ============ */
+        /* ============ TABLE ============ */
         .table-container {
             overflow-x: auto;
-            margin-top: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            white-space: nowrap;
         }
 
         th {
             text-align: left;
-            padding: 14px 16px;
-            font-size: 13px;
+            padding: 16px 20px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border);
             background: rgba(0, 0, 0, 0.2);
         }
 
         td {
-            padding: 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
+            color: var(--text);
             font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         tr:hover {
             background: rgba(0, 255, 195, 0.03);
         }
 
-        /* ============ RESPONSIVE ============ */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -308,44 +321,13 @@
             .menu-toggle {
                 display: block;
             }
-
-            .dashboard-section {
-                padding: 20px;
-            }
-
-            .top-bar {
-                padding: 16px 20px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ============ SCROLLBAR ============ */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-dark);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ============ SIDEBAR ============ -->
+    <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 Teamsive</h2>
@@ -365,6 +347,10 @@
                 <span class="nav-icon">📊</span>
                 <span>Dashboard</span>
             </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
             <a href="employees.html" class="nav-item active">
                 <span class="nav-icon">👥</span>
                 <span>Employees</span>
@@ -376,6 +362,10 @@
             <a href="leave_management.html" class="nav-item">
                 <span class="nav-icon">🏖️</span>
                 <span>Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span>Manage Branches</span>
             </a>
             <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
                     Management</span></a>
@@ -406,9 +396,8 @@
         </nav>
     </div>
 
-    <!-- ============ MAIN CONTENT ============ -->
+    <!-- MAIN CONTENT -->
     <div class="main-content">
-        <!-- Top Bar -->
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
@@ -421,7 +410,6 @@
             </div>
         </div>
 
-        <!-- ============ EMPLOYEES SECTION ============ -->
         <div class="dashboard-section">
             <div class="card">
                 <h3 data-i18n="register_update_employee">Register / Update Employee</h3>
@@ -446,6 +434,21 @@
                         <label data-i18n="salary">Salary</label>
                         <input id="salary" placeholder="Enter salary" data-i18n="salary">
                     </div>
+
+                    <div class="form-group">
+                        <label data-i18n="branch">Branch</label>
+                        <select id="branch">
+                            <option value="">Select Branch</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="department">Department</label>
+                        <select id="department">
+                            <option value="">Select Department (Optional)</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label data-i18n="punch_mode">Punch Mode</label>
                         <select id="punchMode">
@@ -470,10 +473,6 @@
                         <label data-i18n="shift_end">Shift End Time</label>
                         <input type="time" id="shiftEnd" placeholder="e.g., 18:00">
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="branch">Branch</label>
-                        <input id="branch" placeholder="Branch Name" data-i18n="branch">
-                    </div>
                 </div>
                 <button onclick="addEmployee()" data-i18n="save_employee">💾 Save Employee</button>
             </div>
@@ -488,10 +487,10 @@
                                 <th data-i18n="name_id">Name/ID</th>
                                 <th data-i18n="mobile_number">Mobile</th>
                                 <th data-i18n="role">Role</th>
-                                <th data-i18n="branch">Branch</th>
+                                <th data-i18n="branch">Branch & Dept</th>
                                 <th data-i18n="salary">Salary</th>
                                 <th data-i18n="punch_mode">Punch Mode</th>
-                                <th data-i18n="shift_type">Shift Type</th>
+                                <th data-i18n="shift"><span data-i18n="shift_type">Shift Type</span></th>
                                 <th data-i18n="status">Status</th>
                                 <th data-i18n="action">Action</th>
                             </tr>
@@ -524,38 +523,68 @@
             location = "admin.html";
         }
 
-        window.toggleSidebar = () => {
-            document.getElementById('sidebar').classList.toggle('open');
-        };
-
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "admin.html"; }
 
-        // Hide Branch Admin Link for non-super
         const role = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
+        const companyId = localStorage.getItem("companyId");
 
-        if (role !== 'super_admin') {
-            const navs = document.querySelectorAll('.nav-item');
-            navs.forEach(nav => {
-                if (nav.href.includes('manage_admins.html')) nav.style.display = 'none';
-            });
-            // Auto-fill and disable branch for branch admins
-            const branchInput = document.getElementById('branch');
-            if (branchInput) {
-                branchInput.value = adminBranch || '';
-                branchInput.disabled = true;
-            }
+        // Sidebar logic
+        if (role === 'super_admin') {
+            document.getElementById('nav-manage-companies').style.display = 'flex';
+            document.getElementById('nav-manage-branches').style.display = 'flex';
+            document.getElementById('nav-branch-admins').style.display = 'flex';
+        } else if (role === 'company_admin') {
+            document.getElementById('nav-manage-branches').style.display = 'flex';
+            document.getElementById('nav-branch-admins').style.display = 'flex';
+        } else if (role === 'branch_admin') {
+            // Can't manage admins or branches
         }
 
-        // Toggle shift time fields visibility
+        // Dropdowns for Branches and Departments
+        if ((role === 'super_admin' && companyId) || role === 'company_admin' || role === 'branch_admin') {
+            onValue(ref(db, `companies/${companyId}/branches`), snapshot => {
+                const branchSelect = document.getElementById('branch');
+                const currVal = branchSelect.value;
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const data = child.val();
+                        branchSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                    });
+                }
+                if (role === 'branch_admin' && adminBranch) {
+                    branchSelect.value = adminBranch;
+                    branchSelect.disabled = true; // branch admins cannot add operators to other branches
+                } else {
+                    if (currVal) branchSelect.value = currVal;
+                }
+            });
+
+            onValue(ref(db, `companies/${companyId}/departments`), snapshot => {
+                const deptSelect = document.getElementById('department');
+                const currVal = deptSelect.value;
+                deptSelect.innerHTML = '<option value="">Select Department (Optional)</option>';
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const data = child.val();
+                        deptSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                    });
+                }
+                if (currVal) deptSelect.value = currVal;
+            });
+        }
+
+
         window.toggleShiftTimes = () => {
             const shiftType = document.getElementById('shiftType').value;
             const startGroup = document.getElementById('shiftStartGroup');
             const endGroup = document.getElementById('shiftEndGroup');
 
             if (shiftType === 'rotating') {
-                startGroup.style.display = 'block';
-                endGroup.style.display = 'block';
+                startGroup.style.display = 'flex';
+                endGroup.style.display = 'flex';
             } else {
                 startGroup.style.display = 'none';
                 endGroup.style.display = 'none';
@@ -564,7 +593,6 @@
             }
         };
 
-        /* EMPLOYEES */
         let employeeCount = 0;
         window.addEmployee = () => {
             const nameVal = document.getElementById('name').value;
@@ -577,6 +605,7 @@
             const shiftStartValue = document.getElementById('shiftStart').value;
             const shiftEndValue = document.getElementById('shiftEnd').value;
             const branchVal = document.getElementById('branch').value;
+            const deptVal = document.getElementById('department').value;
 
             if (!empIdVal || !nameVal) {
                 alert('Please enter Name and Employee ID');
@@ -584,11 +613,10 @@
             }
 
             if (!branchVal) {
-                alert('Please enter Branch Name');
+                alert('Please select a Branch');
                 return;
             }
 
-            // Validate rotating shift times
             if (shiftTypeValue === 'rotating' && (!shiftStartValue || !shiftEndValue)) {
                 alert('Please enter shift start and end times for rotating shift');
                 return;
@@ -603,10 +631,11 @@
                 punchMode: punchModeValue,
                 shiftType: shiftTypeValue,
                 branch: branchVal,
-                status: 'active' // Default status
+                department: deptVal,
+                companyId: companyId,
+                status: 'active'
             };
 
-            // Add shift times only for rotating shift
             if (shiftTypeValue === 'rotating') {
                 employeeData.shiftStart = shiftStartValue;
                 employeeData.shiftEnd = shiftEndValue;
@@ -615,8 +644,6 @@
             update(ref(db, "employees/" + empIdVal), employeeData)
                 .then(() => {
                     alert('Employee saved successfully!');
-
-                    // Clear form (but keep branch if branch admin)
                     document.getElementById('name').value = '';
                     document.getElementById('empid').value = '';
                     document.getElementById('mobile').value = '';
@@ -627,16 +654,14 @@
                     document.getElementById('shiftStart').value = '';
                     document.getElementById('shiftEnd').value = '';
 
-                    if (role === 'super_admin') {
+                    if (role !== 'branch_admin') {
                         document.getElementById('branch').value = '';
-                    } else {
-                        document.getElementById('branch').value = adminBranch || '';
                     }
+                    document.getElementById('department').value = '';
+
                     toggleShiftTimes();
                 })
-                .catch(error => {
-                    alert('Error saving employee: ' + error.message);
-                });
+                .catch(error => { alert('Error saving employee: ' + error.message); });
         };
 
         window.toggleStatus = (empId, currentStatus) => {
@@ -645,12 +670,7 @@
 
             if (confirm(`Are you sure you want to ${action} this employee?`)) {
                 update(ref(db, "employees/" + empId), { status: newStatus })
-                    .then(() => {
-                        // Status updated automatically by listener
-                    })
-                    .catch(error => {
-                        alert(`Error ${action}ing employee: ` + error.message);
-                    });
+                    .catch(error => alert(`Error ${action}ing employee: ` + error.message));
             }
         };
 
@@ -663,14 +683,14 @@
                 s.forEach(c => {
                     const e = c.val();
 
-                    if (role !== 'super_admin' && e.branch !== adminBranch) {
-                        return;
-                    }
+                    // Security / Context Filtering
+                    if (role === 'branch_admin' && e.branch !== adminBranch) return;
+                    if (role === 'company_admin' && e.companyId !== companyId) return;
 
                     employeeCount++;
 
                     const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
-                    const status = e.status || 'active'; // Default to active for existing users
+                    const status = e.status || 'active';
 
                     const statusBadge = status === 'active'
                         ? `<span style="background: rgba(0, 255, 195, 0.15); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
@@ -679,61 +699,50 @@
                     const toggleBtnText = status === 'active' ? '🛑 Deactivate' : '✅ Activate';
                     const toggleBtnColor = status === 'active' ? 'color: #ff5c5c;' : 'color: #00ffc3;';
 
-                    // Determine shift label
                     let shiftLabel = '🕒 Fixed';
-                    if (e.shiftType === 'flexible') {
-                        shiftLabel = '⏱️ Flexible';
-                    } else if (e.shiftType === 'rotating') {
-                        const shiftTime = e.shiftStart && e.shiftEnd ? `${e.shiftStart}-${e.shiftEnd}` : 'N/A';
-                        shiftLabel = `🔄 Rotating (${shiftTime})`;
-                    }
+                    if (e.shiftType === 'flexible') shiftLabel = '⏱️ Flexible';
+                    else if (e.shiftType === 'rotating') shiftLabel = `🔄 Rotating (${e.shiftStart}-${e.shiftEnd})`;
+
+                    const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
 
                     data.innerHTML += `<tr>
-        <td>${employeeCount}</td>
-        <td>${e.name}<br><span style="font-size: 11px; color: #8b92a0;">${e.empId}</span></td>
-        <td>${e.mobile}</td>
-        <td>${e.role}</td>
-        <td>${e.branch || '-'}</td>
-        <td>₹${e.salary}</td>
-        <td>${punchModeLabel}</td>
-        <td>${shiftLabel}</td>
-        <td>${statusBadge}</td>
-        <td>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}')">✏️ Edit</button>
-            <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
-            <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
-          </div>
-        </td></tr>`;
+                        <td>${employeeCount}</td>
+                        <td>${e.name}<br><span style="font-size: 11px; color: #8b92a0;">${e.empId}</span></td>
+                        <td>${e.mobile}</td>
+                        <td>${e.role}</td>
+                        <td>${e.branch || '-'}${deptDisplay}</td>
+                        <td>₹${e.salary}</td>
+                        <td>${punchModeLabel}</td>
+                        <td>${shiftLabel}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                          <div style="display: flex; gap: 8px;">
+                            <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
+                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}')">✏️ Edit</button>
+                            <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
+                            <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
+                          </div>
+                        </td></tr>`;
                 });
             } else {
                 data.innerHTML = "<tr><td colspan='10' style='text-align:center'>No employees found</td></tr>";
             }
         });
 
-        window.editEmployee = (name, empId, mobile, role, branch, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status) => {
-            // Pre-fill the employee form
+        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status) => {
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
             document.getElementById('mobile').value = mobile;
             document.getElementById('role').value = role;
             document.getElementById('branch').value = branch;
+            document.getElementById('department').value = department;
             document.getElementById('salary').value = salary;
             document.getElementById('punchMode').value = punchModeValue || 'office';
             document.getElementById('shiftType').value = shiftTypeValue || 'fixed';
             document.getElementById('shiftStart').value = shiftStartValue || '';
             document.getElementById('shiftEnd').value = shiftEndValue || '';
-
-            // Note: We are not exposing a status dropdown in the edit form to keep it simple, 
-            // the status can be toggled from the list action button.
-
-            // Toggle shift time fields based on shift type
             toggleShiftTimes();
-
-            // Scroll to the form
-            setTimeout(() => {
-                document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            setTimeout(() => { document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
         };
 
         window.delEmp = id => {
@@ -743,6 +752,7 @@
         };
     </script>
 
+    <script src="sidebar.js"></script>
 </body>
 
 </html>
