@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prediction - Teamsive Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* ============ CONTENT SECTIONS ============ */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+            max-width: 400px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* ============ PREDICTION RESULTS ============ */
+        .results-container {
+            display: none;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .pred-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .pred-val {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+
+        .pred-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            color: var(--primary);
+            padding: 40px;
+            font-weight: 500;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .dashboard-section {
+                padding: 20px;
+            }
+
+            .top-bar {
+                padding: 16px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============ SIDEBAR ============ -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+            <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span>Employees</span></a>
+            <a href="attendance.html" class="nav-item"><span class="nav-icon">✅</span><span>Attendance</span></a>
+            <a href="leave_management.html" class="nav-item"><span class="nav-icon">🏖️</span><span>Leave
+                    Management</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+                    Management</span></a>
+            <a href="salary_settings.html" class="nav-item"><span class="nav-icon">💰</span><span>Salary
+                    Settings</span></a>
+            <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
+                    Report</span></a>
+            <a href="documents.html" class="nav-item"><span class="nav-icon">📄</span><span>Documents</span></a>
+            <a href="leaderboard.html" class="nav-item"><span class="nav-icon">🏆</span><span>Leaderboard</span></a>
+            <a href="ai_prediction.html" class="nav-item active"><span class="nav-icon">🧠</span><span>AI
+                    Prediction</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Settings</span></a>
+        </nav>
+    </div>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>AI Prediction (Next Month)</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3>Select Employee</h3>
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select id="empSelector" onchange="generatePredictions(this.value)">
+                        <option value="">-- Choose an Employee --</option>
+                    </select>
+                </div>
+
+                <div id="loader" class="loader">Analyzing historical data patterns...</div>
+
+                <div id="resultsContainer" class="results-container">
+                    <h3 style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">AI Forecast
+                    </h3>
+                    <div class="results-grid">
+                        <div class="pred-card">
+                            <span class="pred-title">Predicted Salary</span>
+                            <span class="pred-val" id="predSalary">₹0</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Predicted Present</span>
+                            <span class="pred-val" id="predPresent" style="color:var(--success)">0 Days</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Predicted Absent</span>
+                            <span class="pred-val" id="predAbsent" style="color:var(--danger)">0 Days</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Predicted Week Offs</span>
+                            <span class="pred-val" id="predWeekOffs" style="color:#C0C0C0">0 Days</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Leave Probability</span>
+                            <span class="pred-val" id="predLeaveProb" style="color:var(--warning)">Low</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Leaderboard Trend</span>
+                            <span class="pred-val" id="predTrend" style="color:#3b82f6">Stable</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+
+        // Cache data to avoid refetching on every change
+        let cachedEmpData = null;
+        let cachedAttData = null;
+        let cachedSettings = null;
+
+        async function initPage() {
+            const role = localStorage.getItem("role");
+            const adminBranch = localStorage.getItem("branch");
+
+            try {
+                const empSnap = await get(ref(db, "employees"));
+                if (empSnap.exists()) {
+                    cachedEmpData = empSnap.val();
+                    const selector = document.getElementById('empSelector');
+
+                    Object.keys(cachedEmpData).forEach(id => {
+                        const emp = cachedEmpData[id];
+                        if (role !== 'super_admin' && emp.branch !== adminBranch) return;
+
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = `${emp.name} (${emp.empId})`;
+                        selector.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading employees", e);
+            }
+        }
+
+        function parseTime(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function getWorkingDays(start, end, weekOffs, secondSaturday, holidays, joiningDate) {
+            let workingDays = [];
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+            let join = null;
+            if (joiningDate) {
+                try {
+                    join = new Date(joiningDate);
+                } catch (e) { }
+            }
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                // Skip if this date is before the joining date
+                if (join && d < new Date(join.getFullYear(), join.getMonth(), join.getDate())) {
+                    continue;
+                }
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const dateStr = `${y}-${m}-${dd}`;
+
+                const dayName = dayNames[d.getDay()];
+
+                if (weekOffs.includes(dayName)) continue;
+                if (holidays.has(dateStr)) continue;
+
+                if (dayName === "Saturday" && d.getDate() >= 8 && d.getDate() <= 14) {
+                    let isOff = false;
+                    if (secondSaturday === true) isOff = true;
+                    else if (typeof secondSaturday === 'object' && secondSaturday !== null && secondSaturday.enabled) isOff = true;
+                    if (isOff) continue;
+                }
+                workingDays.push(dateStr);
+            }
+            return workingDays;
+        }
+
+        window.generatePredictions = async (empId) => {
+            if (!empId) {
+                document.getElementById('resultsContainer').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            try {
+                if (!cachedSettings || !cachedAttData) {
+                    const [att, ot, int, wo, hol, ss] = await Promise.all([
+                        get(ref(db, "attendance")),
+                        get(ref(db, "settings/officeTime")),
+                        get(ref(db, "settings/intervals")),
+                        get(ref(db, "settings/weekOffs")),
+                        get(ref(db, "settings/holidays")),
+                        get(ref(db, "settings/secondSaturday"))
+                    ]);
+                    cachedAttData = att.exists() ? att.val() : {};
+                    cachedSettings = {
+                        officeTime: ot.exists() ? ot.val() : null,
+                        intervals: int.exists() ? int.val() : null,
+                        weekOffs: wo.exists() ? wo.val() || [] : [],
+                        holidays: hol.exists() ? new Set(Object.keys(hol.val() || {})) : new Set(),
+                        secondSaturday: ss.exists() ? ss.val() : false
+                    };
+                }
+
+                const emp = cachedEmpData[empId];
+                const baseSalary = parseInt(emp.salary || "0");
+
+                // Real basic date calculations
+                const now = new Date();
+                let nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                const nextMonthEnd = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
+
+                const nextMonthWorkingDays = getWorkingDays(nextMonth, nextMonthEnd, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
+                const totalNextMonthDays = nextMonthEnd.getDate();
+                const nextMonthWeekOffs = totalNextMonthDays - nextMonthWorkingDays.length;
+
+                // Analyze current month attendance
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+                const currentMonthWorking = getWorkingDays(startOfMonth, yesterday > startOfMonth ? yesterday : startOfMonth, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
+
+                const myAttendance = cachedAttData[empId] || {};
+                let present = 0, absent = 0, leaves = 0;
+
+                currentMonthWorking.forEach(date => {
+                    const record = myAttendance[date] || {};
+                    const status = record.status || 'absent';
+                    if (status === 'absent') absent++;
+                    else if (status.includes('leave')) leaves++;
+                    else present++;
+                });
+
+                // Prediction logic matching Flutter App
+                let absenceRate = currentMonthWorking.length > 0 ? absent / currentMonthWorking.length : 0.05;
+                let leaveRate = currentMonthWorking.length > 0 ? leaves / currentMonthWorking.length : 0;
+
+                if (absenceRate < 0.05) absenceRate = 0;
+
+                let predictedAbsent = Math.round(nextMonthWorkingDays.length * absenceRate);
+                let predictedLeaves = Math.round((nextMonthWorkingDays.length / 30) * leaves);
+                let predictedPresent = nextMonthWorkingDays.length - predictedAbsent - predictedLeaves;
+                if (predictedPresent < 0) predictedPresent = 0;
+
+                const dailySalary = baseSalary / totalNextMonthDays;
+                let predictedSalary = Math.round(baseSalary - (predictedAbsent * dailySalary));
+                if (predictedSalary < 0) predictedSalary = 0;
+
+                let leaveProb = "Low";
+                if (leaveRate > 0.1) leaveProb = "High";
+                else if (leaveRate > 0.03) leaveProb = "Medium";
+
+                let trend = "Stable";
+                if (absenceRate == 0 && present > 10) trend = "Improving 📈";
+                else if (absenceRate > 0.1) trend = "Declining 📉";
+
+                // Update UI
+                document.getElementById('predSalary').textContent = `₹${predictedSalary}`;
+                document.getElementById('predPresent').textContent = `${predictedPresent} Days`;
+                document.getElementById('predAbsent').textContent = `${predictedAbsent} Days`;
+                document.getElementById('predWeekOffs').textContent = `${nextMonthWeekOffs} Days`;
+                document.getElementById('predLeaveProb').textContent = leaveProb;
+
+                const trendEl = document.getElementById('predTrend');
+                trendEl.textContent = trend;
+                trendEl.style.color = trend.includes("Improving") ? 'var(--success)' : trend.includes("Declining") ? 'var(--danger)' : '#3b82f6';
+
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('resultsContainer').style.display = 'block';
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader').innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+            }
+        };
+
+        initPage();
+    </script>
+</body>
+
+</html>

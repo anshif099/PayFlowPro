@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Teamsive Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* ============ CONTENT SECTIONS ============ */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .filter-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(0, 255, 195, 0.1);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        /* ============ LEADERBOARD LIST ============ */
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .leaderboard-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .leaderboard-card:hover {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(0, 255, 195, 0.3);
+        }
+
+        .rank-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .rank-number {
+            font-size: 18px;
+            font-weight: 700;
+            width: 30px;
+            text-align: center;
+        }
+
+        .rank-1 .rank-number {
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .rank-2 .rank-number {
+            color: #C0C0C0;
+            font-size: 22px;
+        }
+
+        .rank-3 .rank-number {
+            color: #CD7F32;
+            font-size: 20px;
+        }
+
+        .emp-details h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+        }
+
+        .emp-details p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .score-info {
+            text-align: right;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .score-positive {
+            background: rgba(0, 255, 195, 0.1);
+            color: var(--success);
+        }
+
+        .score-negative {
+            background: rgba(255, 92, 92, 0.1);
+            color: var(--danger);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .dashboard-section {
+                padding: 20px;
+            }
+
+            .top-bar {
+                padding: 16px 20px;
+            }
+
+            .leaderboard-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .score-info {
+                align-self: flex-start;
+                margin-left: 46px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============ SIDEBAR ============ -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+            </select>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span>Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span>Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span>Leave Management</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item">
+                <span class="nav-icon">⏲️</span>
+                <span>Interval Management</span>
+            </a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span>Salary Settings</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span>Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item active">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Leaderboard</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <div class="filter-buttons">
+                    <button class="filter-btn" data-filter="Daily" onclick="setFilter('Daily')">Daily</button>
+                    <button class="filter-btn" data-filter="Weekly" onclick="setFilter('Weekly')">Weekly</button>
+                    <button class="filter-btn active" data-filter="Monthly"
+                        onclick="setFilter('Monthly')">Monthly</button>
+                    <button class="filter-btn" data-filter="Yearly" onclick="setFilter('Yearly')">Yearly</button>
+                    <button class="filter-btn" data-filter="Overall" onclick="setFilter('Overall')">Overall</button>
+                </div>
+
+                <div id="leaderboardContainer" class="leaderboard-list">
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading ranks...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+
+        let currentFilter = 'Monthly';
+
+        window.setFilter = (filter) => {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
+            loadLeaderboard();
+        };
+
+        function parseTime(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            if (parts.length < 2) return 0;
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        function calculateDayNetMinutes(record, startMinutes, endMinutes, netOfficeMinutes) {
+            const status = record.status || 'absent';
+            if (status === 'absent' || status === 'unpaid-leave') {
+                return -netOfficeMinutes;
+            }
+
+            let lateIn = 0, earlyIn = 0, lateOut = 0, earlyOut = 0;
+
+            const punchIn = record.punchIn?.time;
+            if (punchIn) {
+                try {
+                    const timeParts = punchIn.trim().split(" ");
+                    if (timeParts.length === 2) {
+                        let hm = timeParts[0].split(":");
+                        let h = parseInt(hm[0] || '0');
+                        let m = parseInt(hm[1] || '0');
+                        const ampm = timeParts[1].toUpperCase();
+
+                        if (ampm === "PM" && h < 12) h += 12;
+                        if (ampm === "AM" && h === 12) h = 0;
+
+                        let totalMins = h * 60 + m;
+                        if (totalMins > startMinutes) {
+                            lateIn = totalMins - startMinutes;
+                        } else {
+                            earlyIn = startMinutes - totalMins;
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            const punchOut = record.punchOut?.time;
+            if (punchOut) {
+                try {
+                    const timeParts = punchOut.trim().split(" ");
+                    if (timeParts.length === 2) {
+                        let hm = timeParts[0].split(":");
+                        let h = parseInt(hm[0] || '0');
+                        let m = parseInt(hm[1] || '0');
+                        const ampm = timeParts[1].toUpperCase();
+
+                        if (ampm === "PM" && h < 12) h += 12;
+                        if (ampm === "AM" && h === 12) h = 0;
+
+                        let totalMins = h * 60 + m;
+                        if (totalMins < endMinutes) {
+                            earlyOut = endMinutes - totalMins;
+                        } else {
+                            lateOut = totalMins - endMinutes;
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            return (earlyIn + lateOut) - (lateIn + earlyOut);
+        }
+
+        function getWorkingDays(filter, weekOffs, secondSaturday, holidays, joiningDate) {
+            const now = new Date();
+            let start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let end = new Date(start);
+
+            if (filter === 'Daily') {
+                // Keep as today
+            } else if (filter === 'Weekly') {
+                const day = start.getDay();
+                const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+                start = new Date(start.setDate(diff));
+                end = new Date(start);
+                end.setDate(start.getDate() + 6);
+            } else if (filter === 'Monthly') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            } else if (filter === 'Yearly') {
+                start = new Date(now.getFullYear(), 0, 1);
+                end = new Date(now.getFullYear(), 11, 31);
+            } else if (filter === 'Overall') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1); // fallback to month
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            }
+
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            let workingDays = [];
+
+            let join = null;
+            if (joiningDate) {
+                try {
+                    join = new Date(joiningDate);
+                } catch (e) { }
+            }
+
+            for (let d = new Date(start); d <= end && d <= now; d.setDate(d.getDate() + 1)) {
+
+                // Skip if this date is before the joining date
+                if (join && d < new Date(join.getFullYear(), join.getMonth(), join.getDate())) {
+                    continue;
+                }
+
+                // Manually format to YYYY-MM-DD instead of toISOString to avoid timezone bugs
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const dateStr = `${y}-${m}-${dd}`;
+
+                // dayNames array matches the native JS getDay() (0=Sunday)
+                // However, Dart `DateTime.weekday` is 1=Monday...7=Sunday.
+                // Our dayNames list above is ["Sunday", "Monday", ...], so `d.getDay()` correctly fetches Monday using index 1.
+                const dayName = dayNames[d.getDay()];
+
+                if (weekOffs.includes(dayName)) continue;
+                if (holidays.has(dateStr)) continue;
+
+                if (dayName === "Saturday" && d.getDate() >= 8 && d.getDate() <= 14) {
+                    let isOff = false;
+                    if (secondSaturday === true) isOff = true;
+                    else if (typeof secondSaturday === 'object' && secondSaturday !== null) {
+                        if (secondSaturday.enabled) isOff = true;
+                        else if (secondSaturday.disabledAt) {
+                            if (new Date(dateStr) < new Date(secondSaturday.disabledAt)) isOff = true;
+                        }
+                    }
+                    if (isOff) continue;
+                }
+                workingDays.push(dateStr);
+            }
+            return workingDays;
+        }
+
+        async function loadLeaderboard() {
+            document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Calculating...</div>';
+
+            try {
+                const [empSnap, attSnap, officeSnap, intSnap, woSnap, holSnap, ssSnap] = await Promise.all([
+                    get(ref(db, "employees")),
+                    get(ref(db, "attendance")),
+                    get(ref(db, "settings/officeTime")),
+                    get(ref(db, "settings/intervals")),
+                    get(ref(db, "settings/weekOffs")),
+                    get(ref(db, "settings/holidays")),
+                    get(ref(db, "settings/secondSaturday"))
+                ]);
+
+                if (!empSnap.exists()) {
+                    document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No employees found.</div>';
+                    return;
+                }
+
+                const role = localStorage.getItem("role");
+                const adminBranch = localStorage.getItem("branch");
+
+                let officeStart = 9 * 60, officeEnd = 18 * 60, intervals = 0;
+                if (officeSnap.exists()) {
+                    officeStart = parseTime(officeSnap.val().start);
+                    officeEnd = parseTime(officeSnap.val().end);
+                }
+                if (intSnap.exists()) {
+                    Object.values(intSnap.val()).forEach(v => {
+                        const s = parseTime(v.start), e = parseTime(v.end);
+                        if (e > s) intervals += (e - s);
+                    });
+                }
+                let netOffice = (officeEnd - officeStart) - intervals;
+                if (netOffice < 0) netOffice = 0;
+
+                const weekOffs = woSnap.exists() ? woSnap.val() || [] : [];
+                const holidays = holSnap.exists() ? new Set(Object.keys(holSnap.val() || {})) : new Set();
+                const ssData = ssSnap.exists() ? ssSnap.val() : false;
+
+                const employees = empSnap.val();
+                const attendance = attSnap.exists() ? attSnap.val() : {};
+
+                let results = [];
+
+                for (let empId in employees) {
+                    const emp = employees[empId];
+                    if (role !== 'super_admin' && emp.branch !== adminBranch) continue;
+
+                    const activeWorkingDays = getWorkingDays(currentFilter, weekOffs, ssData, holidays, emp.joiningDate);
+
+                    let netMins = 0;
+                    const empAtt = attendance[empId] || {};
+
+                    activeWorkingDays.forEach(date => {
+                        if (empAtt[date]) {
+                            netMins += calculateDayNetMinutes(empAtt[date], officeStart, officeEnd, netOffice);
+                        } else {
+                            netMins -= netOffice;
+                        }
+                    });
+
+                    results.push({
+                        empId: empId,
+                        name: emp.name || 'Unknown',
+                        role: emp.role || '',
+                        branch: emp.branch,
+                        netMins: netMins
+                    });
+                }
+
+                results.sort((a, b) => b.netMins - a.netMins);
+
+                let html = '';
+                results.forEach((r, index) => {
+                    const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                    let displayRank = `#${index + 1}`;
+                    if (index === 0) displayRank = '🥇';
+                    else if (index === 1) displayRank = '🥈';
+                    else if (index === 2) displayRank = '🥉';
+
+                    const hours = Math.floor(Math.abs(r.netMins) / 60);
+                    const mins = Math.abs(r.netMins) % 60;
+                    const timeStr = `${hours}h ${mins}m`;
+                    const scoreClass = r.netMins >= 0 ? 'score-positive' : 'score-negative';
+                    const sign = r.netMins >= 0 ? '+' : '-';
+
+                    html += `
+                        <div class="leaderboard-card ${rankClass}">
+                            <div class="rank-info">
+                                <div class="rank-number">${displayRank}</div>
+                                <div class="emp-details">
+                                    <h4>${r.name}</h4>
+                                    <p>${r.role} • ${r.branch || 'No branch'}</p>
+                                </div>
+                            </div>
+                            <div class="score-info ${scoreClass}">
+                                ${sign}${timeStr}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (results.length === 0) html = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No ranking data found for this period.</div>';
+
+                document.getElementById('leaderboardContainer').innerHTML = html;
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('leaderboardContainer').innerHTML = `<div style="text-align: center; color: var(--danger); padding: 20px;">Error: ${e.message}</div>`;
+            }
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+
+</html>
