@@ -365,6 +365,10 @@
                     Settings</span></a>
             <a href="monthly_report.html" class="nav-item"><span class="nav-icon">📑</span><span>Monthly
                     Report</span></a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
             <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span>Settings</span></a>
         </nav>
     </div>
@@ -552,12 +556,12 @@
         window.saveWeekOffs = () => {
             const selectedDays = [];
             weekDays.forEach(day => { if (document.getElementById(`weekoff-${day}`).checked) { selectedDays.push(day.charAt(0).toUpperCase() + day.slice(1)) } });
-            
+
             set(ref(db, `${settingsRoot}/weekOffs`), selectedDays);
 
             const secondSatChecked = document.getElementById('weekoff-second-saturday').checked;
             let isCurrentlyTrue = false;
-            
+
             if (currentSecondSaturdayData === true) {
                 isCurrentlyTrue = true;
             } else if (typeof currentSecondSaturdayData === 'object' && currentSecondSaturdayData !== null) {
