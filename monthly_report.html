@@ -495,7 +495,7 @@
                 const weekOffNames = settingsSnap.child("weekOffs").val() || [];
                 const allHolidays = settingsSnap.child("holidays").val() || {};
                 const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
-                const isSecondSaturday = settingsSnap.child("secondSaturday").val() === true;
+                const secondSaturdayData = settingsSnap.child("secondSaturday").val();
 
                 // Helper: Parse HH:MM to minutes
                 const toMinutes = (timeStr) => {
@@ -533,8 +533,21 @@
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                     let isWO = weekOffNames.includes(dayName);
                     // Second Saturday: day 8-14 is the 2nd week
-                    if (!isWO && dayName === 'Saturday' && isSecondSaturday && d >= 8 && d <= 14) {
-                        isWO = true;
+                    if (!isWO && dayName === 'Saturday' && d >= 8 && d <= 14) {
+                        if (secondSaturdayData === true) {
+                            isWO = true;
+                        } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
+                            if (secondSaturdayData.enabled === true) {
+                                isWO = true;
+                            } else if (secondSaturdayData.disabledAt) {
+                                const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                                if (currentDateOnly < disabledDateOnly) {
+                                    isWO = true;
+                                }
+                            }
+                        }
                     }
                     if (isWO) monthWeekOffCount++;
                 }
@@ -649,8 +662,21 @@
 
                         let isWeekOff = weekOffNames.includes(dayName);
                         // Second Saturday: day 8-14 is the 2nd week
-                        if (!isWeekOff && dayName === 'Saturday' && isSecondSaturday && dateObj.getDate() >= 8 && dateObj.getDate() <= 14) {
-                            isWeekOff = true;
+                        if (!isWeekOff && dayName === 'Saturday' && dateObj.getDate() >= 8 && dateObj.getDate() <= 14) {
+                            if (secondSaturdayData === true) {
+                                isWeekOff = true;
+                            } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
+                                if (secondSaturdayData.enabled === true) {
+                                    isWeekOff = true;
+                                } else if (secondSaturdayData.disabledAt) {
+                                    const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                    const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                    const currentDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                                    if (currentDateOnly < disabledDateOnly) {
+                                        isWeekOff = true;
+                                    }
+                                }
+                            }
                         }
 
                         if (allHolidays[ymd]) {

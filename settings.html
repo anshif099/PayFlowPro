@@ -535,17 +535,51 @@
             weekDays.forEach(day => { document.getElementById(`weekoff-${day}`).checked = false });
             if (s.exists()) { const weekOffs = s.val() || []; weekOffs.forEach(day => { const checkbox = document.getElementById(`weekoff-${day.toLowerCase()}`); if (checkbox) checkbox.checked = true }) }
         });
+        let currentSecondSaturdayData = null;
         onValue(ref(db, `${settingsRoot}/secondSaturday`), s => {
-            document.getElementById('weekoff-second-saturday').checked = (s.exists() && s.val() === true);
+            currentSecondSaturdayData = s.val();
+            let isEnabled = false;
+            if (s.exists()) {
+                if (s.val() === true) {
+                    isEnabled = true;
+                } else if (typeof s.val() === 'object' && s.val() !== null) {
+                    isEnabled = s.val().enabled === true;
+                }
+            }
+            document.getElementById('weekoff-second-saturday').checked = isEnabled;
         });
 
         window.saveWeekOffs = () => {
             const selectedDays = [];
             weekDays.forEach(day => { if (document.getElementById(`weekoff-${day}`).checked) { selectedDays.push(day.charAt(0).toUpperCase() + day.slice(1)) } });
-            const secondSat = document.getElementById('weekoff-second-saturday').checked;
+            
             set(ref(db, `${settingsRoot}/weekOffs`), selectedDays);
-            set(ref(db, `${settingsRoot}/secondSaturday`), secondSat);
-            alert(`Week-offs saved!`)
+
+            const secondSatChecked = document.getElementById('weekoff-second-saturday').checked;
+            let isCurrentlyTrue = false;
+            
+            if (currentSecondSaturdayData === true) {
+                isCurrentlyTrue = true;
+            } else if (typeof currentSecondSaturdayData === 'object' && currentSecondSaturdayData !== null) {
+                isCurrentlyTrue = currentSecondSaturdayData.enabled === true;
+            }
+
+            if (secondSatChecked !== isCurrentlyTrue || currentSecondSaturdayData === null || typeof currentSecondSaturdayData === 'boolean') {
+                const nowIso = new Date().toISOString();
+                if (secondSatChecked) {
+                    set(ref(db, `${settingsRoot}/secondSaturday`), {
+                        enabled: true,
+                        enabledAt: nowIso
+                    });
+                } else {
+                    set(ref(db, `${settingsRoot}/secondSaturday`), {
+                        enabled: false,
+                        disabledAt: nowIso
+                    });
+                }
+            }
+
+            alert(`Week-offs saved!`);
         };
 
         // Holidays

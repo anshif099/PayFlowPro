@@ -639,7 +639,7 @@
             // 2. Fetch Settings (WeekOffs & Holidays & OfficeTime & Intervals)
             const settingsSnap = await get(ref(db, "settings"));
             const weekOffNames = settingsSnap.child("weekOffs").val() || [];
-            const isSecondSaturday = settingsSnap.child("secondSaturday").val() === true;
+            const secondSaturdayData = settingsSnap.child("secondSaturday").val();
             const allHolidays = settingsSnap.child("holidays").val() || {};
             const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
             const intervals = [];
@@ -672,8 +672,21 @@
                 const date = new Date(year, month - 1, day);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                 let isWO = weekOffNames.includes(dayName);
-                if (!isWO && dayName === 'Saturday' && isSecondSaturday && day >= 8 && day <= 14) {
-                    isWO = true;
+                if (!isWO && dayName === 'Saturday' && day >= 8 && day <= 14) {
+                    if (secondSaturdayData === true) {
+                        isWO = true;
+                    } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
+                        if (secondSaturdayData.enabled === true) {
+                            isWO = true;
+                        } else if (secondSaturdayData.disabledAt) {
+                            const disabledDate = new Date(secondSaturdayData.disabledAt);
+                            const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                            const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            if (currentDateOnly < disabledDateOnly) {
+                                isWO = true;
+                            }
+                        }
+                    }
                 }
                 if (isWO) weekOffCount++;
             }
@@ -769,8 +782,21 @@
                 const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
                 let isWO = weekOffNames.includes(dayName);
-                if (!isWO && dayName === 'Saturday' && isSecondSaturday && d >= 8 && d <= 14) {
-                    isWO = true;
+                if (!isWO && dayName === 'Saturday' && d >= 8 && d <= 14) {
+                    if (secondSaturdayData === true) {
+                        isWO = true;
+                    } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
+                        if (secondSaturdayData.enabled === true) {
+                            isWO = true;
+                        } else if (secondSaturdayData.disabledAt) {
+                            const disabledDate = new Date(secondSaturdayData.disabledAt);
+                            const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                            const currentDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                            if (currentDateOnly < disabledDateOnly) {
+                                isWO = true;
+                            }
+                        }
+                    }
                 }
 
                 if (allHolidays[ymd]) {
