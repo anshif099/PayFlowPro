@@ -1287,6 +1287,69 @@ const translations = {
 
         confirm_delete: "Sind Sie sicher?",
         saved_successfully: "Erfolgreich gespeichert!"
+    },
+    ta: {
+        dashboard: "டாஷ்போர்டு (Dashboard)",
+        employees: "பணியாளர்கள் (Employees)",
+        attendance: "வருகை (Attendance)",
+        leave_management: "விடுப்பு மேலாண்மை (Leave Mgt)",
+        branch_admins: "நிர்வாகிகள் (Admins)",
+        salary_settings: "சம்பள அமைப்புகள் (Salary)",
+        monthly_report: "மாதாந்திர அறிக்கை (Report)",
+        settings: "அமைப்புகள் (Settings)",
+        logout: "வெளியேறு (Logout)",
+
+        // Login Page
+        admin_login_title: "நிர்வாகி உள்நுழைவு (Admin Login)",
+        admin_login_header: "நிர்வாகி (Admin)",
+        email_placeholder: "மின்னஞ்சல் (Email)",
+        password_placeholder: "கடவுச்சொல் (Password)",
+        login_checking: "சரிபார்க்கிறது... (Checking)",
+        login_invalid: "தவறான விவரங்கள் (Invalid)",
+        login_error: "பிழை (Error)",
+        login: "உள்நுழை (Login)"
+    },
+    kn: {
+        dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ (Dashboard)",
+        employees: "ಉದ್ಯೋಗಿಗಳು (Employees)",
+        attendance: "ಹಾಜರಾತಿ (Attendance)",
+        leave_management: "ರಜೆ ನಿರ್ವಹಣೆ (Leave Mgt)",
+        branch_admins: "ನಿರ್ವಾಹಕರು (Admins)",
+        salary_settings: "ವೇತನ ಸೆಟ್ಟಿಂಗ್ಸ್ (Salary)",
+        monthly_report: "ಮಾಸಿಕ ವರದಿ (Report)",
+        settings: "ಸೆಟ್ಟಿಂಗ್ಸ್ (Settings)",
+        logout: "ಲಾಗ್ ಔಟ್ (Logout)",
+
+        // Login Page
+        admin_login_title: "ಅಡ್ಮಿನ್ ಲಾಗಿನ್ (Admin Login)",
+        admin_login_header: "ಅಡ್ಮಿನ್ (Admin)",
+        email_placeholder: "ಇಮೇಲ್ (Email)",
+        password_placeholder: "ಪಾಸ್‌ವರ್ಡ್ (Password)",
+        login_checking: "ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ... (Checking)",
+        login_invalid: "ತಪ್ಪಾದ ವಿವರಗಳು (Invalid)",
+        login_error: "ದೋಷ (Error)",
+        login: "ಲಾಗಿನ್ (Login)"
+    },
+    te: {
+        dashboard: "డాష్‌బోర్డ్ (Dashboard)",
+        employees: "ఉద్యోగులు (Employees)",
+        attendance: "హాజరు (Attendance)",
+        leave_management: "సెలవు నిర్వహణ (Leave Mgt)",
+        branch_admins: "అడ్మిన్లు (Admins)",
+        salary_settings: "జీతం సెట్టింగ్‌లు (Salary)",
+        monthly_report: "నెలవారీ నివేదిక (Report)",
+        settings: "సెట్టింగులు (Settings)",
+        logout: "లాగ్ అవుట్ (Logout)",
+
+        // Login Page
+        admin_login_title: "అడ్మిన్ లాగిన్ (Admin Login)",
+        admin_login_header: "అడ్మిన్ (Admin)",
+        email_placeholder: "ఇమెయిల్ (Email)",
+        password_placeholder: "పాస్ వర్డ్ (Password)",
+        login_checking: "తనిఖీ చేస్తోంది... (Checking)",
+        login_invalid: "చెల్లని వివరాలు (Invalid)",
+        login_error: "లోపం (Error)",
+        login: "లాగిన్ (Login)"
     }
 };
 

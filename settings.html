@@ -333,6 +333,201 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary)
         }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px
+        }
+
+        .dashboard-section {
+            padding: 32px
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border)
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text)
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 4px
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            transition: all .2s ease;
+            font-family: inherit
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 195, .1)
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all .2s ease;
+            font-family: inherit
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 195, .3)
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white
+        }
+
+        .btn-danger:hover {
+            background: #ff4444;
+            box-shadow: 0 4px 12px rgba(255, 92, 92, .3)
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text)
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 16px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 2px solid var(--border);
+            background: rgba(0, 0, 0, .2)
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 195, .03)
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                transform: translateX(-100%)
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+            .main-content {
+                margin-left: 0
+            }
+
+            .menu-toggle {
+                display: block
+            }
+
+            .dashboard-section {
+                padding: 20px
+            }
+
+            .top-bar {
+                padding: 16px 20px
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary)
+        }
     </style>
 </head>
 
@@ -349,6 +544,9 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
             </select>
         </div>
         <nav class="sidebar-nav">
@@ -372,11 +570,12 @@
                 <span class="nav-icon">🏖️</span>
                 <span data-i18n="leave_management">Leave Management</span>
             </a>
-            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;" style="display:none;">
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;">
                 <span class="nav-icon">🛡️</span>
                 <span>Manage Branches</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+                    Management</span></a>
             <a href="salary_settings.html" class="nav-item">
                 <span class="nav-icon">💰</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
@@ -397,138 +596,98 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
-        </nav>
+            <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span
+                    data-i18n="settings">Settings</span></a>
+            <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input type="time"
+                    id="officeIn"></div>
+            <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
+                    id="officeOut"></div>
+    </div>
+    <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
     </div>
 
-    <div class="main-content">
-        <div class="top-bar">
-            <div style="display:flex;align-items:center;gap:16px">
-                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1 data-i18n="settings">Settings</h1>
-            </div>
-            <div class="top-bar-actions">
-                <button onclick="toggleTheme()"
-                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
-                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
-            </div>
+    <div class="card">
+        <h3 data-i18n="week_off_days">Week-Off Days</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
+            recurring weekly off days
+            where employees get paid without attendance</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
+                    data-i18n="sunday">Sunday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
+                    data-i18n="monday">Monday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
+                    data-i18n="tuesday">Tuesday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
+                    data-i18n="wednesday">Wednesday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
+                    data-i18n="thursday">Thursday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
+                    data-i18n="friday">Friday</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
+                    data-i18n="saturday">Saturday</span></label>
         </div>
-
-        <div class="dashboard-section">
-            <div class="card">
-                <h3 data-i18n="language_settings">Language Settings</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="select_language_desc">
-                    Select the language for the admin
-                    panel</p>
-                <div class="form-group">
-                    <label data-i18n="language">Language</label>
-                    <select onchange="changeLanguage(this.value)"
-                        style="background:var(--bg-input); color:var(--text); border:1px solid var(--border); padding:10px; border-radius:8px; width:100%">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                        <option value="ar">العربية</option>
-                        <option value="de">Deutsch</option>
-                        <option value="ml">Malayalam</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 data-i18n="office_time_settings">Office Time Settings</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input
-                            type="time" id="officeIn"></div>
-                    <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
-                            id="officeOut"></div>
-                </div>
-                <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
-            </div>
-
-            <div class="card">
-                <h3 data-i18n="week_off_days">Week-Off Days</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
-                    recurring weekly off days
-                    where employees get paid without attendance</p>
-                <div
-                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
-                            data-i18n="sunday">Sunday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
-                            data-i18n="monday">Monday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
-                            data-i18n="tuesday">Tuesday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
-                            data-i18n="wednesday">Wednesday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
-                            data-i18n="thursday">Thursday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
-                            data-i18n="friday">Friday</span></label>
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
-                            data-i18n="saturday">Saturday</span></label>
-                </div>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
-                    data-i18n="special_week_off">
-                    Special Week-Off Configuration</p>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                            id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
-                            style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
-                            Month</span></label>
-                </div>
-                <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
-            </div>
-
-            <div class="card">
-                <h3 data-i18n="holiday_management">Holiday Management</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px"
-                    data-i18n="holiday_management_desc">Add holidays where employees get
-                    paid without attendance</p>
-                <div class="form-grid">
-                    <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
-                            id="holidayDate"></div>
-                    <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
-                            id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
-                </div>
-                <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
-                <div class="table-container" style="margin-top:24px">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th data-i18n="holiday_date">Date</th>
-                                <th data-i18n="holiday_description">Description</th>
-                                <th data-i18n="action">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="holidaysData"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 data-i18n="office_location_settings">Office Location Settings</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
-                    Set office GPS coordinates for
-                    location-based attendance verification</p>
-                <div class="form-grid">
-                    <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number"
-                            step="0.000001" id="officeLat" placeholder="e.g., 11.2588"></div>
-                    <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number"
-                            step="0.000001" id="officeLng" placeholder="e.g., 75.7804"></div>
-                    <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
-                            type="number" id="officeRadius" placeholder="e.g., 100"></div>
-                </div>
-                <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
-            </div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
+            data-i18n="special_week_off">
+            Special Week-Off Configuration</p>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                    id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
+                    style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
+                    Month</span></label>
         </div>
+        <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
+    </div>
+
+    <div class="card">
+        <h3 data-i18n="holiday_management">Holiday Management</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="holiday_management_desc">Add
+            holidays where employees get
+            paid without attendance</p>
+        <div class="form-grid">
+            <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
+                    id="holidayDate"></div>
+            <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
+                    id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
+        </div>
+        <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
+        <div class="table-container" style="margin-top:24px">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-i18n="holiday_date">Date</th>
+                        <th data-i18n="holiday_description">Description</th>
+                        <th data-i18n="action">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="holidaysData"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 data-i18n="office_location_settings">Office Location Settings</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
+            Set office GPS coordinates for
+            location-based attendance verification</p>
+        <div class="form-grid">
+            <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number" step="0.000001"
+                    id="officeLat" placeholder="e.g., 11.2588"></div>
+            <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number" step="0.000001"
+                    id="officeLng" placeholder="e.g., 75.7804"></div>
+            <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
+                    type="number" id="officeRadius" placeholder="e.g., 100"></div>
+        </div>
+        <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
+    </div>
+    </div>
     </div>
 
     <script type="module">
@@ -549,9 +708,9 @@
             settingsRoot = `settings/branches/${branch}`;
         }
 
-        
+
         // --- Sidebar Logic ---
-        (function(){
+        (function () {
             const r = localStorage.getItem("role");
             if (r === 'super_admin') {
                 const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';

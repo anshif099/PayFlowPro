@@ -70,6 +70,9 @@
             <option value="ar">العربية</option>
             <option value="de">Deutsch</option>
             <option value="ml">Malayalam</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            <option value="te">తెలుగు (Telugu)</option>
         </select>
 
         <div id="idStep">
@@ -96,13 +99,24 @@
                 style="background:transparent; color: #8b92a0; margin-top: 10px; font-size: 13px;">Use different
                 ID</button>
         </div>
-
         <p class="error" id="error"></p>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import {
+            initializeApp
+        }
+
+            from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+        import {
+            getDatabase,
+            ref,
+            get,
+            update
+        }
+
+            from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -112,7 +126,9 @@
             storageBucket: "payflowpro-6e62d.firebasestorage.app",
             messagingSenderId: "69298740438",
             appId: "1:69298740438:web:18fd85e982e083e1543d77"
-        };
+        }
+
+            ;
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -146,7 +162,12 @@
                 document.getElementById("passwordStep").style.display = "block";
                 document.getElementById("welcomeMsg").innerText = "Welcome, Super Admin";
                 errorEl.innerText = "";
-                verifiedAdmin = { role: 'super_admin', name: 'RAINHOPES' };
+
+                verifiedAdmin = {
+                    role: 'super_admin', name: 'RAINHOPES'
+                }
+
+                    ;
                 return;
             }
 
@@ -158,6 +179,7 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const admin = child.val();
+
                         if (admin.email === input || admin.adminId === input) {
                             found = true;
                             verifiedAdmin = admin;
@@ -173,9 +195,12 @@
                             if (admin.password) {
                                 document.getElementById("passwordStep").style.display = "block";
                                 document.getElementById("welcomeMsg").innerText = "Welcome, " + (admin.name || "Admin");
-                            } else {
+                            }
+
+                            else {
                                 document.getElementById("createPasswordStep").style.display = "block";
                             }
+
                             errorEl.innerText = "";
                         }
                     });
@@ -184,7 +209,9 @@
                 if (!found) {
                     errorEl.innerText = "Admin ID not found";
                 }
-            } catch (err) {
+            }
+
+            catch (err) {
                 errorEl.innerText = "Error: " + err.message;
             }
         }
@@ -199,9 +226,12 @@
                     localStorage.setItem("role", "super_admin");
                     localStorage.setItem("name", "RAINHOPES");
                     location.href = "dashboard.html";
-                } else {
+                }
+
+                else {
                     errorEl.innerText = "Invalid Password";
                 }
+
                 return;
             }
 
@@ -213,7 +243,9 @@
                 if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
                 if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
                 location.href = "dashboard.html";
-            } else {
+            }
+
+            else {
                 errorEl.innerText = "Invalid Password";
             }
         }
@@ -227,6 +259,7 @@
                 errorEl.innerText = "Password must be at least 6 characters";
                 return;
             }
+
             if (p1 !== p2) {
                 errorEl.innerText = "Passwords do not match";
                 return;
@@ -234,7 +267,10 @@
 
             try {
                 errorEl.innerText = "Setting password...";
-                await update(ref(db, 'admins/' + verifiedKey), { password: p1 });
+
+                await update(ref(db, 'admins/' + verifiedKey), {
+                    password: p1
+                });
                 errorEl.innerText = "Password set! Logging in...";
 
                 localStorage.setItem("admin", "true");
@@ -244,13 +280,14 @@
                 if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
                 if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
                 location.href = "dashboard.html";
-            } catch (err) {
+            }
+
+            catch (err) {
                 errorEl.innerText = "Error: " + err.message;
             }
         }
+
     </script>
-
-
     <script src="sidebar.js"></script>
 </body>
 
