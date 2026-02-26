@@ -252,6 +252,29 @@
             font-size: 13px;
         }
 
+        .btn-admin {
+            background: transparent;
+            border: 1px solid #a855f7;
+            color: #a855f7;
+        }
+
+        .btn-admin:hover {
+            background: rgba(168, 85, 247, 0.15);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .admin-badge {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .btn-logout {
             background: transparent;
             border: 1px solid var(--border);
@@ -270,6 +293,13 @@
             overflow-x: auto;
             border: 1px solid var(--border);
             border-radius: 12px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .table-container.dragging {
+            cursor: grabbing;
+            scroll-behavior: auto;
         }
 
         table {
@@ -340,10 +370,10 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-      </select>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
@@ -366,7 +396,8 @@
                 <span class="nav-icon">🏖️</span>
                 <span>Leave Management</span>
             </a>
-            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;" style="display:none;">
+            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;"
+                style="display:none;">
                 <span class="nav-icon">🛡️</span>
                 <span>Manage Branches</span>
             </a>
@@ -507,7 +538,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -528,19 +559,28 @@
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "admin.html"; }
-
         const role = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const companyId = localStorage.getItem("companyId");
 
         // Sidebar logic
         if (role === 'super_admin') {
-            document.getElementById('nav-manage-companies').style.display = 'flex';
-            document.getElementById('nav-manage-branches').style.display = 'flex';
-            document.getElementById('nav-branch-admins').style.display = 'flex';
+            if (document.getElementById('nav-manage-companies')) {
+                document.getElementById('nav-manage-companies').style.display = 'flex';
+            }
+            if (document.getElementById('nav-manage-branches')) {
+                document.getElementById('nav-manage-branches').style.display = 'flex';
+            }
+            if (document.getElementById('nav-branch-admins')) {
+                document.getElementById('nav-branch-admins').style.display = 'flex';
+            }
         } else if (role === 'company_admin') {
-            document.getElementById('nav-manage-branches').style.display = 'flex';
-            document.getElementById('nav-branch-admins').style.display = 'flex';
+            if (document.getElementById('nav-manage-branches')) {
+                document.getElementById('nav-manage-branches').style.display = 'flex';
+            }
+            if (document.getElementById('nav-branch-admins')) {
+                document.getElementById('nav-branch-admins').style.display = 'flex';
+            }
         } else if (role === 'branch_admin') {
             // Can't manage admins or branches
         }
@@ -719,11 +759,15 @@
                         <td>${shiftLabel}</td>
                         <td>${statusBadge}</td>
                         <td>
-                          <div style="display: flex; gap: 8px;">
+                          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
                                 onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}')">✏️ Edit</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
+                            ${e.isAdmin === true
+                            ? `<button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
+                            : `<button class="btn-small btn-admin" onclick="makeAdmin('${e.empId}', '${e.name}')">🛡️ Make Admin</button>`
+                        }
                           </div>
                         </td></tr>`;
                 });
@@ -753,9 +797,125 @@
                 remove(ref(db, "employees/" + id));
             }
         };
+
+        window.makeAdmin = async (empId, empName) => {
+            const enteredPassword = prompt(`Enter Admin Password to make "${empName}" an Admin:`);
+            if (!enteredPassword) return;
+
+            try {
+                const currentRole = localStorage.getItem('role');
+
+                if (currentRole === 'super_admin') {
+                    // Hardcoded super admin password
+                    if (enteredPassword !== 'Teamsive@123') {
+                        alert('❌ Invalid Admin Password!');
+                        return;
+                    }
+                } else {
+                    // Verify against Firebase admin record
+                    const adminSnapshot = await get(ref(db, 'admins'));
+                    let passwordMatch = false;
+                    const currentAdminName = localStorage.getItem('name');
+
+                    if (adminSnapshot.exists()) {
+                        adminSnapshot.forEach(child => {
+                            const admin = child.val();
+                            if ((admin.name === currentAdminName || admin.branch === localStorage.getItem('branch')) && admin.password === enteredPassword) {
+                                passwordMatch = true;
+                            }
+                        });
+                    }
+
+                    if (!passwordMatch) {
+                        alert('❌ Invalid Admin Password!');
+                        return;
+                    }
+                }
+
+                // Password verified — set isAdmin on employee
+                await update(ref(db, 'employees/' + empId), { isAdmin: true });
+                alert(`✅ ${empName} is now an Admin! They will see the Admin Panel on their profile.`);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        };
+
+        window.unmakeAdmin = async (empId, empName) => {
+            const enteredPassword = prompt(`Enter Admin Password to remove Admin access from "${empName}":`);
+            if (!enteredPassword) return;
+
+            try {
+                const currentRole = localStorage.getItem('role');
+
+                if (currentRole === 'super_admin') {
+                    if (enteredPassword !== 'Teamsive@123') {
+                        alert('❌ Invalid Admin Password!');
+                        return;
+                    }
+                } else {
+                    const adminSnapshot = await get(ref(db, 'admins'));
+                    let passwordMatch = false;
+                    const currentAdminName = localStorage.getItem('name');
+
+                    if (adminSnapshot.exists()) {
+                        adminSnapshot.forEach(child => {
+                            const admin = child.val();
+                            if ((admin.name === currentAdminName || admin.branch === localStorage.getItem('branch')) && admin.password === enteredPassword) {
+                                passwordMatch = true;
+                            }
+                        });
+                    }
+
+                    if (!passwordMatch) {
+                        alert('❌ Invalid Admin Password!');
+                        return;
+                    }
+                }
+
+                // Password verified — remove isAdmin
+                await update(ref(db, 'employees/' + empId), { isAdmin: false });
+                alert(`✅ ${empName} is no longer an Admin.`);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        };
     </script>
 
     <script src="sidebar.js"></script>
+    <script>
+        // Drag-to-scroll for the table
+        document.querySelectorAll('.table-container').forEach(container => {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+                isDown = true;
+                container.classList.add('dragging');
+                startX = e.pageX - container.offsetLeft;
+                scrollLeft = container.scrollLeft;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const walk = (x - startX) * 2;
+                container.scrollLeft = scrollLeft - walk;
+            });
+        });
+    </script>
 </body>
 
 </html>

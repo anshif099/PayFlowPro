@@ -598,96 +598,114 @@
             </a>
             <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span
                     data-i18n="settings">Settings</span></a>
-            <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input type="time"
-                    id="officeIn"></div>
-            <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
-                    id="officeOut"></div>
-    </div>
-    <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
+        </nav>
     </div>
 
-    <div class="card">
-        <h3 data-i18n="week_off_days">Week-Off Days</h3>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
-            recurring weekly off days
-            where employees get paid without attendance</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
-                    data-i18n="sunday">Sunday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
-                    data-i18n="monday">Monday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
-                    data-i18n="tuesday">Tuesday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
-                    data-i18n="wednesday">Wednesday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
-                    data-i18n="thursday">Thursday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
-                    data-i18n="friday">Friday</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
-                    data-i18n="saturday">Saturday</span></label>
+    <div class="main-content">
+        <div class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1>⚙️ Settings</h1>
+            <div class="top-bar-actions">
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">🚪 Logout</button>
+            </div>
         </div>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
-            data-i18n="special_week_off">
-            Special Week-Off Configuration</p>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
-                    id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
-                    style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
-                    Month</span></label>
-        </div>
-        <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
-    </div>
 
-    <div class="card">
-        <h3 data-i18n="holiday_management">Holiday Management</h3>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="holiday_management_desc">Add
-            holidays where employees get
-            paid without attendance</p>
-        <div class="form-grid">
-            <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
-                    id="holidayDate"></div>
-            <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
-                    id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
-        </div>
-        <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
-        <div class="table-container" style="margin-top:24px">
-            <table>
-                <thead>
-                    <tr>
-                        <th data-i18n="holiday_date">Date</th>
-                        <th data-i18n="holiday_description">Description</th>
-                        <th data-i18n="action">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="holidaysData"></tbody>
-            </table>
-        </div>
-    </div>
+        <div class="dashboard-section">
+            <div class="card">
+                <h3 data-i18n="office_time_settings">Office Time Settings</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label data-i18n="office_start_time">Office Start Time</label><input
+                            type="time" id="officeIn"></div>
+                    <div class="form-group"><label data-i18n="office_end_time">Office End Time</label><input type="time"
+                            id="officeOut"></div>
+                </div>
+                <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
+            </div>
 
-    <div class="card">
-        <h3 data-i18n="office_location_settings">Office Location Settings</h3>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
-            Set office GPS coordinates for
-            location-based attendance verification</p>
-        <div class="form-grid">
-            <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number" step="0.000001"
-                    id="officeLat" placeholder="e.g., 11.2588"></div>
-            <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number" step="0.000001"
-                    id="officeLng" placeholder="e.g., 75.7804"></div>
-            <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
-                    type="number" id="officeRadius" placeholder="e.g., 100"></div>
+            <div class="card">
+                <h3 data-i18n="week_off_days">Week-Off Days</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
+                    recurring weekly off days
+                    where employees get paid without attendance</p>
+                <div
+                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-sunday" value="Sunday" style="width:auto;margin:0"><span
+                            data-i18n="sunday">Sunday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-monday" value="Monday" style="width:auto;margin:0"><span
+                            data-i18n="monday">Monday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-tuesday" value="Tuesday" style="width:auto;margin:0"><span
+                            data-i18n="tuesday">Tuesday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-wednesday" value="Wednesday" style="width:auto;margin:0"><span
+                            data-i18n="wednesday">Wednesday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-thursday" value="Thursday" style="width:auto;margin:0"><span
+                            data-i18n="thursday">Thursday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-friday" value="Friday" style="width:auto;margin:0"><span
+                            data-i18n="friday">Friday</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-saturday" value="Saturday" style="width:auto;margin:0"><span
+                            data-i18n="saturday">Saturday</span></label>
+                </div>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;margin-top:24px;border-top:1px solid var(--border);padding-top:20px"
+                    data-i18n="special_week_off">
+                    Special Week-Off Configuration</p>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"
+                            id="weekoff-second-saturday" value="SecondSaturday" style="width:auto;margin:0"><span
+                            style="font-weight:500" data-i18n="second_saturday">🗓️ Second Saturday of Every
+                            Month</span></label>
+                </div>
+                <button onclick="saveWeekOffs()" data-i18n="save_week_offs">💾 Save Week-Offs</button>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="holiday_management">Holiday Management</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px"
+                    data-i18n="holiday_management_desc">Add
+                    holidays where employees get
+                    paid without attendance</p>
+                <div class="form-grid">
+                    <div class="form-group"><label data-i18n="holiday_date">Holiday Date</label><input type="date"
+                            id="holidayDate"></div>
+                    <div class="form-group"><label data-i18n="holiday_description">Holiday Description</label><input
+                            id="holidayDesc" placeholder="e.g., Republic Day, Christmas"></div>
+                </div>
+                <button onclick="addHoliday()" data-i18n="add_holiday">➕ Add Holiday</button>
+                <div class="table-container" style="margin-top:24px">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="holiday_date">Date</th>
+                                <th data-i18n="holiday_description">Description</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holidaysData"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="office_location_settings">Office Location Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="office_location_desc">
+                    Set office GPS coordinates for
+                    location-based attendance verification</p>
+                <div class="form-grid">
+                    <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number"
+                            step="0.000001" id="officeLat" placeholder="e.g., 11.2588"></div>
+                    <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number"
+                            step="0.000001" id="officeLng" placeholder="e.g., 75.7804"></div>
+                    <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
+                            type="number" id="officeRadius" placeholder="e.g., 100"></div>
+                </div>
+                <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
+            </div>
         </div>
-        <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
-    </div>
-    </div>
     </div>
 
     <script type="module">
