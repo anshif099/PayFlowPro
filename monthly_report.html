@@ -315,10 +315,10 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-      </select>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
@@ -349,7 +349,8 @@
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+                    Management</span></a>
             <a href="salary_settings.html" class="nav-item">
                 <span class="nav-icon">💰</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
@@ -370,7 +371,8 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span
+                    data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -565,7 +567,6 @@
                 Object.keys(allHolidays).forEach(dateStr => {
                     if (dateStr.startsWith(monthVal)) monthHolidayCount++;
                 });
-
                 let monthWeekOffCount = 0;
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month - 1, d);
@@ -579,12 +580,14 @@
                             if (secondSaturdayData.enabled === true) {
                                 isWO = true;
                             } else if (secondSaturdayData.disabledAt) {
-                                const disabledDate = new Date(secondSaturdayData.disabledAt);
-                                const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
-                                const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                                if (currentDateOnly < disabledDateOnly) {
-                                    isWO = true;
-                                }
+                                try {
+                                    const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                    const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                    const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                                    if (currentDateOnly <= disabledDateOnly) {
+                                        isWO = true;
+                                    }
+                                } catch (e) { }
                             }
                         }
                     }
@@ -611,12 +614,6 @@
                                     presentCount += 1;
 
                                     // Time Calculation
-                                    /*
-                                        Late In: PunchIn > OfficeStart
-                                        Early In: PunchIn < OfficeStart
-                                        Late Out: PunchOut > OfficeEnd
-                                        Early Out: PunchOut < OfficeEnd
-                                    */
                                     if (val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
                                         // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
                                         const parseTimePart = (tStr) => {
@@ -708,12 +705,14 @@
                                 if (secondSaturdayData.enabled === true) {
                                     isWeekOff = true;
                                 } else if (secondSaturdayData.disabledAt) {
-                                    const disabledDate = new Date(secondSaturdayData.disabledAt);
-                                    const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
-                                    const currentDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                                    if (currentDateOnly < disabledDateOnly) {
-                                        isWeekOff = true;
-                                    }
+                                    try {
+                                        const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                        const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                        const currentDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                                        if (currentDateOnly <= disabledDateOnly) {
+                                            isWeekOff = true;
+                                        }
+                                    } catch (e) { }
                                 }
                             }
                         }
