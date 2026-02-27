@@ -757,7 +757,7 @@
                         const val = d.val();
                         const status = val.status;
 
-                        if (status === 'in' || status === 'paid-leave') {
+                        if (status === 'in' || status === 'paid-leave' || status === 'present') {
                             presentCount++;
 
                             if (status === 'in' && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
@@ -794,6 +794,8 @@
                                     if (outMins > officeEndMins) totalExtraMins += (outMins - officeEndMins);
                                 }
                             }
+                        } else if (status === 'halfday') {
+                            presentCount += 0.5;
                         }
                     }
                 });

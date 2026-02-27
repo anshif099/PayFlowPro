@@ -610,11 +610,11 @@
                                 const val = d.val();
                                 const status = val.status;
 
-                                if (status === 'in') {
+                                if (status === 'in' || status === 'present') {
                                     presentCount += 1;
 
                                     // Time Calculation
-                                    if (val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
+                                    if (status === 'in' && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
                                         // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
                                         const parseTimePart = (tStr) => {
                                             if (!tStr) return null;
