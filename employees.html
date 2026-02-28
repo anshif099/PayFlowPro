@@ -717,38 +717,56 @@
             }
         };
 
-        onValue(ref(db, "employees"), s => {
-            const data = document.getElementById('data');
-            data.innerHTML = "";
-            employeeCount = 0;
+        onValue(ref(db, "admins"), adminsSnap => {
+            const branchAdminBranches = new Set();
+            if (adminsSnap.exists()) {
+                adminsSnap.forEach(a => {
+                    const admin = a.val();
+                    if (admin.role === 'branch_admin' && admin.branch) {
+                        branchAdminBranches.add(admin.branch);
+                    }
+                });
+            }
 
-            if (s.exists()) {
-                s.forEach(c => {
-                    const e = c.val();
+            onValue(ref(db, "employees"), s => {
+                const data = document.getElementById('data');
+                data.innerHTML = "";
+                employeeCount = 0;
 
-                    // Security / Context Filtering
-                    if (role === 'branch_admin' && e.branch !== adminBranch) return;
-                    if (role === 'company_admin' && e.companyId !== companyId) return;
+                if (s.exists()) {
+                    s.forEach(c => {
+                        const e = c.val();
 
-                    employeeCount++;
+                        // Security / Context Filtering
+                        let allow = true;
+                        if (role === 'branch_admin' && e.branch !== adminBranch) {
+                            allow = false;
+                        } else if (role === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                            allow = false;
+                        } else if (role === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+                            allow = false;
+                        }
+                        if (!allow) return;
 
-                    const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
-                    const status = e.status || 'active';
+                        employeeCount++;
 
-                    const statusBadge = status === 'active'
-                        ? `<span style="background: rgba(0, 255, 195, 0.15); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
-                        : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
+                        const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
+                        const status = e.status || 'active';
 
-                    const toggleBtnText = status === 'active' ? '🛑 Deactivate' : '✅ Activate';
-                    const toggleBtnColor = status === 'active' ? 'color: #ff5c5c;' : 'color: #00ffc3;';
+                        const statusBadge = status === 'active'
+                            ? `<span style="background: rgba(0, 255, 195, 0.15); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
+                            : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
 
-                    let shiftLabel = '🕒 Fixed';
-                    if (e.shiftType === 'flexible') shiftLabel = '⏱️ Flexible';
-                    else if (e.shiftType === 'rotating') shiftLabel = `🔄 Rotating (${e.shiftStart}-${e.shiftEnd})`;
+                        const toggleBtnText = status === 'active' ? '🛑 Deactivate' : '✅ Activate';
+                        const toggleBtnColor = status === 'active' ? 'color: #ff5c5c;' : 'color: #00ffc3;';
 
-                    const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
+                        let shiftLabel = '🕒 Fixed';
+                        if (e.shiftType === 'flexible') shiftLabel = '⏱️ Flexible';
+                        else if (e.shiftType === 'rotating') shiftLabel = `🔄 Rotating (${e.shiftStart}-${e.shiftEnd})`;
 
-                    data.innerHTML += `<tr>
+                        const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
+
+                        data.innerHTML += `<tr>
                         <td>${employeeCount}</td>
                         <td>${e.name}<br><span style="font-size: 11px; color: #8b92a0;">${e.empId}</span></td>
                         <td>${e.mobile}</td>
@@ -765,16 +783,17 @@
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
-                            ? `<button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
-                            : `<button class="btn-small btn-admin" onclick="makeAdmin('${e.empId}', '${e.name}')">🛡️ Make Admin</button>`
-                        }
+                                ? `<button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
+                                : `<button class="btn-small btn-admin" onclick="makeAdmin('${e.empId}', '${e.name}')">🛡️ Make Admin</button>`
+                            }
                           </div>
                         </td></tr>`;
-                });
-            } else {
-                data.innerHTML = "<tr><td colspan='10' style='text-align:center'>No employees found</td></tr>";
-            }
-        });
+                    });
+                } else {
+                    data.innerHTML = "<tr><td colspan='10' style='text-align:center'>No employees found</td></tr>";
+                }
+            }); // Close onValue("employees")
+        }); // Close onValue("admins")
 
         window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status) => {
             document.getElementById('name').value = name;

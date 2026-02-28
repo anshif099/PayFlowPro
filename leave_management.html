@@ -581,24 +581,41 @@
         };
 
         // Fetch Employees to build whitelist
-        onValue(ref(db, "employees"), s => {
-            allowedEmpIds.clear();
-            if (s.exists()) {
-                s.forEach(c => {
-                    const e = c.val();
-                    let allow = true;
-                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
-                        allow = false;
-                    }
-                    if (allow) {
-                        allowedEmpIds.add(e.empId);
-                        if (!e.empId) allowedEmpIds.add(c.key);
+        onValue(ref(db, "admins"), adminsSnap => {
+            const branchAdminBranches = new Set();
+            if (adminsSnap.exists()) {
+                adminsSnap.forEach(a => {
+                    const admin = a.val();
+                    if (admin.role === 'branch_admin' && admin.branch) {
+                        branchAdminBranches.add(admin.branch);
                     }
                 });
             }
-            employeesLoaded = true;
-            console.log('[DEBUG employees] Loaded. allowedEmpIds:', [...allowedEmpIds]);
-            renderLeaveTables();
+
+            onValue(ref(db, "employees"), s => {
+                allowedEmpIds.clear();
+                if (s.exists()) {
+                    s.forEach(c => {
+                        const e = c.val();
+                        let allow = true;
+                        const companyId = localStorage.getItem("companyId");
+                        if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                            allow = false;
+                        } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                            allow = false;
+                        } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+                            allow = false;
+                        }
+                        if (allow) {
+                            allowedEmpIds.add(e.empId);
+                            if (!e.empId) allowedEmpIds.add(c.key);
+                        }
+                    });
+                }
+                employeesLoaded = true;
+                console.log('[DEBUG employees] Loaded. allowedEmpIds:', [...allowedEmpIds]);
+                renderLeaveTables();
+            });
         });
 
         // Config Path Logic

@@ -381,10 +381,10 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-      </select>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
@@ -415,7 +415,8 @@
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+                    Management</span></a>
             <a href="salary_settings.html" class="nav-item">
                 <span class="nav-icon">💰</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
@@ -436,7 +437,8 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span
+                    data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -612,9 +614,9 @@
         const adminRole = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
 
-        
+
         // --- Sidebar Logic ---
-        (function(){
+        (function () {
             const r = localStorage.getItem("role");
             if (r === 'super_admin') {
                 const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
@@ -638,37 +640,53 @@
         document.getElementById('filterDate').value = today; // Default to today
 
         // Load Emp List
-        onValue(ref(db, "employees"), s => {
-            allowedEmpIds.clear();
-            const empList = document.getElementById('empList');
-            empList.innerHTML = '';
-
-            // Clear map
-            for (const key in empMap) delete empMap[key];
-
-            if (s.exists()) {
-                s.forEach(c => {
-                    const e = c.val();
-                    let allow = true;
-                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
-                        allow = false;
-                    }
-                    if (allow) {
-                        allowedEmpIds.add(e.empId);
-                        empMap[e.empId] = e.name;
-
-                        // Populate datalist with Value=ID, Label=Name
-                        // This allows searching by Name but selecting fills ID
-                        const option = document.createElement('option');
-                        option.value = e.empId;
-                        option.label = e.name; // Chrome shows this on right, matches both
-                        empList.appendChild(option);
+        onValue(ref(db, "admins"), adminsSnap => {
+            const branchAdminBranches = new Set();
+            if (adminsSnap.exists()) {
+                adminsSnap.forEach(a => {
+                    const admin = a.val();
+                    if (admin.role === 'branch_admin' && admin.branch) {
+                        branchAdminBranches.add(admin.branch);
                     }
                 });
-                // Re-render table if data is already loaded to show names
-                if (allAttendanceData.length > 0) renderAttendanceTable();
             }
-        });
+
+            onValue(ref(db, "employees"), s => {
+                allowedEmpIds.clear();
+                const empList = document.getElementById('empList');
+                empList.innerHTML = '';
+
+                // Clear map
+                for (const key in empMap) delete empMap[key];
+
+                if (s.exists()) {
+                    s.forEach(c => {
+                        const e = c.val();
+                        let allow = true;
+                        if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                            allow = false;
+                        } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                            allow = false;
+                        } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+                            allow = false;
+                        }
+                        if (allow) {
+                            allowedEmpIds.add(e.empId);
+                            empMap[e.empId] = e.name;
+
+                            // Populate datalist with Value=ID, Label=Name
+                            // This allows searching by Name but selecting fills ID
+                            const option = document.createElement('option');
+                            option.value = e.empId;
+                            option.label = e.name; // Chrome shows this on right, matches both
+                            empList.appendChild(option);
+                        }
+                    });
+                    // Re-render table if data is already loaded to show names
+                    if (allAttendanceData.length > 0) renderAttendanceTable();
+                }
+            }); // Close onValue("employees")
+        }); // Close onValue("admins")
 
         window.updateEmpNameDisplay = (inputId, displayId) => {
             const input = document.getElementById(inputId);

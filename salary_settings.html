@@ -624,25 +624,44 @@
         })();
 
 
-        onValue(ref(db, "employees"), s => {
-            empSelect.innerHTML = `<option value="">-- ${t('select_employee')} --</option>`;
-            if (s.exists()) {
-                s.forEach(c => {
-                    const e = c.val();
-
-                    // RBAC Filter
-                    let allow = true;
-                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) allow = false;
-
-                    if (allow) {
-                        employeesData[e.empId] = e;
-                        const opt = document.createElement("option");
-                        opt.value = e.empId;
-                        opt.textContent = `${e.name} (${e.empId})`;
-                        empSelect.appendChild(opt);
+        onValue(ref(db, "admins"), adminsSnap => {
+            const branchAdminBranches = new Set();
+            if (adminsSnap.exists()) {
+                adminsSnap.forEach(a => {
+                    const admin = a.val();
+                    if (admin.role === 'branch_admin' && admin.branch) {
+                        branchAdminBranches.add(admin.branch);
                     }
                 });
             }
+
+            onValue(ref(db, "employees"), s => {
+                empSelect.innerHTML = `<option value="">-- ${t('select_employee')} --</option>`;
+                if (s.exists()) {
+                    s.forEach(c => {
+                        const e = c.val();
+
+                        // RBAC Filter
+                        let allow = true;
+                        const companyId = localStorage.getItem("companyId");
+                        if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                            allow = false;
+                        } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                            allow = false;
+                        } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+                            allow = false;
+                        }
+
+                        if (allow) {
+                            employeesData[e.empId] = e;
+                            const opt = document.createElement("option");
+                            opt.value = e.empId;
+                            opt.textContent = `${e.name} (${e.empId})`;
+                            empSelect.appendChild(opt);
+                        }
+                    });
+                }
+            });
         });
 
         window.fetchApprovalStatus = async () => {

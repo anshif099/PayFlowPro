@@ -355,57 +355,59 @@
       </select>
     </div>
     <nav class="sidebar-nav">
-            <a href="dashboard.html" class="nav-item active">
-                <span class="nav-icon">📊</span>
-                <span data-i18n="dashboard">Dashboard</span>
-            </a>
-            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
-                <span class="nav-icon">🏢</span>
-                <span>Manage Companies</span>
-            </a>
-            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🏢</span>
-                <span>Manage Branches</span>
-            </a>
-            <a href="employees.html" class="nav-item">
-                <span class="nav-icon">👥</span>
-                <span data-i18n="employees">Employees</span>
-            </a>
-            <a href="attendance.html" class="nav-item">
-                <span class="nav-icon">✅</span>
-                <span data-i18n="attendance">Attendance</span>
-            </a>
-            <a href="leave_management.html" class="nav-item">
-                <span class="nav-icon">🏖️</span>
-                <span data-i18n="leave_management">Leave Management</span>
-            </a>
-            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
-                <span class="nav-icon">🛡️</span>
-                <span data-i18n="branch_admins">Branch Admins</span>
-            </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
-            <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
-                <span data-i18n="salary_settings">Salary Settings</span>
-            </a>
-            <a href="monthly_report.html" class="nav-item">
-                <span class="nav-icon">📑</span>
-                <span data-i18n="monthly_report">Monthly Report</span>
-            </a>
-            <a href="documents.html" class="nav-item">
-                <span class="nav-icon">📄</span>
-                <span>Documents</span>
-            </a>
-            <a href="leaderboard.html" class="nav-item">
-                <span class="nav-icon">🏆</span>
-                <span>Leaderboard</span>
-            </a>
-            <a href="ai_prediction.html" class="nav-item">
-                <span class="nav-icon">🧠</span>
-                <span>AI Prediction</span>
-            </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
-        </nav>
+      <a href="dashboard.html" class="nav-item active">
+        <span class="nav-icon">📊</span>
+        <span data-i18n="dashboard">Dashboard</span>
+      </a>
+      <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+        <span class="nav-icon">🏢</span>
+        <span>Manage Companies</span>
+      </a>
+      <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+        <span class="nav-icon">🏢</span>
+        <span>Manage Branches</span>
+      </a>
+      <a href="employees.html" class="nav-item">
+        <span class="nav-icon">👥</span>
+        <span data-i18n="employees">Employees</span>
+      </a>
+      <a href="attendance.html" class="nav-item">
+        <span class="nav-icon">✅</span>
+        <span data-i18n="attendance">Attendance</span>
+      </a>
+      <a href="leave_management.html" class="nav-item">
+        <span class="nav-icon">🏖️</span>
+        <span data-i18n="leave_management">Leave Management</span>
+      </a>
+      <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+        <span class="nav-icon">🛡️</span>
+        <span data-i18n="branch_admins">Branch Admins</span>
+      </a>
+      <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
+          Management</span></a>
+      <a href="salary_settings.html" class="nav-item">
+        <span class="nav-icon">💰</span>
+        <span data-i18n="salary_settings">Salary Settings</span>
+      </a>
+      <a href="monthly_report.html" class="nav-item">
+        <span class="nav-icon">📑</span>
+        <span data-i18n="monthly_report">Monthly Report</span>
+      </a>
+      <a href="documents.html" class="nav-item">
+        <span class="nav-icon">📄</span>
+        <span>Documents</span>
+      </a>
+      <a href="leaderboard.html" class="nav-item">
+        <span class="nav-icon">🏆</span>
+        <span>Leaderboard</span>
+      </a>
+      <a href="ai_prediction.html" class="nav-item">
+        <span class="nav-icon">🧠</span>
+        <span>AI Prediction</span>
+      </a>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span
+          data-i18n="settings">Settings</span></a>
+    </nav>
   </div>
 
   <div class="main-content">
@@ -522,37 +524,56 @@
     const adminRole = localStorage.getItem("role");
     const adminBranch = localStorage.getItem("branch");
 
-    
-        // --- Sidebar Logic ---
-        (function(){
-            const r = localStorage.getItem("role");
-            if (r === 'super_admin') {
-                const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
-                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
-            } else if (r === 'company_admin') {
-                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
-            }
-        })();
+
+    // --- Sidebar Logic ---
+    (function () {
+      const r = localStorage.getItem("role");
+      if (r === 'super_admin') {
+        const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
+        const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+        const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+      } else if (r === 'company_admin') {
+        const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+        const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+      }
+    })();
 
 
-    // 1. Fetch Employees, Attendance, & Leave Requests
+    // 1. Fetch Employees, Attendance, Leave Requests, and Admins
     Promise.all([
       get(ref(db, "employees")),
       get(ref(db, "attendance")),
-      get(ref(db, "leaveRequests"))
-    ]).then(([empSnap, attSnap, leaveSnap]) => {
+      get(ref(db, "leaveRequests")),
+      get(ref(db, "admins"))
+    ]).then(([empSnap, attSnap, leaveSnap, adminsSnap]) => {
+      const branchAdminBranches = new Set();
+      if (adminsSnap.exists()) {
+        adminsSnap.forEach(a => {
+          const admin = a.val();
+          if (admin.role === 'branch_admin' && admin.branch) {
+            branchAdminBranches.add(admin.branch);
+          }
+        });
+      }
+
       const employees = [];
+      const companyId = localStorage.getItem("companyId");
 
       // Process Employees
       if (empSnap.exists()) {
         empSnap.forEach(c => {
           const e = c.val();
           // Filter by Branch
-          if (adminRole !== 'super_admin' && e.branch !== adminBranch) {
-            return;
+          let allow = true;
+          if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+            allow = false;
+          } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+            allow = false;
+          } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+            allow = false;
           }
+          if (!allow) return;
+
           e.empId = c.key; // Ensure ID is present
           employees.push(e);
         });
@@ -573,6 +594,7 @@
 
       const tbody = document.getElementById('recentAttendance');
       tbody.innerHTML = "";
+      const allAtt = attSnap.val() || {};
 
       employees.forEach(emp => {
         let status = 'absent';
@@ -582,22 +604,19 @@
         let hasRecord = false;
 
         // Check Attendance
-        if (attSnap.exists()) {
-          const empRecord = attSnap.child(emp.empId);
-          if (empRecord.exists() && empRecord.child(today).exists()) {
-            const r = empRecord.child(today).val();
-            status = r.status || 'absent';
-            rawStatus = status.toLowerCase();
-            punchIn = r.punchIn?.time || '-';
-            punchOut = r.punchOut?.time || '-';
-            hasRecord = true;
-            totalRecords++;
+        if (allAtt[emp.empId] && allAtt[emp.empId][today]) {
+          const r = allAtt[emp.empId][today];
+          status = r.status || 'absent';
+          rawStatus = status.toLowerCase();
+          punchIn = r.punchIn?.time || '-';
+          punchOut = r.punchOut?.time || '-';
+          hasRecord = true;
+          totalRecords++;
 
-            if (rawStatus === 'in' || rawStatus === 'out') {
-              presentToday++;
-            } else if (rawStatus.includes('leave')) {
-              leavesToday++;
-            }
+          if (rawStatus === 'in' || rawStatus === 'out') {
+            presentToday++;
+          } else if (rawStatus.includes('leave')) {
+            leavesToday++;
           }
         }
 
@@ -622,7 +641,12 @@
       // Calculate Pending Requests separately
       if (leaveSnap.exists()) {
         leaveSnap.forEach(c => {
-          if (c.val().status === 'pending') pendingRequests++;
+          const req = c.val();
+          if (req.status === 'pending') {
+            // Only count if employee is in our filtered list
+            const empInList = employees.find(e => e.empId === req.employeeId);
+            if (empInList) pendingRequests++;
+          }
         });
       }
 
@@ -637,7 +661,7 @@
     }).catch(e => console.error(e));
   </script>
 
-    <script src="sidebar.js"></script>
+  <script src="sidebar.js"></script>
 </body>
 
 </html>
