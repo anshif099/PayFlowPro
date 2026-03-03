@@ -519,7 +519,8 @@
                     const emp = snap.val();
                     if (role !== 'super_admin' && emp.branch !== adminBranch) return;
 
-                    const sanitizedId = emp.empId.replace(/[.#$\[\]]/g, '_');
+                    const rawEmpId = (emp.empId || "").trim();
+                    const sanitizedId = rawEmpId.replace(/[.#$\[\]]/g, '_');
                     const empDocsObj = docsMap[sanitizedId] || {};
                     const empDocs = Object.values(empDocsObj).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
