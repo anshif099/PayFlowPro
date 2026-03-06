@@ -133,7 +133,7 @@ for fname in FILES:
                     break
             
             # Now replace from idx to end_idx with NEW_LOGIC
-            new_content = new_content[:idx] + NEW_LOGIC + new_content[end_idx:]
+            new_content = new_content[:idx] + NEW_LOGIC + new_content[end_idx:] # pyre-ignore
 
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(new_content)

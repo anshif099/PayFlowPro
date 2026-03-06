@@ -549,55 +549,67 @@
                 <option value="te">తెలుగు (Telugu)</option>
             </select>
         </div>
-        <nav class="sidebar-nav">
+            <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
-                <span class="nav-icon">📊</span>
+                <span class="nav-icon">&#x1F4CA;</span>
                 <span data-i18n="dashboard">Dashboard</span>
             </a>
             <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
-                <span class="nav-icon">🏢</span>
+                <span class="nav-icon">&#x1F3E2;</span>
                 <span>Manage Companies</span>
             </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">&#x1F3E2;</span>
+                <span>Manage Branches</span>
+            </a>
             <a href="employees.html" class="nav-item">
-                <span class="nav-icon">👥</span>
+                <span class="nav-icon">&#x1F465;</span>
                 <span data-i18n="employees">Employees</span>
             </a>
             <a href="attendance.html" class="nav-item">
-                <span class="nav-icon">✅</span>
+                <span class="nav-icon">&#x2705;</span>
                 <span data-i18n="attendance">Attendance</span>
             </a>
             <a href="leave_management.html" class="nav-item">
-                <span class="nav-icon">🏖️</span>
+                <span class="nav-icon">&#x1F3D6;&#xFE0F;</span>
                 <span data-i18n="leave_management">Leave Management</span>
             </a>
-            <a href="manage_admins.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🛡️</span>
-                <span>Manage Branches</span>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">&#x1F6E1;&#xFE0F;</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval
-                    Management</span></a>
+            <a href="intervalmanagement.html" class="nav-item">
+                <span class="nav-icon">&#x23F2;&#xFE0F;</span>
+                <span>Interval Management</span>
+            </a>
             <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
+                <span class="nav-icon">&#x1F4B0;</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
             </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">&#x1F4B3;</span>
+                <span data-i18n="salary_payments">Salary Payments</span>
+            </a>
             <a href="monthly_report.html" class="nav-item">
-                <span class="nav-icon">📑</span>
+                <span class="nav-icon">&#x1F4D1;</span>
                 <span data-i18n="monthly_report">Monthly Report</span>
             </a>
             <a href="documents.html" class="nav-item">
-                <span class="nav-icon">📄</span>
+                <span class="nav-icon">&#x1F4C4;</span>
                 <span>Documents</span>
             </a>
             <a href="leaderboard.html" class="nav-item">
-                <span class="nav-icon">🏆</span>
+                <span class="nav-icon">&#x1F3C6;</span>
                 <span>Leaderboard</span>
             </a>
             <a href="ai_prediction.html" class="nav-item">
-                <span class="nav-icon">🧠</span>
+                <span class="nav-icon">&#x1F9E0;</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span
-                    data-i18n="settings">Settings</span></a>
+            <a href="settings.html" class="nav-item active">
+                <span class="nav-icon">&#x2699;&#xFE0F;</span>
+                <span data-i18n="settings">Settings</span>
+            </a>
         </nav>
     </div>
 
@@ -620,6 +632,18 @@
                             id="officeOut"></div>
                 </div>
                 <button onclick="saveOfficeTime()" data-i18n="save_office_time">💾 Save Office Time</button>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="salary_day_settings">Salary Day Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="salary_day_desc">Set the day of the month when salaries are typically credited (1-31).</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-i18n="salary_day">Salary Credited Day</label>
+                        <input type="number" id="salaryDayInput" min="1" max="31" placeholder="e.g., 1 or 5">
+                    </div>
+                </div>
+                <button onclick="saveSalaryDay()" data-i18n="save_salary_day">💾 Save Salary Day</button>
             </div>
 
             <div class="card">
@@ -744,6 +768,25 @@
         // Office Time
         onValue(ref(db, `${settingsRoot}/officeTime`), s => { if (s.exists()) { officeIn.value = s.val().start || ''; officeOut.value = s.val().end || '' } else { officeIn.value = ''; officeOut.value = ''; } });
         window.saveOfficeTime = () => { set(ref(db, `${settingsRoot}/officeTime`), { start: officeIn.value, end: officeOut.value }); alert('Office time saved!') };
+
+        // Salary Day
+        onValue(ref(db, `${settingsRoot}/salaryDay`), s => {
+            if (s.exists()) {
+                document.getElementById('salaryDayInput').value = s.val();
+            } else {
+                document.getElementById('salaryDayInput').value = '';
+            }
+        });
+        window.saveSalaryDay = () => {
+            const day = parseInt(document.getElementById('salaryDayInput').value);
+            if (isNaN(day) || day < 1 || day > 31) {
+                alert('Please enter a valid day between 1 and 31.');
+                return;
+            }
+            set(ref(db, `${settingsRoot}/salaryDay`), day).then(() => {
+                alert('Salary Day saved successfully!');
+            });
+        };
 
         // Week-Offs
         const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Payments - Teamsive Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar styles matching other pages */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* Main structure */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* Page specific */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 195, 0.03);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 195, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 32px;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: white;
+            border-radius: 12px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .qr-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .payment-amount {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .payment-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .btn-upi {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 255, 195, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-upi:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+            </select>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">&#x1F4CA;</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">&#x1F3E2;</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">&#x1F3E2;</span>
+                <span>Manage Branches</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">&#x1F465;</span>
+                <span data-i18n="employees">Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">&#x2705;</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">&#x1F3D6;&#xFE0F;</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">&#x1F6E1;&#xFE0F;</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item">
+                <span class="nav-icon">&#x23F2;&#xFE0F;</span>
+                <span>Interval Management</span>
+            </a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">&#x1F4B0;</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item active">
+                <span class="nav-icon">&#x1F4B3;</span>
+                <span data-i18n="salary_payments">Salary Payments</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">&#x1F4D1;</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">&#x1F4C4;</span>
+                <span>Documents</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">&#x1F3C6;</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">&#x1F9E0;</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">&#x2699;&#xFE0F;</span>
+                <span data-i18n="settings">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1 data-i18n="salary_payments">Salary Payments</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+                    <div style="flex:1; min-width: 200px;">
+                        <h3 data-i18n="pending_salary_payments">Previous Month's Pending Payments</h3>
+                        <p style="color:var(--text-muted);font-size:14px;">Review and pay employees for the previous
+                            month.</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="employee_name">Employee Name</th>
+                                <th data-i18n="employee_id">Employee ID</th>
+                                <th data-i18n="mobile_number">Mobile Number</th>
+                                <th data-i18n="net_salary">Net Salary (Last Month)</th>
+                                <th>Bank Details</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentData">
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);"
+                                    data-i18n="loading_employees">Loading employees...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Process Payment</h3>
+                <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+            </div>
+            <div class="payment-amount" id="modalAmount">₹0</div>
+
+            <div class="qr-placeholder">
+                <img id="qrImage" src="" alt="Payment QR Code">
+            </div>
+
+            <button id="confirmPaymentBtn"
+                style="width:100%; margin-top:16px; background:var(--primary); color:#000; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; border:1px solid #000; font-size:15px; transition:0.2s;"
+                onclick="confirmPayment()" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1"
+                data-i18n="confirm_payment">✅ Confirm Payment</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.toggleTheme = () => { document.body.classList.toggle('light-mode'); };
+
+        const role = localStorage.getItem("role");
+        const adminBranch = localStorage.getItem("branch");
+        const companyId = localStorage.getItem("companyId");
+
+        async function loadPayments() {
+            const tbody = document.getElementById('paymentData');
+
+            const now = new Date();
+            // Go to previous month
+            const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const y = lastMonthDate.getFullYear();
+            const m = String(lastMonthDate.getMonth() + 1).padStart(2, '0');
+            const lastMonthStr = `${y}-${m}`;
+
+            try {
+                const [empSnap, approvalsSnap, adminsSnap] = await Promise.all([
+                    get(ref(db, "employees")),
+                    get(ref(db, "salary_approvals")),
+                    get(ref(db, "admins"))
+                ]);
+
+                if (!empSnap.exists()) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No employees found</td></tr>`;
+                    return;
+                }
+
+                const branchAdminBranches = new Set();
+                if (adminsSnap.exists()) {
+                    adminsSnap.forEach(a => {
+                        const admin = a.val();
+                        if (admin.role === 'branch_admin' && admin.branch) {
+                            branchAdminBranches.add(admin.branch);
+                        }
+                    });
+                }
+
+                tbody.innerHTML = "";
+                const allApprovals = approvalsSnap.val() || {};
+
+                empSnap.forEach(c => {
+                    const e = c.val();
+                    let allow = true;
+                    if (role === 'branch_admin' && e.branch !== adminBranch) allow = false;
+                    else if (role === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) allow = false;
+                    else if (role === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) allow = false;
+
+                    if (allow && e.status !== 'inactive') {
+                        e.empId = c.key;
+
+                        // Discover salary
+                        let netSalary = parseFloat(e.salary || 0);
+                        let isApproved = false;
+
+                        if (allApprovals[e.empId] && allApprovals[e.empId][lastMonthStr]) {
+                            const approval = allApprovals[e.empId][lastMonthStr];
+                            if (approval.finalSalary !== undefined) {
+                                netSalary = approval.finalSalary;
+                                isApproved = true;
+                            }
+                        }
+
+                        // Bank details
+                        const bank = e.bankDetails || null;
+                        window._bankData = window._bankData || {};
+                        window._bankData[e.empId] = bank;
+
+                        // Escape string variables
+                        const safeName = (e.name || '').replace(/'/g, "\\'");
+                        const safeMobile = (e.mobile || '').replace(/'/g, "\\'");
+                        const safeEmpId = (e.empId || '').replace(/'/g, "\\'");
+                        const salaryAmount = netSalary;
+
+                        // Check if already paid
+                        const isAlreadyPaid = (e.salary_history && e.salary_history[lastMonthStr] && e.salary_history[lastMonthStr].status === 'paid');
+
+                        const approvedBadge = isApproved
+                            ? `<span style="background: rgba(0,255,195,0.1); color:#00ffc3; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">✅ Approved</span>`
+                            : `<span style="background: rgba(255,167,38,0.1); color:#ffa726; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">⚠️ Base Salary</span>`;
+
+                        const bankStatusBadge = (bank && bank.accountNumber)
+                            ? `<span style="background:rgba(0,255,195,0.1);color:#00ffc3;padding:3px 8px;border-radius:4px;font-size:11px;">✅ Added</span>`
+                            : `<span style="background:rgba(255,167,38,0.1);color:#ffa726;padding:3px 8px;border-radius:4px;font-size:11px;">❌ Not Added</span>`;
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${e.name}</td>
+                                <td>${e.empId}</td>
+                                <td>${e.mobile}</td>
+                                <td>
+                                    <strong>₹${netSalary.toLocaleString()}</strong>
+                                    ${approvedBadge}
+                                </td>
+                                <td>${bankStatusBadge}</td>
+                                <td>
+                                    ${isAlreadyPaid
+                                ? `<span style="background:rgba(0,255,195,0.2);color:#00e6af;padding:6px 12px;border-radius:6px;font-weight:bold;font-size:12px;">✅ Paid</span>`
+                                : `<button class="btn-small" onclick="openPaymentModal('${safeName}', '${safeMobile}', ${salaryAmount}, '${safeEmpId}', '${lastMonthStr}')">💸 Pay</button>`
+                            }
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                if (tbody.innerHTML === "") {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No valid employees</td></tr>`;
+                }
+
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Failed to load data</td></tr>`;
+            }
+        }
+
+        window.openPaymentModal = (name, mobile, amount, empId, monthStr) => {
+            const bank = (window._bankData && window._bankData[empId]) ? window._bankData[empId] : null;
+            const modal = document.getElementById('paymentModal');
+            document.getElementById('modalAmount').innerText = `₹${amount.toLocaleString()} to ${name}`;
+            window._currentPayment = { empId, amount, monthStr };
+
+            // Configure UPI - use saved UPI ID if available
+            const upiId = (bank && bank.upiId) ? bank.upiId : `${mobile}@ybl`;
+            const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR`;
+
+
+
+            // Generate QR
+            const qrImage = document.getElementById('qrImage');
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiString)}`;
+
+            modal.classList.add('active');
+        };
+
+        window.closePaymentModal = () => {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.remove('active');
+        };
+
+        window.confirmPayment = async () => {
+            const payment = window._currentPayment;
+            if (!payment) return;
+
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            const originalText = confirmBtn.innerText;
+            confirmBtn.innerText = "Processing...";
+            confirmBtn.disabled = true;
+
+            try {
+                const historyRef = ref(db, `employees/${payment.empId}/salary_history/${payment.monthStr}`);
+                await set(historyRef, {
+                    amount: payment.amount,
+                    status: 'paid',
+                    paidAt: new Date().toISOString(),
+                    month: payment.monthStr
+                });
+
+                alert("Payment Confirmed Successfully!");
+                closePaymentModal();
+                loadPayments(); // Reload table to reflect Paid status
+            } catch (error) {
+                console.error("Error saving payment: ", error);
+                alert("Failed to confirm payment. Check console.");
+            } finally {
+                confirmBtn.innerText = originalText;
+                confirmBtn.disabled = false;
+            }
+        };
+
+        // Initialize
+        loadPayments();
+
+    </script>
+</body>
+
+</html>
