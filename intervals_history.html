@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teamsive Intervals History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="lang.js"></script>
+  <style>
+    :root {
+      --primary: #00ffc3;
+      --primary-hover: #00e6af;
+      --bg-dark: #0b0f14;
+      --bg-card: #141a22;
+      --bg-input: #0f151d;
+      --text: #ffffff;
+      --text-muted: #8b92a0;
+      --border: #1e2530;
+      --success: #00ffc3;
+      --danger: #ff5c5c;
+      --warning: #ffa726;
+      --sidebar-width: 260px
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh;
+      background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0;
+      z-index: 100; overflow-y: auto; transition: transform .3s ease
+    }
+    .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border) }
+    .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px }
+    .sidebar-nav { margin-top: 24px; padding: 0 12px }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px;
+      color: var(--text-muted); cursor: pointer; transition: all .2s ease; font-weight: 500; font-size: 14px; text-decoration: none
+    }
+    .nav-item:hover { background: rgba(0, 255, 195, .08); color: var(--primary) }
+    .nav-item.active { background: rgba(0, 255, 195, .15); color: var(--primary); font-weight: 600 }
+    .nav-icon { width: 20px; height: 20px; font-size: 18px }
+
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left .3s ease }
+    .top-bar {
+      background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50
+    }
+    .top-bar h1 { font-size: 24px; font-weight: 600 }
+    .menu-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 8px }
+    
+    .dashboard-section { padding: 32px }
+    .card { background: var(--bg-card); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid var(--border) }
+    .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text) }
+    
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all .2s ease; }
+    .btn-logout:hover { background: var(--danger); border-color: var(--danger); color: white }
+
+    .controls-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    input[type="date"], input[type="text"] {
+        padding: 10px 14px;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: inherit;
+        outline: none;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    input[type="text"] { min-width: 250px; }
+
+    .table-container { overflow-x: auto; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid var(--border); background: rgba(0, 0, 0, .2); }
+    td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    tr:hover { background: rgba(0, 255, 195, .03); }
+
+    .extra-tag {
+        color: var(--danger);
+        font-weight: 600;
+        font-size: 12px;
+        background: rgba(255, 92, 92, 0.1);
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+    }
+
+    @media(max-width:768px) {
+      .sidebar { transform: translateX(-100%) }
+      .sidebar.open { transform: translateX(0) }
+      .main-content { margin-left: 0 }
+      .menu-toggle { display: block }
+      .dashboard-section { padding: 20px }
+      .top-bar { padding: 16px 20px }
+      .controls-bar { flex-direction: column; align-items: stretch; }
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px }
+    ::-webkit-scrollbar-track { background: var(--bg-dark) }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary) }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>💼 Teamsive</h2>
+      <select id="langSelector" onchange="changeLanguage(this.value)" style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+    </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">&#x1F4CA;</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">&#x1F3E2;</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">&#x1F3E2;</span>
+                <span>Manage Branches</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item" id="nav-subscriptions" style="display:none;">
+                <span class="nav-icon">&#x1F4B3;</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="employees.html" class="nav-item">
+                <span class="nav-icon">&#x1F465;</span>
+                <span data-i18n="employees">Employees</span>
+            </a>
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">&#x2705;</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">&#x1F3D6;&#xFE0F;</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">&#x1F6E1;&#xFE0F;</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item">
+                <span class="nav-icon">&#x23F2;&#xFE0F;</span>
+                <span>Interval Management</span>
+            </a>
+            <a href="intervals_history.html" class="nav-item active">
+                <span class="nav-icon">&#x1F552;</span>
+                <span>Intervals History</span>
+            </a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">&#x1F4B0;</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">&#x1F4B3;</span>
+                <span data-i18n="salary_payments">Salary Payments</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">&#x1F4D1;</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">&#x1F4C4;</span>
+                <span>Documents</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">&#x1F3C6;</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">&#x1F9E0;</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">&#x2699;&#xFE0F;</span>
+                <span data-i18n="settings">Settings</span>
+            </a>
+        </nav>
+  </div>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:16px">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1>Intervals History</h1>
+      </div>
+      <div class="top-bar-actions">
+        <button onclick="toggleTheme()" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+        <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+       </div>
+    </div>
+
+    <div class="dashboard-section">
+      <div class="card">
+        <div class="controls-bar">
+           <input type="date" id="datePicker">
+           <input type="text" id="searchInput" placeholder="Search employee row or interval...">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Interval Name</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Consumed</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                 <!-- Populated dynamically -->
+            </tbody>
+          </table>
+          <div id="noDataMsg" style="text-align:center; padding: 40px; color: var(--text-muted); display: none;">No interval records found.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+      authDomain: "payflowpro-6e62d.firebaseapp.com",
+      databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+      projectId: "payflowpro-6e62d",
+      storageBucket: "payflowpro-6e62d.firebasestorage.app",
+      messagingSenderId: "69298740438",
+      appId: "1:69298740438:web:18fd85e982e083e1543d77"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    if (localStorage.getItem("admin") !== "true") {
+      location = "admin.html";
+    }
+
+    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+    window.logout = () => { localStorage.clear(); location = "admin.html"; };
+
+    const adminRole = localStorage.getItem("role");
+    const adminBranch = localStorage.getItem("branch");
+    const companyId = localStorage.getItem("companyId");
+
+    const datePicker = document.getElementById('datePicker');
+    const searchInput = document.getElementById('searchInput');
+    const tbody = document.getElementById('historyTableBody');
+    const noData = document.getElementById('noDataMsg');
+    
+    // Set Default Date
+    const today = new Date().toISOString().split('T')[0];
+    datePicker.value = today;
+
+    let allRecords = [];
+
+    async function loadData() {
+        allRecords = [];
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Loading...</td></tr>";
+        noData.style.display = "none";
+        
+        try {
+            const dateStr = datePicker.value;
+            if(!dateStr) return;
+
+            // Fetch Branch Admin constraints
+            const branchAdminBranches = new Set();
+            if (adminRole === 'super_admin' || adminRole === 'company_admin') {
+                const adminsSnap = await get(ref(db, "admins"));
+                if (adminsSnap.exists()) {
+                    adminsSnap.forEach(a => {
+                        const admin = a.val();
+                        if (admin.role === 'branch_admin' && admin.branch) {
+                            branchAdminBranches.add(admin.branch);
+                        }
+                    });
+                }
+            }
+
+            // Fetch valid employees
+            const empSnap = await get(ref(db, "employees"));
+            const validEmployees = {};
+            if (empSnap.exists()) {
+                empSnap.forEach(c => {
+                    const e = c.val();
+                    let allow = true;
+                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) allow = false;
+                    else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) allow = false;
+                    else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) allow = false;
+                    if (allow) validEmployees[c.key.replace(/[.#$\[\]]/g, "_")] = { name: e.name, id: c.key };
+                });
+            }
+
+            // Fetch interval records for the active date
+            for (const [sanitizedId, emp] of Object.entries(validEmployees)) {
+                const punchSnap = await get(ref(db, `employees/${sanitizedId}/interval_punches/${dateStr}`));
+                if (punchSnap.exists()) {
+                    punchSnap.forEach(pSnap => {
+                        const p = pSnap.val();
+                        allRecords.push({
+                           empName: emp.name || 'Unknown',
+                           empId: emp.id,
+                           intervalName: p.name || 'Interval',
+                           punchIn: p.punchIn || null,
+                           punchOut: p.punchOut || null,
+                           extraMins: p.extraMins || 0
+                        });
+                    });
+                }
+            }
+            
+            renderTable();
+
+        } catch(err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan='5' style='text-align:center; color:red;'>Failed to load data.</td></tr>`;
+        }
+    }
+
+    function formatTime(isoStr) {
+        if (!isoStr) return '--:--';
+        try {
+            const d = new Date(isoStr);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch(e) { return '--:--'; }
+    }
+
+    function calculateConsumed(inIso, outIso) {
+        if (!inIso || !outIso) return '--';
+        try {
+            const d1 = new Date(inIso);
+            const d2 = new Date(outIso);
+            let mins = Math.floor((d2 - d1) / 60000);
+            if (mins < 0) mins = 0;
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m} mins`;
+        } catch(e) { return '--'; }
+    }
+
+    function renderTable() {
+        const query = searchInput.value.toLowerCase();
+        tbody.innerHTML = "";
+        
+        let filtered = allRecords.filter(r => 
+           r.empName.toLowerCase().includes(query) || 
+           r.empId.toLowerCase().includes(query) || 
+           r.intervalName.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            noData.style.display = "block";
+            return;
+        }
+
+        noData.style.display = "none";
+        
+        filtered.forEach(r => {
+             const inStr = formatTime(r.punchIn);
+             const outStr = formatTime(r.punchOut);
+             let consumed = calculateConsumed(r.punchIn, r.punchOut);
+             let extraBadge = "";
+             
+             if (r.extraMins && r.extraMins != 0) {
+                 extraBadge = `<span class="extra-tag">+${r.extraMins} mins Extra</span>`;
+             }
+
+             const tr = document.createElement('tr');
+             tr.innerHTML = `
+                <td>
+                    <div style="font-weight:600; color:var(--text);">${r.empName}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">ID: ${r.empId}</div>
+                </td>
+                <td><span style="background:rgba(0,255,195,0.1); color:var(--primary); padding: 4px 10px; border-radius:12px; font-size:12px; font-weight:bold;">${r.intervalName}</span></td>
+                <td>${inStr}</td>
+                <td>${outStr}</td>
+                <td>${consumed} ${extraBadge}</td>
+             `;
+             tbody.appendChild(tr);
+        });
+    }
+
+    datePicker.addEventListener('change', loadData);
+    searchInput.addEventListener('input', renderTable);
+
+    loadData();
+
+  </script>
+  <script src="sidebar.js"></script>
+</body>
+</html>
