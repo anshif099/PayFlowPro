@@ -450,7 +450,14 @@
             </div>
 
             <div class="card">
-                <h3 data-i18n="leave_history">Leave History</h3>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h3 data-i18n="leave_history" style="margin-bottom:0;">Leave History</h3>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:14px;color:var(--text-muted);">Selected Date:</span>
+                        <input type="date" id="historyDateFilter" onchange="window.onDateChange(this.value)"
+                            style="padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;">
+                    </div>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -507,6 +514,16 @@
         const adminRole = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const adminName = localStorage.getItem("adminName") || "Admin";
+
+        window.selectedDate = new Date().toISOString().split('T')[0];
+        document.getElementById('historyDateFilter').value = window.selectedDate;
+
+        window.onDateChange = (val) => {
+            if (val) {
+                window.selectedDate = val;
+                renderLeaveTables();
+            }
+        };
 
         if (adminRole !== 'super_admin') {
             // Hide Branch Admins link
@@ -576,21 +593,27 @@
                         </tr>
                     `;
                 } else {
-                    hasHistory = true;
-                    const statusColor = req.status === 'approved' ? '#00ffc3' : '#ff5c5c';
-                    const statusBg = req.status === 'approved' ? 'rgba(0,255,195,0.15)' : 'rgba(255,92,92,0.15)';
+                    const fromTime = new Date(req.fromDate).setHours(0,0,0,0);
+                    const toTime = new Date(req.toDate).setHours(0,0,0,0);
+                    const selTime = new Date(window.selectedDate).setHours(0,0,0,0);
+                    
+                    if (selTime >= fromTime && selTime <= toTime) {
+                        hasHistory = true;
+                        const statusColor = req.status === 'approved' ? '#00ffc3' : '#ff5c5c';
+                        const statusBg = req.status === 'approved' ? 'rgba(0,255,195,0.15)' : 'rgba(255,92,92,0.15)';
 
-                    historyData.innerHTML += `
-                        <tr>
-                            <td>${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}</td>
-                            <td>${req.leaveTypeLabel || 'Paid Leave'}</td>
-                            <td>${req.fromDate}</td>
-                            <td>${req.toDate}</td>
-                            <td>${req.days}</td>
-                            <td><span style="color:${statusColor};background:${statusBg};padding:4px 12px;border-radius:20px;font-weight:600;font-size:12px;text-transform:uppercase">${req.status}</span></td>
-                            <td>${req.actionAt ? new Date(req.actionAt).toLocaleDateString() : '-'}</td>
-                        </tr>
-                    `;
+                        historyData.innerHTML += `
+                            <tr>
+                                <td>${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}</td>
+                                <td>${req.leaveTypeLabel || 'Paid Leave'}</td>
+                                <td>${req.fromDate}</td>
+                                <td>${req.toDate}</td>
+                                <td>${req.days}</td>
+                                <td><span style="color:${statusColor};background:${statusBg};padding:4px 12px;border-radius:20px;font-weight:600;font-size:12px;text-transform:uppercase">${req.status}</span></td>
+                                <td>${req.actionAt ? new Date(req.actionAt).toLocaleDateString() : '-'}</td>
+                            </tr>
+                        `;
+                    }
                 }
             });
 
