@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -180,7 +180,12 @@
                     snapshot.forEach(child => {
                         const admin = child.val();
 
-                        if (admin.email === input || admin.adminId === input) {
+                        const adminEmail = (admin.email || "").trim().toLowerCase();
+                        const aId = (admin.adminId || "").trim().toLowerCase();
+                        const cId = (admin.companyId || "").trim().toLowerCase();
+                        const searchInput = input.toLowerCase();
+
+                        if (adminEmail === searchInput || aId === searchInput || cId === searchInput) {
                             found = true;
                             verifiedAdmin = admin;
                             verifiedKey = child.key;
@@ -195,9 +200,7 @@
                             if (admin.password) {
                                 document.getElementById("passwordStep").style.display = "block";
                                 document.getElementById("welcomeMsg").innerText = "Welcome, " + (admin.name || "Admin");
-                            }
-
-                            else {
+                            } else {
                                 document.getElementById("createPasswordStep").style.display = "block";
                             }
 
@@ -207,11 +210,9 @@
                 }
 
                 if (!found) {
-                    errorEl.innerText = "Admin ID not found";
+                    errorEl.innerText = "Admin ID or Email not found";
                 }
-            }
-
-            catch (err) {
+            } catch (err) {
                 errorEl.innerText = "Error: " + err.message;
             }
         }

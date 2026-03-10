@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Subscriptions - Teamsive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffb700;
+            --sidebar-width: 260px;
+        }
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sidebar-nav { margin-top: 24px; padding: 0 12px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
+        .nav-item:hover { background: rgba(0, 255, 195, 0.08); color: var(--primary); }
+        .nav-item.active { background: rgba(0, 255, 195, 0.15); color: var(--primary); font-weight: 600; }
+        .nav-icon { width: 20px; height: 20px; font-size: 18px; }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left 0.3s ease; }
+        .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar h1 { font-size: 24px; font-weight: 600; }
+        .top-bar-actions { display: flex; gap: 12px; align-items: center; }
+        .menu-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 8px; }
+
+        .dashboard-section { padding: 32px; }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid var(--border); }
+        .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text); }
+
+        /* ============ TABLE ============ */
+        .table-container { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--border); background: rgba(0, 0, 0, 0.2); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:hover { background: rgba(0, 255, 195, 0.03); }
+
+        button { padding: 8px 16px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
+        button:hover { background: var(--primary-hover); }
+
+        /* ============ MODAL ============ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(4px); }
+        .modal { background: var(--bg-card); padding: 32px; border-radius: 16px; width: 400px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal h3 { margin-bottom: 20px; font-size: 20px; color: var(--text); }
+        .modal label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        .modal select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); margin-bottom: 20px; font-size: 14px; }
+        .modal select:focus { outline: none; border-color: var(--primary); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+
+        /* ============ CODE POPUP ============ */
+        .code-box { background: var(--bg-input); padding: 20px; border-radius: 8px; text-align: center; border: 1px dashed var(--primary); margin: 20px 0; }
+        .code-text { font-size: 24px; font-weight: 700; letter-spacing: 2px; color: var(--primary); font-family: monospace; }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)" style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item"><span class="nav-icon">&#x1F4CA;</span><span>Dashboard</span></a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;"><span class="nav-icon">&#x1F3E2;</span><span>Manage Companies</span></a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;"><span class="nav-icon">&#x1F3E2;</span><span>Manage Branches</span></a>
+            <a href="subscriptions.html" class="nav-item active" id="nav-subscriptions" style="display:none;"><span class="nav-icon">&#x1F4B3;</span><span>Subscriptions</span></a>
+            <a href="employees.html" class="nav-item"><span class="nav-icon">&#x1F465;</span><span>Employees</span></a>
+            <a href="attendance.html" class="nav-item"><span class="nav-icon">&#x2705;</span><span>Attendance</span></a>
+            <a href="leave_management.html" class="nav-item"><span class="nav-icon">&#x1F3D6;&#xFE0F;</span><span>Leave Management</span></a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;"><span class="nav-icon">&#x1F6E1;&#xFE0F;</span><span>Branch Admins</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">&#x23F2;&#xFE0F;</span><span>Interval Management</span></a>
+            <a href="salary_settings.html" class="nav-item"><span class="nav-icon">&#x1F4B0;</span><span>Salary Settings</span></a>
+            <a href="salary_payments.html" class="nav-item"><span class="nav-icon">&#x1F4B3;</span><span>Salary Payments</span></a>
+            <a href="monthly_report.html" class="nav-item"><span class="nav-icon">&#x1F4D1;</span><span>Monthly Report</span></a>
+            <a href="documents.html" class="nav-item"><span class="nav-icon">&#x1F4C4;</span><span>Documents</span></a>
+            <a href="leaderboard.html" class="nav-item"><span class="nav-icon">&#x1F3C6;</span><span>Leaderboard</span></a>
+            <a href="ai_prediction.html" class="nav-item"><span class="nav-icon">&#x1F9E0;</span><span>AI Prediction</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">&#x2699;&#xFE0F;</span><span>Settings</span></a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Subscriptions Overview</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button onclick="toggleTheme()" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-cancel" onclick="logout()" style="padding: 8px 16px;">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3>Company Subscriptions</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Company ID</th>
+                                <th>Current Plan</th>
+                                <th>Activation Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Set Subscription -->
+    <div class="modal-overlay" id="subscriptionModal">
+        <div class="modal">
+            <h3>Set Subscription</h3>
+            <p id="modalCompanyName" style="margin-bottom: 20px; color: var(--primary); font-weight: bold;"></p>
+            <label>Select Plan</label>
+            <select id="planSelect">
+                <option value="free_trial">Free Trial (14 Days)</option>
+                <option value="1_month">1 Month</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly (3 Months)</option>
+                <option value="half_year">Half Year (6 Months)</option>
+                <option value="yearly">Yearly (12 Months)</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button onclick="generateCode()">Generate Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Show Code -->
+    <div class="modal-overlay" id="codeModal">
+        <div class="modal" style="text-align: center;">
+            <h3 style="color: var(--success);">Subscription Code</h3>
+            <p style="color: var(--text-muted); font-size: 14px;">Give this code to the company to activate their subscription.</p>
+            <div class="code-box">
+                <div class="code-text" id="generatedCodeDisplay">SUB-XXXX-XXXX</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="copyCode()" style="background: var(--warning); color: #000;">Copy Code</button>
+                <button onclick="closeCodeModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get, set, child, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true" || localStorage.getItem("role") !== "super_admin") {
+            location = "dashboard.html";
+        }
+
+        document.getElementById('nav-manage-companies').style.display = 'flex';
+        document.getElementById('nav-manage-branches').style.display = 'flex';
+        document.getElementById('nav-subscriptions').style.display = 'flex';
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+
+        let currentTargetCompanyId = null;
+
+        onValue(ref(db, 'companies'), (snapshot) => {
+            const list = document.getElementById('companyList');
+            list.innerHTML = "";
+            let hasCompanies = false;
+
+            if (snapshot.exists()) {
+                const companies = snapshot.val();
+                
+                // Fetch subscriptions to map
+                get(ref(db, 'subscriptions')).then(subSnap => {
+                    const subscriptions = subSnap.exists() ? subSnap.val() : {};
+
+                    for (const companyId in companies) {
+                        hasCompanies = true;
+                        const company = companies[companyId];
+                        
+                        let planName = "No Subscription";
+                        let actDate = "-";
+                        let expDate = "-";
+                        let statusText = "No Subscription";
+                        let statusColor = "var(--text-muted)";
+                        
+                        // Check if subscription exists for company
+                        // Format: subscriptions[companyId] = { plan, activated, activationDate, expiryDate, ... }
+                        // Wait, a company can have multiple codes. Better structure: `subscriptions/{companyId}` which holds current sub info
+                        // Or `subscriptionCodes/{code}` for code checking... Let's use `subscriptions/{companyId}` as current state, and `activationCodes/{code}` as codes to be redeemed.
+                        
+                        const sub = subscriptions[companyId];
+                        if (sub) {
+                            planName = sub.plan || "Unknown";
+                            
+                            if (sub.activated) {
+                                actDate = sub.activationDate || "-";
+                                expDate = sub.expiryDate || "-";
+                                
+                                // Check if expired
+                                if (new Date(sub.expiryDate) < new Date()) {
+                                    statusText = "Expired";
+                                    statusColor = "var(--danger)";
+                                } else {
+                                    statusText = "Active";
+                                    statusColor = "var(--success)";
+                                }
+                            } else {
+                                statusText = "Pending Activation";
+                                statusColor = "var(--warning)";
+                            }
+                        }
+
+                        const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${statusText.toUpperCase()}</span>`;
+
+                        let actionButtons = `<button style="padding: 6px 12px; margin-right: 5px;" onclick="openModal('${company.companyId}', '${company.companyName}')">Set</button>`;
+                        if (sub && sub.activationCode) {
+                            actionButtons += `<button style="padding: 6px 12px; margin-right: 5px; background: var(--warning);" onclick="showCode('${sub.activationCode}')">Code</button>`;
+                        }
+                        if (sub && planName !== "No Subscription") {
+                            actionButtons += `<button style="padding: 6px 12px; background: var(--danger); color: white;" onclick="cancelSubscription('${company.companyId}')">Cancel</button>`;
+                        }
+
+                        list.innerHTML += `
+                            <tr>
+                                <td>${company.companyName}</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${company.companyId}</span></td>
+                                <td style="text-transform: capitalize;">${planName.replace('_', ' ')}</td>
+                                <td>${actDate}</td>
+                                <td>${expDate}</td>
+                                <td>${statusBadge}</td>
+                                <td style="white-space: nowrap;">
+                                    ${actionButtons}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    if (!hasCompanies) list.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No companies found</td></tr>`;
+                });
+            } else {
+                list.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No companies found</td></tr>`;
+            }
+        });
+
+        window.openModal = (companyId, companyName) => {
+            currentTargetCompanyId = companyId;
+            document.getElementById('modalCompanyName').innerText = companyName;
+            document.getElementById('subscriptionModal').style.display = 'flex';
+        };
+
+        window.closeModal = () => {
+            document.getElementById('subscriptionModal').style.display = 'none';
+        };
+
+        window.closeCodeModal = () => {
+            document.getElementById('codeModal').style.display = 'none';
+        };
+
+        window.showCode = (code) => {
+            document.getElementById('generatedCodeDisplay').innerText = code;
+            document.getElementById('codeModal').style.display = 'flex';
+        };
+
+        window.copyCode = () => {
+            const code = document.getElementById('generatedCodeDisplay').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert("Code copied to clipboard!");
+            });
+        };
+
+        window.cancelSubscription = async (companyId) => {
+            if (confirm("Are you sure you want to cancel this subscription? The company will lose access instantly.")) {
+                try {
+                    await remove(ref(db, 'subscriptions/' + companyId));
+                    alert("Subscription canceled.");
+                } catch(e) {
+                    alert("Error: " + e.message);
+                }
+            }
+        };
+
+        function getDurationDays(plan) {
+            switch(plan) {
+                case 'free_trial': return 14;
+                case '1_month': return 30;
+                case 'monthly': return 30;
+                case 'quarterly': return 90;
+                case 'half_year': return 180;
+                case 'yearly': return 365;
+                default: return 30;
+            }
+        }
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'SUB-';
+            for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            code += '-';
+            for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
+        }
+
+        window.generateCode = async () => {
+            const plan = document.getElementById('planSelect').value;
+            const companyId = currentTargetCompanyId;
+            
+            if (!companyId) return;
+
+            // Generate unique code
+            const code = generateRandomCode();
+            const duration = getDurationDays(plan);
+
+            // Save to database
+            // We store the activation code broadly (so company can enter it), and update company's subscription state
+            const promises = [
+                set(ref(db, 'activationCodes/' + code), {
+                    code: code,
+                    companyId: companyId,
+                    plan: plan,
+                    duration: duration,
+                    createdAt: new Date().toISOString(),
+                    used: false
+                }),
+                set(ref(db, 'subscriptions/' + companyId), {
+                    plan: plan,
+                    duration: duration,
+                    createdAt: new Date().toISOString(),
+                    activated: false,
+                    activationCode: code
+                })
+            ];
+
+            try {
+                await Promise.all(promises);
+                closeModal();
+                document.getElementById('generatedCodeDisplay').innerText = code;
+                document.getElementById('codeModal').style.display = 'flex';
+            } catch (err) {
+                alert("Error generating code: " + err.message);
+            }
+        };
+
+    </script>
+    <script src="sidebar.js"></script>
+</body>
+</html>

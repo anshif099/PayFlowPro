@@ -333,6 +333,29 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--primary)
     }
+
+    /* Subscription Widget & Modal */
+    .sub-widget {
+        background: linear-gradient(135deg, rgba(0,255,195,0.1), rgba(20,26,34,1));
+        border: 1px solid var(--primary);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .sub-info { font-size: 14px; }
+    .sub-info strong { color: var(--primary); font-size: 16px; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }
+    .modal { background: var(--bg-card); padding: 32px; border-radius: 16px; width: 400px; border: 1px solid var(--border); text-align: center; }
+    .modal h3 { color: var(--primary); margin-bottom: 16px; }
+    .modal input { width: 100%; padding: 12px; margin-bottom: 20px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; text-align: center; font-family: monospace; letter-spacing: 2px; }
+    .modal button { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; }
+    .modal button:hover { background: var(--primary-hover); }
   </style>
 </head>
 
@@ -366,6 +389,10 @@
             <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
                 <span class="nav-icon">&#x1F3E2;</span>
                 <span>Manage Branches</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item" id="nav-subscriptions" style="display:none;">
+                <span class="nav-icon">&#x1F4B3;</span>
+                <span>Subscriptions</span>
             </a>
             <a href="employees.html" class="nav-item">
                 <span class="nav-icon">&#x1F465;</span>
@@ -432,6 +459,25 @@
     </div>
 
     <div class="dashboard-section">
+      <div id="subscriptionWidgetContainer" class="sub-widget">
+         <div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Current Plan</div>
+            <div class="sub-info"><strong id="subWidgetPlan" style="text-transform: capitalize;">-</strong></div>
+         </div>
+         <div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Activation</div>
+            <div class="sub-info" id="subWidgetAct">-</div>
+         </div>
+         <div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Expiry</div>
+            <div class="sub-info" id="subWidgetExp">-</div>
+         </div>
+         <div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Days Remaining</div>
+            <div class="sub-info" id="subWidgetDays" style="color: var(--warning);">-</div>
+         </div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-header">
@@ -497,9 +543,18 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="companySubModal">
+      <div class="modal">
+          <h3>Activate Subscription</h3>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Your subscription has expired or hasn't been activated yet. Please enter your activation code.</p>
+          <input type="text" id="activationCodeInput" placeholder="SUB-XXXX-XXXX">
+          <button onclick="activateSubscriptionCode()">Activate</button>
+      </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -531,6 +586,73 @@
     const allowedEmpIds = new Set();
     const adminRole = localStorage.getItem("role");
     const adminBranch = localStorage.getItem("branch");
+    const companyIdForSub = localStorage.getItem("companyId");
+
+    if (adminRole === 'company_admin' || adminRole === 'branch_admin') {
+      get(ref(db, 'subscriptions/' + companyIdForSub)).then(snap => {
+         const sub = snap.val();
+         let requiresActivation = false;
+         
+         if (!sub || !sub.activated) {
+            requiresActivation = true;
+         } else if (sub.expiryDate && new Date(sub.expiryDate) < new Date()) {
+            requiresActivation = true;
+         }
+
+         if (requiresActivation) {
+            document.getElementById('companySubModal').style.display = 'flex';
+         } else {
+             document.getElementById('subWidgetPlan').innerText = (sub.plan || 'Free Trial').replace('_', ' ');
+             document.getElementById('subWidgetAct').innerText = sub.activationDate || '-';
+             document.getElementById('subWidgetExp').innerText = sub.expiryDate || '-';
+             
+             if (sub.expiryDate) {
+                 const diffTime = new Date(sub.expiryDate) - new Date();
+                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                 document.getElementById('subWidgetDays').innerText = Math.max(0, diffDays) + " Days";
+             }
+         }
+      });
+    } else {
+      document.getElementById('subscriptionWidgetContainer').style.display = 'none';
+      document.getElementById('companySubModal').style.display = 'none';
+    }
+
+    window.activateSubscriptionCode = async () => {
+       const code = document.getElementById('activationCodeInput').value.trim();
+       if (!code) return alert("Enter activation code");
+       
+       try {
+           const snap = await get(ref(db, 'activationCodes/' + code));
+           if (!snap.exists()) return alert("Invalid activation code");
+           
+           const codeData = snap.val();
+           if (codeData.used) return alert("Activation code already used");
+           if (codeData.companyId !== companyIdForSub) return alert("Activation code not valid for your company");
+           
+           const today = new Date();
+           const actDateStr = today.toISOString().split('T')[0];
+           
+           const expiry = new Date();
+           expiry.setDate(expiry.getDate() + codeData.duration);
+           const expDateStr = expiry.toISOString().split('T')[0];
+           
+           await update(ref(db, 'activationCodes/' + code), { used: true, activatedAt: new Date().toISOString() });
+           await update(ref(db, 'subscriptions/' + companyIdForSub), {
+               activated: true,
+               activationDate: actDateStr,
+               expiryDate: expDateStr,
+               plan: codeData.plan,
+               duration: codeData.duration,
+               activationCode: code
+           });
+           
+           alert("Subscription Activated Successfully!");
+           location.reload();
+       } catch (err) {
+           alert("Error activating subscription: " + err.message);
+       }
+    };
 
 
     // --- Sidebar Logic ---
