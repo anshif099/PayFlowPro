@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Report - Teamsive Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar styles matching other pages */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* Main structure */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* Page specific */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+            </select>
+        </div>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
+            
+            <!-- Employees Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">👥</span>
+                    <span data-i18n="employees">Employees</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="empDropdown">
+                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+                    <span class="nav-icon">📜</span>
+                    <span>List Employees</span>
+                </a>
+                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                    <span class="nav-icon">✏️</span>
+                    <span>Manage Employees</span>
+                </a>
+            </div>
+
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
+            <a href="salary_report.html" class="nav-item active">
+                <span class="nav-icon">📈</span>
+                <span>Salary Report</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Salary Report</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+                    <div style="flex:1; min-width: 200px;">
+                        <h3>Generate Monthly Salary Report</h3>
+                        <p style="color:var(--text-muted);font-size:14px;">Select a month to view and export the entire staff salary history and generation records.</p>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; align-items:flex-end; margin-bottom: 24px;">
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-size:13px; color:var(--text-muted);">Select Month</label>
+                        <input type="month" id="monthSelector" style="padding:10px 16px; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; width:220px;">
+                    </div>
+                    <button id="generateBtn" onclick="generateReport()" style="padding:12px 24px; background:var(--primary); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Generate</button>
+                    <button id="exportBtn" onclick="exportCSV()" style="padding:12px 24px; background:transparent; border:1px solid var(--border); color:var(--text); border-radius:8px; font-weight:600; cursor:pointer;" disabled>Export CSV</button>
+                </div>
+                
+                <div id="loadingIndicator" style="display:none; text-align:center; padding: 20px;">
+                    <span style="color: var(--primary);">Loading data...</span>
+                </div>
+
+                <div class="table-container" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(0,0,0,0.2); border-bottom: 2px solid var(--border);">
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">ID</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Name</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Base Salary</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Present</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Late (Mins)</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Penalty</th>
+                                <th style="padding: 12px; text-align: left; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Final Salary</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Select a month and click Generate</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Standard auth validation mapped for role restrictions securely across company domains
+        const role = localStorage.getItem("role");
+        const companyId = localStorage.getItem("companyId");
+        const branchId = localStorage.getItem("branch");
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.toggleTheme = () => { document.body.classList.toggle('light-mode'); };
+
+        // Default Date to Current Month
+        document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('monthSelector').value = `${yyyy}-${mm}`;
+        });
+
+        let currentReportData = []; // Array used to populate exporting logic
+
+        window.generateReport = async () => {
+            const monthStr = document.getElementById('monthSelector').value;
+            if (!monthStr) return alert("Select a month first");
+
+            const tbody = document.getElementById('reportTableBody');
+            const loader = document.getElementById('loadingIndicator');
+            const exportBtn = document.getElementById('exportBtn');
+            const generateBtn = document.getElementById('generateBtn');
+
+            tbody.innerHTML = "";
+            loader.style.display = "block";
+            exportBtn.disabled = true;
+            generateBtn.disabled = true;
+            currentReportData = [];
+
+            try {
+                const parts = monthStr.split('-');
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]);
+                const daysInMonth = new Date(year, month, 0).getDate();
+
+                // 1. Fetch Basic Data Maps Object concurrently securely
+                const [empSnap, settingsSnap, attSnap, appSnap] = await Promise.all([
+                    get(ref(db, "employees")),
+                    get(ref(db, "settings")),
+                    get(ref(db, "attendance")),
+                    get(ref(db, "salary_approvals"))
+                ]);
+
+                if (!empSnap.exists()) {
+                    loader.style.display = "none";
+                    generateBtn.disabled = false;
+                    tbody.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No Employees Found</td></tr>`;
+                    return;
+                }
+
+                // Convert Employees securely to Array Filtering down if bound to Branch/Company globally
+                let employees = [];
+                const empRaw = empSnap.val();
+                if (Array.isArray(empRaw)) {
+                    employees = empRaw.filter(e => e !== null);
+                } else {
+                    for (const key in empRaw) employees.push(empRaw[key]);
+                }
+
+                // Filter mapping logic against companyId / branchId scoping
+                if (role !== "super_admin") {
+                    employees = employees.filter(e => e.companyId === companyId);
+                    if (role === "branch_admin") {
+                        employees = employees.filter(e => e.branch === branchId);
+                    }
+                }
+
+                // 2. Parse Settings Object Structure correctly (WeekOffs & Holidays & Intervals globally)
+                let weekOffs = [];
+                let isSecondSaturday = false;
+                let holidays = {};
+                let officeStartMins = 9 * 60; // 09:00 default
+                let officeEndMins = 18 * 60; // 18:00 default
+                let totalIntervalMins = 0;
+
+                if (settingsSnap.exists()) {
+                    const sData = settingsSnap.val();
+                    if (sData) {
+                        if (Array.isArray(sData.weekOffs)) weekOffs = sData.weekOffs.map(e => e.toString());
+                        isSecondSaturday = sData.secondSaturday === true;
+                        if (typeof sData.holidays === 'object' && sData.holidays) holidays = sData.holidays;
+
+                        if (sData.officeTime) {
+                            if (sData.officeTime.start) {
+                                const p = sData.officeTime.start.split(':');
+                                officeStartMins = parseInt(p[0]) * 60 + parseInt(p[1]);
+                            }
+                            if (sData.officeTime.end) {
+                                const p = sData.officeTime.end.split(':');
+                                officeEndMins = parseInt(p[0]) * 60 + parseInt(p[1]);
+                            }
+                        }
+
+                        // Parse Complex Intervals
+                        if (sData.intervals) {
+                            let ints = [];
+                            if (Array.isArray(sData.intervals)) ints = sData.intervals.filter(i => i !== null);
+                            else for (let k in sData.intervals) ints.push(sData.intervals[k]);
+
+                            for (let i of ints) {
+                                if (i.start && i.end) {
+                                    const sP = i.start.split(':'), eP = i.end.split(':');
+                                    const sM = parseInt(sP[0]) * 60 + parseInt(sP[1]);
+                                    const eM = parseInt(eP[0]) * 60 + parseInt(eP[1]);
+                                    if (eM > sM) totalIntervalMins += (eM - sM);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
+
+                // Week Offs & Holiday parsing Array Maps directly per month layout
+                let monthWeekOffCount = 0;
+                let monthHolidayCount = 0;
+                
+                // Helper to get Day Name standard JS securely
+                const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const d = new Date(year, month - 1, i);
+                    const dayName = dayNames[d.getDay()];
+                    
+                    if (weekOffs.includes(dayName)) {
+                        monthWeekOffCount++;
+                    } else if (dayName === "Saturday" && isSecondSaturday && d.getDate() >= 8 && d.getDate() <= 14) {
+                        monthWeekOffCount++;
+                    }
+                }
+
+                for (let key in holidays) {
+                    if (key.startsWith(monthStr)) monthHolidayCount++;
+                }
+
+                // Fetch Global Maps for fast evaluation without nested awaits securely (Attendance, Approvals)
+                const allAtt = attSnap.exists() ? attSnap.val() : {};
+                const allApprovals = appSnap.exists() ? appSnap.val() : {};
+
+                // 3. Compute Employee Algorithm Iterator Engine Mapping Logic directly mirroring Flutter formula securely
+                const now = new Date();
+                let daysForAbsentCalc = daysInMonth;
+                
+                if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
+                    daysForAbsentCalc = (now.getDate() - 1) < 0 ? 0 : (now.getDate() - 1);
+                } else if (now < new Date(year, month - 1, 1)) {
+                    daysForAbsentCalc = 0; // future layout securely bounds
+                }
+
+                for (const emp of employees) {
+                    const empId = emp.empId;
+                    const name = emp.name || 'Unknown';
+                    let baseSalary = 0;
+                    
+                    try {
+                        let salStr = (emp.salary || '0').toString().replace(/[^0-9.]/g, '');
+                        baseSalary = parseFloat(salStr) || 0;
+                    } catch(e) {}
+
+                    let presentCount = 0;
+                    let leaveCount = 0;
+                    let totalLateMins = 0;
+                    let totalExtraMins = 0;
+
+                    // Parse attendance securely looking inside multidimensional dict tree mapping
+                    let empAtt = null;
+                    if (allAtt[empId]) {
+                        if (Array.isArray(allAtt[empId])) {
+                            empAtt = {};
+                            allAtt[empId].forEach((v, idx) => { if(v) empAtt[idx.toString()] = v; });
+                        } else {
+                            empAtt = allAtt[empId];
+                        }
+                    }
+
+                    if (empAtt) {
+                        for (let dateKey in empAtt) {
+                            if (dateKey.startsWith(monthStr)) {
+                                const vMap = empAtt[dateKey];
+                                const status = vMap.status;
+
+                                if (status === 'in') {
+                                    presentCount++;
+
+                                    if (vMap.punchIn && vMap.punchOut && vMap.punchIn.time && vMap.punchOut.time) {
+                                        const parseToMins = (t) => {
+                                            try {
+                                                t = t.trim();
+                                                const upper = t.toUpperCase();
+                                                if (upper.includes('AM') || upper.includes('PM')) {
+                                                    const parts = t.split(/[:\s]+/);
+                                                    let h = parseInt(parts[0]);
+                                                    let m = parseInt(parts[1]);
+                                                    const ampm = parts[2] ? parts[2].toUpperCase() : '';
+                                                    if (ampm === 'PM' && h < 12) h += 12;
+                                                    if (ampm === 'AM' && h === 12) h = 0;
+                                                    return h * 60 + m;
+                                                } else {
+                                                    const parts = t.split(':');
+                                                    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                                }
+                                            } catch(e) { return null; }
+                                        };
+
+                                        const inMins = parseToMins(vMap.punchIn.time);
+                                        const outMins = parseToMins(vMap.punchOut.time);
+
+                                        if (inMins !== null && outMins !== null) {
+                                            if (inMins > officeStartMins) totalLateMins += (inMins - officeStartMins);
+                                            if (inMins < officeStartMins) totalExtraMins += (officeStartMins - inMins);
+                                            if (outMins < officeEndMins) totalLateMins += (officeEndMins - outMins);
+                                            if (outMins > officeEndMins) totalExtraMins += (outMins - officeEndMins);
+                                        }
+                                    }
+                                } else if (status === 'paid-leave' || status === 'sick-leave') {
+                                    leaveCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    // WeekOffs / Holidays mapping UP TO current absent calc threshold
+                    let weekOffsSoFar = 0;
+                    let holidaysSoFar = 0;
+
+                    for (let d = 1; d <= daysForAbsentCalc; d++) {
+                        const dateObj = new Date(year, month - 1, d);
+                        const dayName = dayNames[dateObj.getDay()];
+                        
+                        // YYYY-MM-DD correct pad formatting securely mapping the algorithm tree
+                        const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+                        let isWeekOff = weekOffs.includes(dayName);
+                        if (!isWeekOff && dayName === "Saturday" && isSecondSaturday && d >= 8 && d <= 14) {
+                            isWeekOff = true;
+                        }
+
+                        if (holidays[ymd]) {
+                            holidaysSoFar++;
+                        } else if (isWeekOff) {
+                            weekOffsSoFar++;
+                        }
+                    }
+
+                    const absentCount = (daysForAbsentCalc - (presentCount + leaveCount + weekOffsSoFar + holidaysSoFar));
+                    const finalAbsent = absentCount < 0 ? 0 : absentCount;
+
+                    if (finalAbsent > 0) {
+                        totalLateMins += (finalAbsent * netOfficeMins);
+                    }
+
+                    // Penalty formula logic execution tree cleanly mapped from Dart Math.Floor logic securely 
+                    const netLateMins = totalLateMins - totalExtraMins;
+                    let penaltyDays = 0;
+
+                    if (netLateMins > 0) {
+                        let netLateHours = netLateMins / 60.0;
+                        penaltyDays = Math.floor(netLateHours / 4) * 0.5;
+                    }
+
+                    const totalPayableDaysRaw = presentCount + leaveCount + weekOffsSoFar + holidaysSoFar;
+                    const totalPayableDays = totalPayableDaysRaw > daysInMonth ? daysInMonth : totalPayableDaysRaw;
+
+                    const finalPayableAfterPenalty = (totalPayableDays - penaltyDays);
+                    const perDay = baseSalary / daysInMonth;
+                    let finalSalary = Math.round(perDay * finalPayableAfterPenalty);
+
+                    // Add mapping for standard Extra Reward securely mimicking Dart exact rounding behavior tracking net rewards 
+                    let extraDays = 0;
+                    let amountToAdd = 0;
+                    if (netLateMins < 0) {
+                        const netExtraHours = Math.abs(netLateMins) / 60.0;
+                        extraDays = Math.floor(netExtraHours / 4) * 0.5;
+                        amountToAdd = Math.round(perDay * extraDays);
+                    }
+
+                    let isApproved = false;
+                    
+                    if (allApprovals[empId] && allApprovals[empId][monthStr]) {
+                        const approval = allApprovals[empId][monthStr];
+                        finalSalary = approval.finalSalary !== undefined ? approval.finalSalary : finalSalary;
+                        penaltyDays = approval.penaltyDays !== undefined ? approval.penaltyDays : penaltyDays;
+                        totalLateMins = approval.netLateMins !== undefined ? approval.netLateMins : totalLateMins;
+                        isApproved = true;
+                    }
+
+                    if (!isApproved) finalSalary += amountToAdd;
+
+                    // Build array object state mapping cleanly iteratively
+                    currentReportData.push({
+                        id: empId,
+                        name: name,
+                        baseSalary: baseSalary,
+                        present: presentCount,
+                        leaves: leaveCount,
+                        absent: finalAbsent,
+                        lateMins: totalLateMins,
+                        penaltyDays: penaltyDays,
+                        finalSalary: finalSalary,
+                        isApproved: isApproved,
+                        amountToAdd: (!isApproved ? amountToAdd : 0)
+                    });
+                }
+
+                loader.style.display = "none";
+                
+                if (currentReportData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No data matched for calculation parameters.</td></tr>`;
+                } else {
+                    currentReportData.forEach(row => {
+                        let finalCellMetaHtml = `<div style="font-weight:bold; color:var(--primary);">₹${row.finalSalary}</div>`;
+                        if (row.isApproved) {
+                            finalCellMetaHtml += `<div style="color: #64b5f6; font-size: 10px; font-weight: bold; margin-top:2px;">✅ Approved</div>`;
+                        } else if (row.amountToAdd > 0) {
+                            finalCellMetaHtml += `<div style="color: #4caf50; font-size: 10px; font-weight: bold; margin-top:2px;">+ Extra Reward (₹${row.amountToAdd})</div>`;
+                        }
+
+                        tbody.innerHTML += `
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding:12px;">${row.id}</td>
+                                <td style="padding:12px;">${row.name}</td>
+                                <td style="padding:12px;">₹${row.baseSalary.toFixed(0)}</td>
+                                <td style="padding:12px;">${row.present}</td>
+                                <td style="padding:12px;">${row.lateMins}</td>
+                                <td style="padding:12px;">${row.penaltyDays}</td>
+                                <td style="padding:12px;">${finalCellMetaHtml}</td>
+                            </tr>
+                        `;
+                    });
+                    exportBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error generating report: " + err.message);
+                loader.style.display = "none";
+            } finally {
+                generateBtn.disabled = false;
+            }
+        };
+
+        // Standard CSV Blob Compiler Mapping Architecture mimicking dart logic natively inside JS seamlessly locally securely!
+        window.exportCSV = () => {
+            if (currentReportData.length === 0) return;
+            const monthStr = document.getElementById('monthSelector').value;
+
+            // Generate header structure correctly securely matching mapping array
+            let csvContent = "ID,Name,Base Salary,Present,Leaves,Absent,Late (Mins),Penalty (Days),Final Salary\n";
+
+            currentReportData.forEach(row => {
+                // Wrap strings with quotes to escape internal commas correctly natively mapping format
+                const rowStr = [
+                    `"${row.id}"`, 
+                    `"${row.name}"`, 
+                    row.baseSalary, 
+                    row.present, 
+                    row.leaves, 
+                    row.absent, 
+                    row.lateMins, 
+                    row.penaltyDays, 
+                    row.finalSalary
+                ].join(",");
+                csvContent += rowStr + "\n";
+            });
+
+            // Trigger blob download securely
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Salary_Report_${monthStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+    </script>
+    <script src="sidebar.js"></script>
+</body>
+
+</html>
+

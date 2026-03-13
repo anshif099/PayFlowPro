@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Details - Teamsive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            margin-top: 24px;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 255, 195, 0.08);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 255, 195, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 18px;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-bar {
+            background: var(--bg-card);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* ============ CONTENT ============ */
+        .dashboard-section {
+            padding: 32px;
+        }
+
+        .header-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .profile-picture {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 32px;
+        }
+
+        .emp-info h2 {
+            margin-bottom: 8px;
+        }
+
+        .emp-info p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Table / List */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: rgba(0, 255, 195, 0.03);
+        }
+
+        /* Attendance Redesign Styles */
+        .att-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .summary-card .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 14px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+        }
+
+        .calendar-day.today {
+            border: 1.5px solid var(--primary);
+        }
+
+        .day-badge {
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 3px;
+            border-radius: 3px;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .status-present { background: rgba(0, 255, 195, 0.2); color: #00ffc3; }
+        .status-absent { background: rgba(255, 92, 92, 0.2); color: #ff5c5c; }
+        .status-pl { background: rgba(255, 165, 0, 0.2); color: #ffa500; }
+        .status-ul { background: rgba(255, 0, 0, 0.2); color: #ff0000; }
+        .status-sl { background: rgba(128, 0, 128, 0.2); color: #800080; }
+        .status-hd { background: rgba(108, 117, 125, 0.2); color: #adb5bd; }
+        .status-holiday { background: rgba(0, 123, 255, 0.2); color: #007bff; }
+        .status-off { background: rgba(255, 255, 255, 0.1); color: #8b92a0; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en" selected>English</option>
+            </select>
+        </div>
+        
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
+            
+            <!-- Employees Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">👥</span>
+                    <span data-i18n="employees">Employees</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="empDropdown">
+                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+                    <span class="nav-icon">📜</span>
+                    <span>List Employees</span>
+                </a>
+                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                    <span class="nav-icon">✏️</span>
+                    <span>Manage Employees</span>
+                </a>
+            </div>
+
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
+            <a href="salary_report.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>Salary Report</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <button onclick="window.history.back()" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:20px;cursor:pointer;">&larr;</button>
+                <h1>Employee Details</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;cursor:pointer;">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="header-card">
+                <div class="profile-picture" id="empProfilePic">?</div>
+                <div class="emp-info">
+                    <h2 id="empName">Loading...</h2>
+                    <p id="empDetails">Role: - | Branch: - | ID: -</p>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('attendance')">Attendance</div>
+                <div class="tab" onclick="switchTab('intervals')">Intervals</div>
+            </div>
+
+            <!-- Attendance Tab -->
+            <div class="tab-content active" id="attendanceTab">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                    <h3 id="attMonthTitle">Attendance Overview</h3>
+                    <input type="month" id="attMonthSelector" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px;">
+                </div>
+                
+                <div class="att-summary-grid" id="attSummary">
+                    <div class="summary-card"><div class="value" id="statPresent">-</div><div class="label" data-i18n="present">Present</div></div>
+                    <div class="summary-card"><div class="value" id="statLeaves">-</div><div class="label" data-i18n="leaves">Leaves</div></div>
+                    <div class="summary-card"><div class="value" id="statWeekOff">-</div><div class="label" data-i18n="week_off">Week Off</div></div>
+                    <div class="summary-card"><div class="value" id="statHoliday">-</div><div class="label" data-i18n="holiday">Holidays</div></div>
+                    <div class="summary-card"><div class="value" id="statPercent">-</div><div class="label" data-i18n="attendance">Attendance</div></div>
+                    <div class="summary-card"><div class="value" id="statSalary">-</div><div class="label" data-i18n="salary">Salary</div></div>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+
+            <!-- Intervals Tab -->
+            <div class="tab-content" id="intervalsTab">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3>Interval History</h3>
+                    <input type="month" id="invMonthSelector" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px;">
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reason</th>
+                                <th>Time Taken</th>
+                                <th>Punch In (Start)</th>
+                                <th>Punch Out (End)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intervalsData">
+                            <tr><td colspan="6" style="text-align:center;">Loading intervals...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "admin.html";
+        }
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
+        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        
+        // Parse Employee ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetEmpId = urlParams.get('id');
+
+        if(!targetEmpId) {
+            alert('No Employee ID provided');
+            window.location.href = 'view_employees.html';
+        }
+
+        // Setup Month Selectors
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('attMonthSelector').value = currentMonth;
+        document.getElementById('invMonthSelector').value = currentMonth;
+
+        let activeTabName = 'attendance';
+
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            activeTabName = tabName;
+            
+            if(tabName === 'attendance') fetchAttendance(document.getElementById('attMonthSelector').value);
+            else fetchIntervals(document.getElementById('invMonthSelector').value);
+        }
+
+        document.getElementById('attMonthSelector').addEventListener('change', (e) => fetchAttendance(e.target.value));
+        document.getElementById('invMonthSelector').addEventListener('change', (e) => fetchIntervals(e.target.value));
+
+        // Load Employee Details
+        onValue(ref(db, `employees/${targetEmpId}`), (snapshot) => {
+            if(snapshot.exists()) {
+                const e = snapshot.val();
+                document.getElementById('empName').textContent = e.name;
+                document.getElementById('empProfilePic').textContent = e.name.charAt(0).toUpperCase();
+                document.getElementById('empDetails').textContent = `Role: ${e.role || 'Employee'} | Branch: ${e.branch || '-'} | ID: ${e.empId}`;
+            } else {
+                document.getElementById('empName').textContent = "Employee Not Found";
+            }
+        });
+
+        const fetchAttendance = (monthKey) => {
+            const [year, month] = monthKey.split('-').map(Number);
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
+
+            get(ref(db, `attendance/${targetEmpId}`)).then(async (snap) => {
+                const empSnap = await get(ref(db, `employees/${targetEmpId}`));
+                const employee = empSnap.val() || {};
+                const salary = employee.salary || 0;
+                
+                const attendance = snap.exists() ? snap.val() : {};
+                const grid = document.getElementById('calendarGrid');
+                grid.innerHTML = '';
+
+                let attendedCount = 0;
+                let leaveCount = 0;
+                let payableLeaveCount = 0;
+                let weekOffCount = 0;
+                let holidayCount = 0;
+
+                // Stats calculation loop (for entire month)
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const record = attendance[dateStr] || {};
+                    const status = record.status || '';
+
+                    if (status === 'in') attendedCount += 1.0;
+                    else if (status === 'halfday') attendedCount += 0.5;
+                    
+                    if (['paid-leave', 'unpaid-leave', 'sick-leave'].includes(status)) leaveCount++;
+                    if (['paid-leave', 'sick-leave'].includes(status)) payableLeaveCount++;
+                    
+                    if (status === 'week-off') weekOffCount++;
+                    if (status === 'holiday') holidayCount++;
+                }
+
+                // Render Calendar
+                for (let i = 0; i < firstDay; i++) {
+                    const empty = document.createElement('div');
+                    empty.className = 'calendar-day empty';
+                    grid.appendChild(empty);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'calendar-day';
+                    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    
+                    if (isCurrentMonth && d === today.getDate()) cell.classList.add('today');
+
+                    const record = attendance[dateStr] || {};
+                    const status = record.status || '';
+                    
+                    let bgClass = '';
+                    let badgeTxt = '';
+                    
+                    if (status === 'in') bgClass = 'status-present';
+                    else if (status === 'absent') bgClass = 'status-absent';
+                    else if (status === 'paid-leave') { bgClass = 'status-pl'; badgeTxt = 'PL'; }
+                    else if (status === 'unpaid-leave') { bgClass = 'status-ul'; badgeTxt = 'UL'; }
+                    else if (status === 'sick-leave') { bgClass = 'status-sl'; badgeTxt = 'SL'; }
+                    else if (status === 'halfday') { bgClass = 'status-hd'; badgeTxt = 'HD'; }
+                    else if (status === 'holiday') { bgClass = 'status-holiday'; badgeTxt = 'H'; }
+                    else if (status === 'week-off') { bgClass = 'status-off'; badgeTxt = 'OFF'; }
+
+                    if (bgClass) cell.classList.add(bgClass);
+                    
+                    cell.innerHTML = `<span>${d}</span>`;
+                    if (badgeTxt) {
+                        cell.innerHTML += `<span class="day-badge" style="background:rgba(0,0,0,0.2)">${badgeTxt}</span>`;
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+
+                // Update Stats
+                const presentDays = attendedCount + payableLeaveCount + weekOffCount + holidayCount;
+                const attendancePercent = (presentDays / daysInMonth) * 100;
+                const earnedSalary = (salary / daysInMonth) * presentDays;
+
+                document.getElementById('statPresent').textContent = attendedCount.toString().replace(/\.0$/, '');
+                document.getElementById('statLeaves').textContent = leaveCount;
+                document.getElementById('statWeekOff').textContent = weekOffCount;
+                document.getElementById('statHoliday').textContent = holidayCount;
+                document.getElementById('statPercent').textContent = `${attendancePercent.toFixed(1)}%`;
+                document.getElementById('statSalary').textContent = `₹${Math.round(earnedSalary)}`;
+            });
+        }
+
+        const calculateConsumed = (inIso, outIso) => {
+            try {
+                const t1 = new Date(inIso);
+                const t2 = new Date(outIso);
+                const diffMs = t2 - t1;
+                const minutes = Math.floor(diffMs / 60000);
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                if (hours > 0) return `${hours}h ${mins}m`;
+                return `${mins} mins`;
+            } catch (e) {
+                return "--";
+            }
+        };
+
+        const fetchIntervals = (monthKey) => {
+            const sanitizedId = targetEmpId.replace(/[.#$\[\]]/g, '_');
+            get(ref(db, `employees/${sanitizedId}/interval_punches`)).then((snapshot) => {
+                const tbody = document.getElementById('intervalsData');
+                tbody.innerHTML = '';
+                let found = false;
+                
+                if (snapshot.exists()) {
+                    const allData = snapshot.val();
+                    const dates = Object.keys(allData).sort((a,b) => b.localeCompare(a));
+                    
+                    dates.forEach(dateStr => {
+                        if (dateStr.startsWith(monthKey)) {
+                            const dailyIntervals = allData[dateStr];
+                            const keys = Object.keys(dailyIntervals).sort((a,b) => {
+                                const aTime = dailyIntervals[a].punchIn;
+                                const bTime = dailyIntervals[b].punchIn;
+                                return (bTime || '').localeCompare(aTime || '');
+                            });
+                            
+                            keys.forEach(k => {
+                                found = true;
+                                const inv = dailyIntervals[k];
+                                const completed = !!inv.punchOut;
+                                
+                                const pInTime = inv.punchIn ? new Date(inv.punchIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                                const pOutTime = inv.punchOut ? new Date(inv.punchOut).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
+                                
+                                const statusBadge = completed 
+                                    ? `<span style="background:var(--success)20; color:var(--success); padding:4px 8px; border-radius:4px; font-size:12px;">Completed</span>`
+                                    : `<span style="background:var(--warning)20; color:var(--warning); padding:4px 8px; border-radius:4px; font-size:12px;">Ongoing</span>`;
+                                    
+                                const reason = inv.name || 'Interval';
+                                const extraMins = inv.extraMins ? ` <span style="color:#ff5c5c; font-size:11px;">(+${inv.extraMins}m)</span>` : '';
+                                const timeTaken = completed ? calculateConsumed(inv.punchIn, inv.punchOut) + extraMins : 'Ongoing';
+                                    
+                                tbody.innerHTML += `
+                                    <tr>
+                                        <td><strong>${dateStr}</strong></td>
+                                        <td>${reason}</td>
+                                        <td>${timeTaken}</td>
+                                        <td>${pInTime}</td>
+                                        <td>${pOutTime}</td>
+                                        <td>${statusBadge}</td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                    });
+                }
+                
+                if (!found) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No interval records for ${monthKey}</td></tr>`;
+            });
+        }
+
+        // Initial fetch
+        fetchAttendance(currentMonth);
+
+        window.toggleDropdown = function(id, el) {
+            const dropdown = document.getElementById(id);
+            dropdown.classList.toggle('show');
+            el.classList.toggle('open');
+            const chevron = el.querySelector('.chevron');
+            if(chevron) {
+                chevron.style.transform = dropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+                chevron.style.transition = 'transform 0.3s ease';
+            }
+        };
+    </script>
+</body>
+</html>

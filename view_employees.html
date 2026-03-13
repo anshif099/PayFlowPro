@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Prediction - Teamsive Admin</title>
+    <title>List Employees - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="lang.js"></script>
     <style>
@@ -19,8 +19,16 @@
             --border: #1e2530;
             --success: #00ffc3;
             --danger: #ff5c5c;
-            --warning: #ffa726;
             --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
         }
 
         * {
@@ -142,23 +150,7 @@
             padding: 8px;
         }
 
-        .btn-logout {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-logout:hover {
-            background: var(--danger);
-            border-color: var(--danger);
-            color: white;
-        }
-
-        /* ============ CONTENT SECTIONS ============ */
+        /* ============ CONTENT ============ */
         .dashboard-section {
             padding: 32px;
         }
@@ -178,84 +170,104 @@
             color: var(--text);
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 24px;
-            max-width: 400px;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        select {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
+        button {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
             border-radius: 8px;
-            color: var(--text);
+            font-weight: 600;
             font-size: 14px;
-            font-family: inherit;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
 
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 195, 0.3);
         }
 
-        /* ============ PREDICTION RESULTS ============ */
-        .results-container {
-            display: none;
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px;
         }
 
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 20px;
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
         }
 
-        .pred-card {
-            background: var(--bg-input);
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 92, 92, 0.2);
+        }
+
+        /* ============ TABLE ============ */
+        .table-container {
+            overflow-x: auto;
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+            cursor: grab;
+            user-select: none;
         }
 
-        .pred-val {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 8px 0;
+        .table-container.dragging {
+            cursor: grabbing;
+            scroll-behavior: auto;
         }
 
-        .pred-title {
-            font-size: 13px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 12px;
+            font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
         }
 
-        .loader {
-            display: none;
-            text-align: center;
-            color: var(--primary);
-            padding: 40px;
-            font-weight: 500;
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-size: 14px;
         }
 
-        /* ============ RESPONSIVE ============ */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 195, 0.03);
+        }
+
+        .profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: var(--primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -272,26 +284,32 @@
             .menu-toggle {
                 display: block;
             }
-
-            .dashboard-section {
-                padding: 20px;
-            }
-
-            .top-bar {
-                padding: 16px 20px;
-            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ============ SIDEBAR ============ -->
+    <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>💼 Teamsive</h2>
+            <select id="langSelector" onchange="changeLanguage(this.value)"
+                style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+                <option value="de">Deutsch</option>
+                <option value="ml">Malayalam</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
-            <style>
+        
+        <style>
         .nav-dropdown {
             display: none;
             flex-direction: column;
@@ -560,7 +578,7 @@
                 <span class="nav-icon">🏆</span>
                 <span>Leaderboard</span>
             </a>
-            <a href="ai_prediction.html" class="nav-item active">
+            <a href="ai_prediction.html" class="nav-item">
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
@@ -572,59 +590,42 @@
         </nav>
     </div>
 
-    <!-- ============ MAIN CONTENT ============ -->
-    <div class="main-content">
-        <div class="top-bar">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>AI Prediction (Next Month)</h1>
+    <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="top-bar">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 data-i18n="employees_list" id="pageTitle">List Employees</h1>
+                </div>
+                <div class="top-bar-actions">
+                    <button onclick="toggleTheme()"
+                        style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                    <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+                </div>
             </div>
-            <div class="top-bar-actions">
-                <button class="btn-logout" onclick="logout()">Logout</button>
-            </div>
-        </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Select Employee</h3>
-                <div class="form-group">
-                    <label>Employee</label>
-                    <select id="empSelector" onchange="generatePredictions(this.value)">
-                        <option value="">-- Choose an Employee --</option>
-                    </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 data-i18n="employee_list" style="margin-bottom: 0;">Employee List</h3>
+                    <input type="text" id="searchInput" placeholder="Search by Name or ID..." onkeyup="renderEmployees()" 
+                        style="padding: 10px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; width: 250px;">
                 </div>
-
-                <div id="loader" class="loader">Analyzing historical data patterns...</div>
-
-                <div id="resultsContainer" class="results-container">
-                    <h3 style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">AI Forecast
-                    </h3>
-                    <div class="results-grid">
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Salary</span>
-                            <span class="pred-val" id="predSalary">₹0</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Present</span>
-                            <span class="pred-val" id="predPresent" style="color:var(--success)">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Absent</span>
-                            <span class="pred-val" id="predAbsent" style="color:var(--danger)">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Week Offs</span>
-                            <span class="pred-val" id="predWeekOffs" style="color:#C0C0C0">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Leave Probability</span>
-                            <span class="pred-val" id="predLeaveProb" style="color:var(--warning)">Low</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Leaderboard Trend</span>
-                            <span class="pred-val" id="predTrend" style="color:#3b82f6">Stable</span>
-                        </div>
-                    </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="profile_pic">Profile</th>
+                                <th data-i18n="name_id">Name / ID</th>
+                                <th data-i18n="mobile_number">Mobile</th>
+                                <th data-i18n="role">Role</th>
+                                <th data-i18n="branch">Branch & Dept</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -632,7 +633,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -651,186 +652,183 @@
             location = "admin.html";
         }
 
-        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        const role = localStorage.getItem("role");
+        const adminBranch = localStorage.getItem("branch");
+        const companyId = localStorage.getItem("companyId");
 
-        // Cache data to avoid refetching on every change
-        let cachedEmpData = null;
-        let cachedAttData = null;
-        let cachedSettings = null;
-
-        async function initPage() {
-            const role = localStorage.getItem("role");
-            const adminBranch = localStorage.getItem("branch");
-
-            try {
-                const empSnap = await get(ref(db, "employees"));
-                if (empSnap.exists()) {
-                    cachedEmpData = empSnap.val();
-                    const selector = document.getElementById('empSelector');
-
-                    Object.keys(cachedEmpData).forEach(id => {
-                        const emp = cachedEmpData[id];
-                        if (role !== 'super_admin' && emp.branch !== adminBranch) return;
-
-                        const opt = document.createElement('option');
-                        opt.value = id;
-                        opt.textContent = `${emp.name} (${emp.empId})`;
-                        selector.appendChild(opt);
-                    });
-                }
-            } catch (e) {
-                console.error("Error loading employees", e);
-            }
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterStr = urlParams.get('filter') || '';
+        const isPresentFilter = filterStr === 'present';
+        const isAbsentFilter = filterStr === 'absent';
+        const isLeavesFilter = filterStr === 'leaves';
+        
+        if (isPresentFilter) {
+            document.getElementById('pageTitle').textContent = "Present Employees Today";
+        } else if (isAbsentFilter) {
+            document.getElementById('pageTitle').textContent = "Absent Employees Today";
+        } else if (isLeavesFilter) {
+            document.getElementById('pageTitle').textContent = "Employees on Leave Today";
         }
 
-        function parseTime(timeStr) {
-            if (!timeStr) return 0;
-            const parts = timeStr.split(':');
-            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-        }
-
-        function getWorkingDays(start, end, weekOffs, secondSaturday, holidays, joiningDate) {
-            let workingDays = [];
-            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-            let join = null;
-            if (joiningDate) {
-                try {
-                    join = new Date(joiningDate);
-                } catch (e) { }
+        // --- Sidebar Logic ---
+        (function(){
+            const r = localStorage.getItem("role");
+            if (r === 'super_admin') {
+                const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+            } else if (r === 'company_admin') {
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
             }
-
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                // Skip if this date is before the joining date
-                if (join && d < new Date(join.getFullYear(), join.getMonth(), join.getDate())) {
-                    continue;
-                }
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                const dateStr = `${y}-${m}-${dd}`;
-
-                const dayName = dayNames[d.getDay()];
-
-                if (weekOffs.includes(dayName)) continue;
-                if (holidays.has(dateStr)) continue;
-
-                if (dayName === "Saturday" && d.getDate() >= 8 && d.getDate() <= 14) {
-                    let isOff = false;
-                    if (secondSaturday === true) isOff = true;
-                    else if (typeof secondSaturday === 'object' && secondSaturday !== null && secondSaturday.enabled) isOff = true;
-                    if (isOff) continue;
-                }
-                workingDays.push(dateStr);
-            }
-            return workingDays;
-        }
-
-        window.generatePredictions = async (empId) => {
-            if (!empId) {
-                document.getElementById('resultsContainer').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('resultsContainer').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
-
-            try {
-                if (!cachedSettings || !cachedAttData) {
-                    const [att, ot, int, wo, hol, ss] = await Promise.all([
-                        get(ref(db, "attendance")),
-                        get(ref(db, "settings/officeTime")),
-                        get(ref(db, "settings/intervals")),
-                        get(ref(db, "settings/weekOffs")),
-                        get(ref(db, "settings/holidays")),
-                        get(ref(db, "settings/secondSaturday"))
-                    ]);
-                    cachedAttData = att.exists() ? att.val() : {};
-                    cachedSettings = {
-                        officeTime: ot.exists() ? ot.val() : null,
-                        intervals: int.exists() ? int.val() : null,
-                        weekOffs: wo.exists() ? wo.val() || [] : [],
-                        holidays: hol.exists() ? new Set(Object.keys(hol.val() || {})) : new Set(),
-                        secondSaturday: ss.exists() ? ss.val() : false
-                    };
-                }
-
-                const emp = cachedEmpData[empId];
-                const baseSalary = parseInt(emp.salary || "0");
-
-                // Real basic date calculations
-                const now = new Date();
-                let nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                const nextMonthEnd = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
-
-                const nextMonthWorkingDays = getWorkingDays(nextMonth, nextMonthEnd, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
-                const totalNextMonthDays = nextMonthEnd.getDate();
-                const nextMonthWeekOffs = totalNextMonthDays - nextMonthWorkingDays.length;
-
-                // Analyze current month attendance
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-                const currentMonthWorking = getWorkingDays(startOfMonth, yesterday > startOfMonth ? yesterday : startOfMonth, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
-
-                const myAttendance = cachedAttData[empId] || {};
-                let present = 0, absent = 0, leaves = 0;
-
-                currentMonthWorking.forEach(date => {
-                    const record = myAttendance[date] || {};
-                    const status = record.status || 'absent';
-                    if (status === 'absent') absent++;
-                    else if (status.includes('leave')) leaves++;
-                    else present++;
-                });
-
-                // Prediction logic matching Flutter App
-                let absenceRate = currentMonthWorking.length > 0 ? absent / currentMonthWorking.length : 0.05;
-                let leaveRate = currentMonthWorking.length > 0 ? leaves / currentMonthWorking.length : 0;
-
-                if (absenceRate < 0.05) absenceRate = 0;
-
-                let predictedAbsent = Math.round(nextMonthWorkingDays.length * absenceRate);
-                let predictedLeaves = Math.round((nextMonthWorkingDays.length / 30) * leaves);
-                let predictedPresent = nextMonthWorkingDays.length - predictedAbsent - predictedLeaves;
-                if (predictedPresent < 0) predictedPresent = 0;
-
-                const dailySalary = baseSalary / totalNextMonthDays;
-                let predictedSalary = Math.round(baseSalary - (predictedAbsent * dailySalary));
-                if (predictedSalary < 0) predictedSalary = 0;
-
-                let leaveProb = "Low";
-                if (leaveRate > 0.1) leaveProb = "High";
-                else if (leaveRate > 0.03) leaveProb = "Medium";
-
-                let trend = "Stable";
-                if (absenceRate == 0 && present > 10) trend = "Improving 📈";
-                else if (absenceRate > 0.1) trend = "Declining 📉";
-
-                // Update UI
-                document.getElementById('predSalary').textContent = `₹${predictedSalary}`;
-                document.getElementById('predPresent').textContent = `${predictedPresent} Days`;
-                document.getElementById('predAbsent').textContent = `${predictedAbsent} Days`;
-                document.getElementById('predWeekOffs').textContent = `${nextMonthWeekOffs} Days`;
-                document.getElementById('predLeaveProb').textContent = leaveProb;
-
-                const trendEl = document.getElementById('predTrend');
-                trendEl.textContent = trend;
-                trendEl.style.color = trend.includes("Improving") ? 'var(--success)' : trend.includes("Declining") ? 'var(--danger)' : '#3b82f6';
-
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('resultsContainer').style.display = 'block';
-
-            } catch (e) {
-                console.error(e);
-                document.getElementById('loader').innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+        })();
+        
+        window.toggleDropdown = function(id, el) {
+            const dropdown = document.getElementById(id);
+            dropdown.classList.toggle('show');
+            el.classList.toggle('open');
+            const chevron = el.querySelector('.chevron');
+            if(chevron) {
+                chevron.style.transform = dropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+                chevron.style.transition = 'transform 0.3s ease';
             }
         };
 
-        initPage();
-    </script>
+        
+        window.renderEmployees = function() {
+            const data = document.getElementById('data');
+            data.innerHTML = "";
+            let count = 0;
+            const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
 
-    <script src="sidebar.js"></script>
+            if (window.allEmployeesData && window.allEmployeesData.length > 0) {
+                window.allEmployeesData.forEach(e => {
+                    const nameMatch = (e.name || '').toLowerCase().includes(query);
+                    const idMatch = (e.empId || '').toLowerCase().includes(query);
+                    
+                    if (query && !nameMatch && !idMatch) return;
+
+                    // Presence/Absence Filter logic
+                    const today = new Date().toISOString().split('T')[0];
+                    const att = window.attendanceData || {};
+                    const empAtt = att[e.empId] || {};
+                    const record = empAtt[today] || {};
+                    const attStatus = record.status || '';
+
+                    if (isPresentFilter) {
+                        if (attStatus !== 'in' && attStatus !== 'out') return;
+                    }
+                    if (isAbsentFilter) {
+                        if (attStatus === 'in' || attStatus === 'out') return;
+                    }
+                    if (isLeavesFilter) {
+                        if (!attStatus.includes('leave') && attStatus !== 'halfday') return;
+                    }
+
+                    count++;
+                    const status = e.status || 'active';
+                    const statusBadge = status === 'active'
+                        ? `<span style="background: rgba(0, 255, 195, 0.15); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
+                        : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
+
+                    const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
+                    let initial = e.name && e.name.length > 0 ? e.name[0].toUpperCase() : '?';
+                    let profileWidget = `<div class="profile-picture">${initial}</div>`;
+
+                    data.innerHTML += `<tr>
+                    <td>${profileWidget}</td>
+                    <td><div style="font-weight: 500;">${e.name}</div><div style="font-size: 11px; color: #8b92a0;">ID: ${e.empId}</div></td>
+                    <td>${e.mobile}</td>
+                    <td>${e.role}</td>
+                    <td>${e.branch || '-'}${deptDisplay}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                            <button class="btn-small" style="background: transparent; border: 1px solid var(--primary); color: var(--primary);" 
+                            onclick="window.location.href='employee_details.html?id=${e.empId}'">👁️ View Details</button>
+                    </td></tr>`;
+                });
+                
+                if (count === 0) {
+                    data.innerHTML = "<tr><td colspan='7' style='text-align:center'>No matching employees found</td></tr>";
+                }
+            } else {
+                data.innerHTML = "<tr><td colspan='7' style='text-align:center'>No employees found</td></tr>";
+            }
+        };
+
+        let employeeCount = 0;
+
+        onValue(ref(db, "admins"), adminsSnap => {
+            const branchAdminBranches = new Set();
+            if (adminsSnap.exists()) {
+                adminsSnap.forEach(a => {
+                    const admin = a.val();
+                    if (admin.role === 'branch_admin' && admin.branch) {
+                        branchAdminBranches.add(admin.branch);
+                    }
+                });
+            }
+
+            get(ref(db, "attendance")).then(attSnap => {
+                window.attendanceData = attSnap.val() || {};
+
+                onValue(ref(db, "employees"), s => {
+                    window.allEmployeesData = [];
+                    if (s.exists()) {
+                        s.forEach(c => {
+                            const e = c.val();
+                            let allow = true;
+                            if (role === 'branch_admin' && e.branch !== adminBranch) {
+                                allow = false;
+                            } else if (role === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                                allow = false;
+                            } else if (role === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
+                                allow = false;
+                            }
+                            if (allow) window.allEmployeesData.push(e);
+                        });
+                    }
+                    window.renderEmployees();
+                }); // Close onValue("employees")
+            }); // Close get("attendance")
+        }); // Close onValue("admins")
+    </script>
+    <script>
+        // Drag-to-scroll for the table
+        document.querySelectorAll('.table-container').forEach(container => {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+                isDown = true;
+                container.classList.add('dragging');
+                startX = e.pageX - container.offsetLeft;
+                scrollLeft = container.scrollLeft;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDown = false;
+                container.classList.remove('dragging');
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const walk = (x - startX) * 2;
+                container.scrollLeft = scrollLeft - walk;
+            });
+        });
+    </script>
 </body>
 
 </html>
