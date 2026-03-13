@@ -56,11 +56,11 @@ NEW_NAV = """<style>
             </a>
             <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
                 <span class="nav-icon">🏢</span>
-                <span>Manage Companies</span>
+                <span data-i18n="manage_companies">Manage Companies</span>
             </a>
             <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
                 <span class="nav-icon">🏢</span>
-                <span>Manage Branches</span>
+                <span data-i18n="manage_branches">Manage Branches</span>
             </a>
             
             <!-- Employees Dropdown -->
@@ -74,11 +74,11 @@ NEW_NAV = """<style>
             <div class="nav-dropdown" id="empDropdown">
                 <a href="view_employees.html" class="nav-item" id="nav-view-employees">
                     <span class="nav-icon">📜</span>
-                    <span>List Employees</span>
+                    <span data-i18n="list_employees">List Employees</span>
                 </a>
                 <a href="employees.html" class="nav-item" id="nav-manage-employees">
                     <span class="nav-icon">✏️</span>
-                    <span>Manage Employees</span>
+                    <span data-i18n="manage_employees">Manage Employees</span>
                 </a>
             </div>
 
@@ -94,19 +94,19 @@ NEW_NAV = """<style>
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
-            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span data-i18n="interval_management">Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span data-i18n="intervals_history">Intervals History</span></a>
             <a href="salary_settings.html" class="nav-item">
                 <span class="nav-icon">💰</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
             </a>
             <a href="salary_payments.html" class="nav-item">
                 <span class="nav-icon">💳</span>
-                <span>Salary Payments</span>
+                <span data-i18n="salary_payments">Salary Payments</span>
             </a>
             <a href="salary_report.html" class="nav-item">
                 <span class="nav-icon">📈</span>
-                <span>Salary Report</span>
+                <span data-i18n="salary_report">Salary Report</span>
             </a>
             <a href="monthly_report.html" class="nav-item">
                 <span class="nav-icon">📑</span>
@@ -114,19 +114,19 @@ NEW_NAV = """<style>
             </a>
             <a href="documents.html" class="nav-item">
                 <span class="nav-icon">📄</span>
-                <span>Documents</span>
+                <span data-i18n="documents">Documents</span>
             </a>
             <a href="leaderboard.html" class="nav-item">
                 <span class="nav-icon">🏆</span>
-                <span>Leaderboard</span>
+                <span data-i18n="leaderboard">Leaderboard</span>
             </a>
             <a href="ai_prediction.html" class="nav-item">
                 <span class="nav-icon">🧠</span>
-                <span>AI Prediction</span>
+                <span data-i18n="ai_prediction">AI Prediction</span>
             </a>
             <a href="subscriptions.html" class="nav-item">
                 <span class="nav-icon">📋</span>
-                <span>Subscriptions</span>
+                <span data-i18n="subscriptions">Subscriptions</span>
             </a>
             <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
         </nav>"""
