@@ -23,7 +23,7 @@
                         localStorage.removeItem('companyId');
                         localStorage.removeItem('companyName');
                         localStorage.removeItem('branch');
-                        localStorage.setItem('name', 'RAINHOPES');
+                        localStorage.setItem('name', 'Teamsive');
                     } else if (impersonatorRole === 'company_admin') {
                         localStorage.removeItem('branch');
                     }

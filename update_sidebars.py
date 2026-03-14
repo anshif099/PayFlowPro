@@ -24,10 +24,12 @@ FILES = [
     "settings.html",
     "subscriptions.html",
     "view_employees.html",
-    "employee_details.html"
+    "employee_details.html",
+    "manage_notes.html",
+    "manage_feedback.html"
 ]
 
-NEW_NAV = """<style>
+NEW_NAV_STYLE = """<style>
         .nav-dropdown {
             display: none;
             flex-direction: column;
@@ -48,8 +50,9 @@ NEW_NAV = """<style>
         .nav-dropdown .nav-icon {
             font-size: 16px;
         }
-        </style>
-        <nav class="sidebar-nav">
+        </style>"""
+
+NEW_NAV = """<nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
                 <span class="nav-icon">📊</span>
                 <span data-i18n="dashboard">Dashboard</span>
@@ -128,6 +131,14 @@ NEW_NAV = """<style>
                 <span class="nav-icon">📋</span>
                 <span data-i18n="subscriptions">Subscriptions</span>
             </a>
+            <a href="manage_notes.html" class="nav-item">
+                <span class="nav-icon">📝</span>
+                <span data-i18n="manage_notes">Manage Notes</span>
+            </a>
+            <a href="manage_feedback.html" class="nav-item">
+                <span class="nav-icon">💬</span>
+                <span data-i18n="manage_feedback">Feedback / Support</span>
+            </a>
             <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
         </nav>"""
 
@@ -171,6 +182,10 @@ for fname in FILES:
     
     # 1. Replace nav
     new_content = NAV_PATTERN.sub(NEW_NAV, content)
+    
+    # Check if style exists, if not prepend it before <nav class="sidebar-nav">
+    if ".nav-dropdown" not in new_content:
+        new_content = new_content.replace('<nav class="sidebar-nav">', NEW_NAV_STYLE + '\n        <nav class="sidebar-nav">')
     
     # Set the active class
     # The active class corresponds to the file name
