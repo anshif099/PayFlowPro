@@ -560,6 +560,8 @@
             update(ref(db, 'companies/' + cId), {
                 companyName: cName,
                 companyId: cId,
+                adminName: aName,
+                adminEmail: aEmail,
                 createdAt: new Date().toISOString()
             }).then(() => {
                 // Save Admin Account mapping to this company
@@ -604,8 +606,8 @@
                 merged[cId] = {
                     companyId: c.companyId || cId,
                     companyName: c.companyName || cId,
-                    adminName: '',
-                    adminEmail: '',
+                    adminName: c.adminName || '',
+                    adminEmail: c.adminEmail || '',
                     adminKey: '',
                     status: 'active'
                 };
@@ -653,7 +655,7 @@
                         <td>${company.adminEmail || '-'}</td>
                         <td>${statusBadge}</td>
                         <td>
-                            ${company.adminKey ? `<button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                            ${company.adminEmail ? `<button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
                                 onclick="loginAs('${safeName}', '${safeEmail}', '${safeCId}', '${safeCName}')">🔑 Login</button>` : ''}
                             <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
                                 onclick="editCompany('${safeCName}', '${safeCId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
