@@ -586,52 +586,106 @@
             }).catch(e => alert("Error saving company: " + e.message));
         };
 
-        onValue(ref(db, 'admins'), snapshot => {
+        // Listen to both 'companies' and 'admins' nodes to build a complete list
+        let companiesData = {};
+        let adminsData = {};
+
+        function renderCompanyList() {
             const list = document.getElementById('companyList');
             list.innerHTML = "";
-
             let hasCompanies = false;
 
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const admin = child.val();
-                    const id = child.key;
+            // Build merged view: start from companies node, enrich with admin data
+            const merged = {};
 
-                    // Only show company admins
-                    if (admin.role === 'company_admin') {
-                        hasCompanies = true;
+            // First, add all companies from the 'companies' node
+            Object.keys(companiesData).forEach(cId => {
+                const c = companiesData[cId];
+                merged[cId] = {
+                    companyId: c.companyId || cId,
+                    companyName: c.companyName || cId,
+                    adminName: '',
+                    adminEmail: '',
+                    adminKey: '',
+                    status: 'active'
+                };
+            });
 
-                        const safeCName = (admin.companyName || '').replace(/'/g, "\\'");
-                        const safeCId = (admin.companyId || '').replace(/'/g, "\\'");
-                        const safeName = (admin.name || '').replace(/'/g, "\\'");
-                        const safeEmail = (admin.email || '').replace(/'/g, "\\'");
-                        const status = admin.status || 'active';
-                        const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
-                        const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${status.toUpperCase()}</span>`;
-
-                        list.innerHTML += `
-                            <tr>
-                                <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${admin.companyId}</span></td>
-                                <td>${admin.companyName}</td>
-                                <td>${admin.name}</td>
-                                <td>${admin.email}</td>
-                                <td>${statusBadge}</td>
-                                <td>
-                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                        onclick="loginAs('${safeName}', '${safeEmail}', '${safeCId}', '${safeCName}')">🔑 Login</button>
-                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                        onclick="editCompany('${safeCName}', '${safeCId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
-                                    <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteCompany('${id}', '${safeCId}')">🗑️ Delete</button>
-                                </td>
-                            </tr>
-                        `;
+            // Then, enrich/add from admins with role === 'company_admin'
+            Object.keys(adminsData).forEach(key => {
+                const admin = adminsData[key];
+                if (admin.role === 'company_admin' && admin.companyId) {
+                    if (!merged[admin.companyId]) {
+                        merged[admin.companyId] = {
+                            companyId: admin.companyId,
+                            companyName: admin.companyName || admin.companyId,
+                            adminName: '',
+                            adminEmail: '',
+                            adminKey: '',
+                            status: 'active'
+                        };
                     }
-                });
-            }
+                    merged[admin.companyId].adminName = admin.name || '';
+                    merged[admin.companyId].adminEmail = admin.email || '';
+                    merged[admin.companyId].adminKey = key;
+                    merged[admin.companyId].status = admin.status || 'active';
+                    if (admin.companyName) {
+                        merged[admin.companyId].companyName = admin.companyName;
+                    }
+                }
+            });
+
+            Object.values(merged).forEach(company => {
+                hasCompanies = true;
+                const safeCName = (company.companyName || '').replace(/'/g, "\\'");
+                const safeCId = (company.companyId || '').replace(/'/g, "\\'");
+                const safeName = (company.adminName || '').replace(/'/g, "\\'");
+                const safeEmail = (company.adminEmail || '').replace(/'/g, "\\'");
+                const status = company.status || 'active';
+                const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
+                const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${status.toUpperCase()}</span>`;
+
+                list.innerHTML += `
+                    <tr>
+                        <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${company.companyId}</span></td>
+                        <td>${company.companyName}</td>
+                        <td>${company.adminName || '<em style="color:var(--text-muted)">No admin</em>'}</td>
+                        <td>${company.adminEmail || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${company.adminKey ? `<button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                onclick="loginAs('${safeName}', '${safeEmail}', '${safeCId}', '${safeCName}')">🔑 Login</button>` : ''}
+                            <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                onclick="editCompany('${safeCName}', '${safeCId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
+                            <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteCompany('${company.adminKey}', '${safeCId}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
 
             if (!hasCompanies) {
                 list.innerHTML = `<tr><td colspan='6' style='text-align:center;'>No companies found</td></tr>`;
             }
+        }
+
+        onValue(ref(db, 'companies'), snapshot => {
+            companiesData = {};
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    companiesData[child.key] = child.val();
+                });
+            }
+            renderCompanyList();
+        });
+
+        onValue(ref(db, 'admins'), snapshot => {
+            adminsData = {};
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    adminsData[child.key] = child.val();
+                });
+            }
+            renderCompanyList();
         });
 
         window.loginAs = (name, email, companyId, companyName) => {

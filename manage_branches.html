@@ -571,17 +571,22 @@
             // Create a safe ID from email
             const keyId = aEmail.replace(/[^a-zA-Z0-9]/g, '_');
 
-            // Save Branch Details globally matching structure inside branches top level or inside company structure.
-            // Using companies > branches architecture, but let's assume global branches logic mapping.
-            update(ref(db, 'branches/' + bId), {
+            const branchData = {
                 branchName: bName,
                 branchId: bId,
+                name: bName,
                 companyId: currCompanyId,
                 companyName: currCompanyName,
                 createdAt: new Date().toISOString()
+            };
+
+            // Save to global branches node
+            update(ref(db, 'branches/' + bId), branchData).then(() => {
+                // Also save under company-scoped branches so the employee form dropdown can find it
+                return update(ref(db, 'companies/' + currCompanyId + '/branches/' + bId), branchData);
             }).then(() => {
                 // Save Branch Admin Account mapping to this company and branch
-                update(ref(db, 'admins/' + keyId), {
+                return update(ref(db, 'admins/' + keyId), {
                     name: aName,
                     email: aEmail,
                     companyId: currCompanyId,
@@ -589,7 +594,8 @@
                     branch: bId,
                     role: 'branch_admin',
                     status: status
-                }).then(() => {
+                });
+            }).then(() => {
                     alert("Branch & Admin Account Saved Successfully!");
 
                     // Reset fields
@@ -599,9 +605,8 @@
                     emailEl.value = '';
                     statusEl.value = 'active';
                     document.getElementById('saveBtn').innerText = "💾 Save Branch";
-                    branchIdAliasEl.disabled = false; // re-enable if it was disabled
+                    branchIdAliasEl.disabled = false;
                     emailEl.disabled = false;
-                }).catch(e => alert("Error saving branch admin: " + e.message));
             }).catch(e => alert("Error saving branch: " + e.message));
         };
 
@@ -692,6 +697,10 @@
             if (confirm("Delete this branch admin and branch record?")) {
                 remove(ref(db, 'admins/' + adminKey));
                 remove(ref(db, 'branches/' + branchId));
+                // Also remove from company-scoped branches
+                if (companyId) {
+                    remove(ref(db, 'companies/' + companyId + '/branches/' + branchId));
+                }
             }
         };
     </script>

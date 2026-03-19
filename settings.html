@@ -778,6 +778,26 @@
                 </div>
                 <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
             </div>
+
+            <div class="card">
+                <h3>🏷️ Manage Departments</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Add departments that will appear in the employee registration dropdown.</p>
+                <div class="form-grid">
+                    <div class="form-group"><label>Department Name</label><input id="deptNameInput" placeholder="e.g., Marketing, Engineering"></div>
+                </div>
+                <button onclick="addDepartment()">➕ Add Department</button>
+                <div class="table-container" style="margin-top:24px">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Department Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deptList"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -934,6 +954,54 @@
             if (isNaN(lat) || isNaN(lng) || isNaN(radius)) { alert('Please enter valid values'); return }
             set(ref(db, `${settingsRoot}/officeLocation`), { lat, lng, radius });
             alert('Office location saved!')
+        };
+
+        // --- Department Management ---
+        const companyId = localStorage.getItem('companyId');
+
+        // Determine department path: super_admin without companyId uses global 'departments', others use company-scoped
+        const deptPath = companyId ? `companies/${companyId}/departments` : 'departments';
+
+        window.addDepartment = () => {
+            const nameInput = document.getElementById('deptNameInput');
+            const name = nameInput.value.trim();
+            if (!name) { alert('Please enter a department name'); return; }
+            const deptId = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            set(ref(db, `${deptPath}/${deptId}`), {
+                name: name,
+                deptId: deptId,
+                companyId: companyId || '',
+                createdAt: new Date().toISOString()
+            }).then(() => {
+                nameInput.value = '';
+                alert('Department added!');
+            }).catch(e => alert('Error: ' + e.message));
+        };
+
+        onValue(ref(db, deptPath), snapshot => {
+            const list = document.getElementById('deptList');
+            list.innerHTML = '';
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const dept = child.val();
+                    const key = child.key;
+                    const deptName = dept.name || key;
+                    list.innerHTML += `
+                        <tr>
+                            <td>${deptName}</td>
+                            <td><button class="btn-danger btn-small" onclick="deleteDept('${key}')">🗑️ Delete</button></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                list.innerHTML = `<tr><td colspan="2" style="text-align:center;color:var(--text-muted)">No departments added yet</td></tr>`;
+            }
+        });
+
+        window.deleteDept = (key) => {
+            if (confirm('Delete this department?')) {
+                remove(ref(db, `${deptPath}/${key}`));
+            }
         };
     </script>
 

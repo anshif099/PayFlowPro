@@ -644,33 +644,81 @@
         }
 
         // Dropdowns for Branches and Departments
-        if ((role === 'super_admin' && companyId) || role === 'company_admin' || role === 'branch_admin') {
-            onValue(ref(db, `companies/${companyId}/branches`), snapshot => {
+        if (role === 'super_admin' || role === 'company_admin' || role === 'branch_admin') {
+            // Read branches from BOTH paths and merge
+            let companyScopedBranches = {};
+            let globalBranches = {};
+
+            function renderBranchDropdown() {
                 const branchSelect = document.getElementById('branch');
                 const currVal = branchSelect.value;
                 branchSelect.innerHTML = '<option value="">Select Branch</option>';
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        const data = child.val();
-                        branchSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    });
-                }
+
+                const merged = {};
+
+                // Company-scoped branches (only if companyId exists)
+                Object.keys(companyScopedBranches).forEach(k => {
+                    const b = companyScopedBranches[k];
+                    const name = b.name || b.branchName || k;
+                    merged[name] = name;
+                });
+
+                // Global branches — super admin sees ALL, others filtered by companyId
+                Object.keys(globalBranches).forEach(k => {
+                    const b = globalBranches[k];
+                    if (role === 'super_admin' || b.companyId === companyId) {
+                        const name = b.name || b.branchName || k;
+                        merged[name] = name;
+                    }
+                });
+
+                Object.values(merged).forEach(name => {
+                    branchSelect.innerHTML += `<option value="${name}">${name}</option>`;
+                });
+
                 if (role === 'branch_admin' && adminBranch) {
                     branchSelect.value = adminBranch;
-                    branchSelect.disabled = true; // branch admins cannot add operators to other branches
+                    branchSelect.disabled = true;
                 } else {
                     if (currVal) branchSelect.value = currVal;
                 }
+            }
+
+            // Company-scoped branches (only if companyId exists)
+            if (companyId) {
+                onValue(ref(db, `companies/${companyId}/branches`), snapshot => {
+                    companyScopedBranches = {};
+                    if (snapshot.exists()) {
+                        snapshot.forEach(child => {
+                            companyScopedBranches[child.key] = child.val();
+                        });
+                    }
+                    renderBranchDropdown();
+                });
+            }
+
+            // Global branches — always listen
+            onValue(ref(db, 'branches'), snapshot => {
+                globalBranches = {};
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        globalBranches[child.key] = child.val();
+                    });
+                }
+                renderBranchDropdown();
             });
 
-            onValue(ref(db, `companies/${companyId}/departments`), snapshot => {
+            // Departments
+            const deptRefPath = companyId ? `companies/${companyId}/departments` : 'departments';
+            onValue(ref(db, deptRefPath), snapshot => {
                 const deptSelect = document.getElementById('department');
                 const currVal = deptSelect.value;
                 deptSelect.innerHTML = '<option value="">Select Department (Optional)</option>';
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const data = child.val();
-                        deptSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                        const deptName = data.name || child.key;
+                        deptSelect.innerHTML += `<option value="${deptName}">${deptName}</option>`;
                     });
                 }
                 if (currVal) deptSelect.value = currVal;
