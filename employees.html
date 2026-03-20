@@ -534,6 +534,13 @@
                         </select>
                     </div>
 
+                    <div class="form-group" id="companyGroup" style="display: none;">
+                        <label data-i18n="company">Company</label>
+                        <select id="companySelect">
+                            <option value="">Select Company</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label data-i18n="department">Department</label>
                         <select id="department">
@@ -612,11 +619,11 @@
         const db = getDatabase(app);
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
         const role = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const companyId = localStorage.getItem("companyId");
@@ -639,6 +646,24 @@
             if (document.getElementById('nav-branch-admins')) {
                 document.getElementById('nav-branch-admins').style.display = 'flex';
             }
+        }
+
+        // Company selector for Super Admin
+        if (role === 'super_admin') {
+            const companyGroup = document.getElementById('companyGroup');
+            if (companyGroup) companyGroup.style.display = 'block';
+            
+            get(ref(db, 'companies')).then(snap => {
+                const companySelect = document.getElementById('companySelect');
+                if (snap.exists() && companySelect) {
+                    snap.forEach(child => {
+                        const c = child.val();
+                        const cId = child.key;
+                        const cName = c.companyName || cId;
+                        companySelect.innerHTML += `<option value="${cId}">${cName} (${cId})</option>`;
+                    });
+                }
+            });
         } else if (role === 'branch_admin') {
             // Can't manage admins or branches
         }
@@ -755,6 +780,7 @@
             const shiftEndValue = document.getElementById('shiftEnd').value;
             const branchVal = document.getElementById('branch').value;
             const deptVal = document.getElementById('department').value;
+            const selectedCompanyId = document.getElementById('companySelect')?.value || companyId;
 
             if (!empIdVal || !nameVal) {
                 alert('Please enter Name and Employee ID');
@@ -781,7 +807,7 @@
                 shiftType: shiftTypeValue,
                 branch: branchVal,
                 department: deptVal,
-                companyId: companyId,
+                companyId: selectedCompanyId,
                 status: 'active'
             };
 
@@ -845,12 +871,17 @@
 
                         // Security / Context Filtering
                         let allow = true;
-                        if (role === 'branch_admin' && e.branch !== adminBranch) {
+                        const empBranch = (e.branch || "").trim().toLowerCase();
+                        const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                        const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                        const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                        if (role === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (role === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                        } else if (role === 'company_admin' && empCompanyId !== sessionCompanyId) {
                             allow = false;
-                        } else if (role === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
-                            allow = false;
+                        } else if (role === 'super_admin') {
+                            allow = true;
                         }
                         if (!allow) return;
 
@@ -885,7 +916,7 @@
                         <td>
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
-                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}')">✏️ Edit</button>
+                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}')">✏️ Edit</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
@@ -913,7 +944,7 @@
             }
         };
 
-        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status) => {
+        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId) => {
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
             document.getElementById('mobile').value = mobile;
@@ -925,6 +956,12 @@
             document.getElementById('shiftType').value = shiftTypeValue || 'fixed';
             document.getElementById('shiftStart').value = shiftStartValue || '';
             document.getElementById('shiftEnd').value = shiftEndValue || '';
+            
+            if (role === 'super_admin' && empCompanyId) {
+                const companySelect = document.getElementById('companySelect');
+                if (companySelect) companySelect.value = empCompanyId;
+            }
+            
             toggleShiftTimes();
             setTimeout(() => { document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
         };

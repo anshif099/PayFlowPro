@@ -516,13 +516,13 @@
         const storage = getStorage(app);
 
         // Basic auth check
-        if (localStorage.getItem("admin") !== "true") { location = "admin.html"; }
+        if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
 
         const role = localStorage.getItem("role");
         const adminName = localStorage.getItem("name") || "Admin";
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         // --- MANAGE NOTES ---
 

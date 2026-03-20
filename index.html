@@ -184,8 +184,9 @@
                         const aId = (admin.adminId || "").trim().toLowerCase();
                         const cId = (admin.companyId || "").trim().toLowerCase();
                         const searchInput = input.toLowerCase();
+                        const adminKey = (child.key || "").trim().toLowerCase();
 
-                        if (adminEmail === searchInput || aId === searchInput || cId === searchInput) {
+                        if (adminEmail === searchInput || aId === searchInput || cId === searchInput || adminKey === searchInput) {
                             found = true;
                             verifiedAdmin = admin;
                             verifiedKey = child.key;
@@ -207,6 +208,37 @@
                             errorEl.innerText = "";
                         }
                     });
+                }
+
+                if (!found) {
+                    // Try searching companies node for adminEmail match
+                    const compSnap = await get(ref(db, 'companies'));
+                    if (compSnap.exists()) {
+                        compSnap.forEach(child => {
+                            const c = child.val();
+                            if ((c.adminEmail || "").trim().toLowerCase() === input.toLowerCase()) {
+                                found = true;
+                                verifiedAdmin = {
+                                    email: (c.adminEmail || "").trim(),
+                                    name: (c.companyName || "Admin").trim(),
+                                    role: 'company_admin',
+                                    companyId: (c.companyId || child.key).trim(),
+                                    companyName: (c.companyName || "").trim(),
+                                    password: c.password || "" // Use company password if exists
+                                };
+                                verifiedKey = null; // Mark as synthesized from company
+
+                                document.getElementById("idStep").style.display = "none";
+                                if (verifiedAdmin.password) {
+                                    document.getElementById("passwordStep").style.display = "block";
+                                    document.getElementById("welcomeMsg").innerText = "Welcome, " + verifiedAdmin.name;
+                                } else {
+                                    document.getElementById("createPasswordStep").style.display = "block";
+                                }
+                                errorEl.innerText = "";
+                            }
+                        });
+                    }
                 }
 
                 if (!found) {
@@ -236,13 +268,70 @@
                 return;
             }
 
-            if (verifiedAdmin && verifiedAdmin.password === p) {
+            if (verifiedAdmin) {
+                // Determine password match
+                let passwordMatched = false;
+                if (verifiedAdmin.password && verifiedAdmin.password === p) {
+                    passwordMatched = true;
+                } else if (verifiedKey) {
+                   // Double check in Firebase just in case state is stale
+                   try {
+                       const snap = await get(ref(db, `admins/${verifiedKey}/password`));
+                       if (snap.exists() && snap.val() === p) passwordMatched = true;
+                   } catch(e) {}
+                } else if (verifiedAdmin.companyId) {
+                   // Check companies node for synthesized admins
+                   try {
+                       const snap = await get(ref(db, `companies/${verifiedAdmin.companyId}/password`));
+                       if (snap.exists() && snap.val() === p) passwordMatched = true;
+                   } catch(e) {}
+                }
+
+                if (!passwordMatched) {
+                    errorEl.innerText = "Invalid Password";
+                    return;
+                }
+
+                // Determine companyId and role if it's missing
+                let finalCompanyId = (verifiedAdmin.companyId || '').trim();
+                let finalCompanyName = (verifiedAdmin.companyName || '').trim();
+                let finalRole = verifiedAdmin.role || '';
+                let adminEmail = (verifiedAdmin.email || '').trim().toLowerCase();
+                if (!adminEmail && verifiedAdmin.email) adminEmail = verifiedAdmin.email.toLowerCase(); // synthesized
+
+                // FALLBACK: If role is company_admin or missing, always try to verify/fetch from companies node
+                if (!finalRole || finalRole === 'company_admin') {
+                    try {
+                        const compSnap = await get(ref(db, 'companies'));
+                        if (compSnap.exists()) {
+                            compSnap.forEach(child => {
+                                const c = child.val();
+                                if ((c.adminEmail || "").trim().toLowerCase() === adminEmail) {
+                                    finalCompanyId = (c.companyId || child.key).trim();
+                                    finalCompanyName = (c.companyName || finalCompanyId).trim();
+                                    finalRole = 'company_admin'; 
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error("Error finding company:", e);
+                    }
+                }
+
+                // Default to branch_admin if still no role
+                if (!finalRole) finalRole = 'branch_admin';
+
                 localStorage.setItem("admin", "true");
-                localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
-                localStorage.setItem("branch", verifiedAdmin.branch || '');
+                localStorage.setItem("role", finalRole);
+                localStorage.setItem("branch", (verifiedAdmin.branch || '').trim());
                 localStorage.setItem("name", verifiedAdmin.name || 'Admin');
-                if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
-                if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
+                
+                if (finalCompanyId) {
+                    localStorage.setItem("companyId", finalCompanyId.toLowerCase());
+                }
+                if (finalCompanyName) {
+                    localStorage.setItem("companyName", finalCompanyName);
+                }
                 location.href = "dashboard.html";
             }
 
@@ -269,17 +358,30 @@
             try {
                 errorEl.innerText = "Setting password...";
 
-                await update(ref(db, 'admins/' + verifiedKey), {
-                    password: p1
-                });
+                if (verifiedKey) {
+                    await update(ref(db, 'admins/' + verifiedKey), {
+                        password: p1
+                    });
+                } else if (verifiedAdmin.companyId) {
+                    await update(ref(db, 'companies/' + verifiedAdmin.companyId), {
+                        password: p1
+                    });
+                } else {
+                    throw new Error("Cannot save password: No record found");
+                }
+                
                 errorEl.innerText = "Password set! Logging in...";
 
                 localStorage.setItem("admin", "true");
                 localStorage.setItem("role", verifiedAdmin.role || 'branch_admin');
                 localStorage.setItem("branch", verifiedAdmin.branch || '');
                 localStorage.setItem("name", verifiedAdmin.name || 'Admin');
-                if (verifiedAdmin.companyId) localStorage.setItem("companyId", verifiedAdmin.companyId);
-                if (verifiedAdmin.companyName) localStorage.setItem("companyName", verifiedAdmin.companyName);
+                if (verifiedAdmin.companyId) {
+                    localStorage.setItem("companyId", verifiedAdmin.companyId.toLowerCase());
+                }
+                if (verifiedAdmin.companyName) {
+                    localStorage.setItem("companyName", verifiedAdmin.companyName);
+                }
                 location.href = "dashboard.html";
             }
 

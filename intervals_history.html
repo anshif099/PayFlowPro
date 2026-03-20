@@ -297,11 +297,11 @@
     const db = getDatabase(app);
 
     if (localStorage.getItem("admin") !== "true") {
-      location = "admin.html";
+      location = "index.html";
     }
 
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-    window.logout = () => { localStorage.clear(); location = "admin.html"; };
+    window.logout = () => { localStorage.clear(); location = "index.html"; };
 
     const adminRole = localStorage.getItem("role");
     const adminBranch = localStorage.getItem("branch");
@@ -348,9 +348,14 @@
                 empSnap.forEach(c => {
                     const e = c.val();
                     let allow = true;
-                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) allow = false;
-                    else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) allow = false;
-                    else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) allow = false;
+                    const empBranch = (e.branch || "").trim().toLowerCase();
+                    const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                    const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                    const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                    if (adminRole === 'branch_admin' && empBranch !== sessionBranch) allow = false;
+                    else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) allow = false;
+                    else if (adminRole === 'super_admin') allow = true;
                     if (allow) validEmployees[c.key.replace(/[.#$\[\]]/g, "_")] = { name: e.name, id: c.key };
                 });
             }

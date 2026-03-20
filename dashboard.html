@@ -432,7 +432,7 @@
                 </a>
             </div>
 
-            <a href="attendance.html" class="nav-item">
+            <a href="attendance.html" class="nav-item" id="nav-attendance" style="display:none;">
                 <span class="nav-icon">✅</span>
                 <span data-i18n="attendance">Attendance</span>
             </a>
@@ -568,7 +568,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="attendanceCard">
         <h3 data-i18n="todays_report">Today's Report</h3>
         <div class="table-container">
           <table>
@@ -615,7 +615,7 @@
     const db = getDatabase(app);
 
     if (localStorage.getItem("admin") !== "true") {
-      location = "admin.html";
+      location = "index.html";
     }
 
     window.toggleSidebar = () => {
@@ -624,7 +624,7 @@
 
     window.logout = () => {
       localStorage.clear();
-      location = "admin.html";
+      location = "index.html";
     };
 
     // --- DATA HANDLING ---
@@ -707,9 +707,15 @@
         const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
         const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
         const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+        const el4 = document.getElementById('nav-attendance'); if (el4) el4.style.display = 'flex';
       } else if (r === 'company_admin') {
         const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
         const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+        const el4 = document.getElementById('nav-attendance'); if (el4) el4.style.display = 'flex';
+      } else if (r === 'branch_admin') {
+        // Hide attendance card for branch admin
+        const attCard = document.getElementById('attendanceCard');
+        if (attCard) attCard.style.display = 'none';
       }
     })();
 
@@ -738,14 +744,32 @@
       if (empSnap.exists()) {
         empSnap.forEach(c => {
           const e = c.val();
-          // Filter by Branch
           let allow = true;
-          if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
-            allow = false;
-          } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
-            allow = false;
-          } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
-            allow = false;
+          const empBranch = (e.branch || "").trim().toLowerCase();
+          const empCompanyId = (e.companyId || "").trim().toLowerCase();
+          const sessionBranch = (adminBranch || "").trim().toLowerCase();
+          const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+          if (adminRole === 'branch_admin') {
+            // Branch admin sees only their branch employees
+            if (empBranch !== sessionBranch) {
+              allow = false;
+            }
+          } else if (adminRole === 'company_admin') {
+            // Company admin sees only their company employees
+            if (empCompanyId) {
+              // If employee has companyId, it must match
+              if (empCompanyId !== sessionCompanyId) {
+                allow = false;
+              }
+            } else {
+              // Legacy data without companyId - reject it
+              allow = false;
+            }
+          } else if (adminRole === 'super_admin') {
+            if (empBranch && branchAdminBranches.has(empBranch)) {
+              allow = false;
+            }
           }
           if (!allow) return;
 

@@ -569,11 +569,11 @@
         const db = getDatabase(app);
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
         window.toggleTheme = () => { document.body.classList.toggle('light-mode'); };
 
         const role = localStorage.getItem("role");
@@ -619,8 +619,8 @@
                     const e = c.val();
                     let allow = true;
                     if (role === 'branch_admin' && e.branch !== adminBranch) allow = false;
-                    else if (role === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) allow = false;
-                    else if (role === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) allow = false;
+                    else if (role === 'company_admin' && e.companyId !== companyId) allow = false;
+                    else if (role === 'super_admin') allow = true;
 
                     if (allow && e.status !== 'inactive') {
                         e.empId = c.key;

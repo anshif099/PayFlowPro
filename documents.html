@@ -539,13 +539,13 @@
         const db = getDatabase(app);
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         window.toggleSidebar = () => {
             document.getElementById('sidebar').classList.toggle('open');
         };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         function formatBytes(bytes) {
             if (bytes === 0 || !bytes) return '0 B';

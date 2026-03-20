@@ -659,7 +659,7 @@
         const db = getDatabase(app);
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         window.toggleSidebar = () => {
@@ -668,13 +668,14 @@
 
         window.logout = () => {
             localStorage.clear();
-            location = "admin.html";
+            location = "index.html";
         };
 
         // --- AUTH & BRANCH FILTERING ---
         const allowedEmpIds = new Set();
         const adminRole = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
+        const companyId = localStorage.getItem("companyId");
 
 
         // --- Sidebar Logic ---
@@ -726,12 +727,17 @@
                     s.forEach(c => {
                         const e = c.val();
                         let allow = true;
-                        if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                        const empBranch = (e.branch || "").trim().toLowerCase();
+                        const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                        const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                        const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                        if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                        } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
                             allow = false;
-                        } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
-                            allow = false;
+                        } else if (adminRole === 'super_admin') {
+                            allow = true;
                         }
                         if (allow) {
                             allowedEmpIds.add(e.empId);
@@ -876,7 +882,24 @@
         };
 
         window.markAttendance = () => {
-            const empId = document.getElementById('attEmpId').value;
+            const empIdInput = document.getElementById('attEmpId').value.trim();
+            if (!empIdInput) {
+                alert("Please enter Employee Name or ID");
+                return;
+            }
+
+            let empId = empIdInput;
+            if (!empMap[empId]) {
+                // Try to find matching ID by Name (case-insensitive)
+                const foundId = Object.keys(empMap).find(id => empMap[id].toLowerCase() === empIdInput.toLowerCase());
+                if (foundId) {
+                    empId = foundId;
+                } else {
+                    alert("Invalid Employee Name or ID: " + empIdInput);
+                    return;
+                }
+            }
+
             if (adminRole === 'branch_admin' && !allowedEmpIds.has(empId)) {
                 alert("Access Denied: You can only manage employees in your branch (" + adminBranch + ")");
                 return;
@@ -930,7 +953,23 @@
         };
 
         window.markBulkAttendance = async () => {
-            const emp = document.getElementById('bulkEmpId').value;
+            const empInput = document.getElementById('bulkEmpId').value.trim();
+            if (!empInput) {
+                alert("Please enter Employee Name or ID");
+                return;
+            }
+
+            let emp = empInput;
+            if (!empMap[emp]) {
+                const foundId = Object.keys(empMap).find(id => empMap[id].toLowerCase() === empInput.toLowerCase());
+                if (foundId) {
+                    emp = foundId;
+                } else {
+                    alert("Invalid Employee Name or ID: " + empInput);
+                    return;
+                }
+            }
+
             if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp)) {
                 alert("Access Denied: You can only manage employees in your branch");
                 return;
@@ -977,9 +1016,9 @@
             allAttendanceData = [];
             if (s.exists()) {
                 s.forEach(emp => {
-                    // FILTER: Skip employees not in whitelist (if branch admin)
-                    // allowedEmpIds is populated based on employee branch in previous listener
-                    if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp.key)) return;
+                    // FILTER: Skip employees not in whitelist (unless super admin)
+                    // allowedEmpIds is populated based on employee branch/company in previous listener
+                    if (adminRole !== 'super_admin' && !allowedEmpIds.has(emp.key)) return;
 
                     emp.forEach(day => {
                         const r = day.val();

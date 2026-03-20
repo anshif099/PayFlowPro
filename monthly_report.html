@@ -518,9 +518,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        if (localStorage.getItem("admin") !== "true") location = "admin.html";
+        if (localStorage.getItem("admin") !== "true") location = "index.html";
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "admin.html"; };
+        window.logout = () => { localStorage.clear(); location = "index.html"; };
 
         // Export Logic
         window.downloadCSV = () => {
@@ -593,12 +593,17 @@
                 empSnap.forEach(c => {
                     const e = c.val();
                     let allow = true;
-                    if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                    const empBranch = (e.branch || "").trim().toLowerCase();
+                    const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                    const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                    const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                    if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                         allow = false;
-                    } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                    } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
                         allow = false;
-                    } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
-                        allow = false;
+                    } else if (adminRole === 'super_admin') {
+                        allow = true;
                     }
                     if (allow) {
                         e.empId = c.key;
@@ -613,7 +618,12 @@
 
                 // 3. Settings (WeekOffs & Holidays & OfficeTime)
                 const weekOffNames = settingsSnap.child("weekOffs").val() || [];
-                const allHolidays = settingsSnap.child("holidays").val() || {};
+                const allHolidaysRaw = settingsSnap.child("holidays").val() || {};
+                // Re-key from push IDs to date strings: {pushId: {date, desc}} -> {"2026-03-20": {date, desc}}
+                const allHolidays = {};
+                Object.values(allHolidaysRaw).forEach(h => {
+                    if (h && h.date) allHolidays[h.date] = h;
+                });
                 const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
                 const secondSaturdayData = settingsSnap.child("secondSaturday").val();
 
@@ -642,13 +652,26 @@
 
                 const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
 
+                const today = new Date();
+                const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const todayDate = today.getDate();
+                const isCurrentMonthGlobal = (today.getFullYear() === year && today.getMonth() + 1 === month);
+
                 let monthHolidayCount = 0;
                 Object.keys(allHolidays).forEach(dateStr => {
-                    if (dateStr.startsWith(monthVal)) monthHolidayCount++;
+                    if (dateStr.startsWith(monthVal)) {
+                        if (!isCurrentMonthGlobal || dateStr <= todayDateStr) {
+                            monthHolidayCount++;
+                        }
+                    }
                 });
                 let monthWeekOffCount = 0;
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month - 1, d);
+                    
+                    // Don't count future dates in current month
+                    if (isCurrentMonthGlobal && d > todayDate) continue;
+
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                     let isWO = weekOffNames.includes(dayName);
                     // Second Saturday: day 8-14 is the 2nd week

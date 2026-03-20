@@ -516,7 +516,7 @@
 
         // Basic auth check
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         // Strict Role Check: ONLY Super Admin can manage companies
@@ -531,7 +531,7 @@
             document.getElementById('sidebar').classList.toggle('open');
         };
 
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         // --- MANAGE COMPANIES ---
 
@@ -698,7 +698,7 @@
                 localStorage.setItem('role', 'company_admin');
                 localStorage.setItem('name', name);
                 localStorage.setItem('email', email);
-                localStorage.setItem('companyId', companyId);
+                localStorage.setItem('companyId', companyId.toLowerCase());
                 localStorage.setItem('companyName', companyName);
                 localStorage.setItem('admin', 'true');
 

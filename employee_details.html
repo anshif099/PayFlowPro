@@ -591,11 +591,11 @@
         const db = getDatabase(app);
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
         
         // Parse Employee ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -653,6 +653,17 @@
                 const employee = empSnap.val() || {};
                 const salary = employee.salary || 0;
                 
+                // Fetch Settings for Week-Offs and Holidays
+                const settingsSnap = await get(ref(db, "settings"));
+                const settings = settingsSnap.val() || {};
+                const weekOffNames = Array.isArray(settings.weekOffs) ? settings.weekOffs.map(w => w.toString()) : [];
+                const isSecondSaturdayEnabled = settings.secondSaturday === true;
+                const rawHolidays = settings.holidays || {};
+                const holidays = {};
+                Object.values(rawHolidays).forEach(h => {
+                    if (h && h.date) holidays[h.date] = h;
+                });
+
                 const attendance = snap.exists() ? snap.val() : {};
                 const grid = document.getElementById('calendarGrid');
                 grid.innerHTML = '';
@@ -665,9 +676,34 @@
 
                 // Stats calculation loop (for entire month)
                 for (let d = 1; d <= daysInMonth; d++) {
+                    const date = new Date(year, month - 1, d);
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                    
+                    // Don't count future dates in current month stats
+                    if (isCurrentMonth && d > today.getDate()) continue;
+
                     const record = attendance[dateStr] || {};
-                    const status = record.status || '';
+                    let status = record.status || '';
+                    
+                    // If no status, check settings
+                    if (!status) {
+                        if (holidays[dateStr]) {
+                            status = 'holiday';
+                        } else {
+                            let isSecSat = false;
+                            if (isSecondSaturdayEnabled && dayName === 'Saturday') {
+                                let satCount = 0;
+                                for (let i = 1; i <= d; i++) {
+                                    if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                }
+                                if (satCount === 2) isSecSat = true;
+                            }
+                            if (isSecSat || weekOffNames.includes(dayName)) {
+                                status = 'week-off';
+                            }
+                        }
+                    }
 
                     if (status === 'in') attendedCount += 1.0;
                     else if (status === 'halfday') attendedCount += 0.5;
@@ -689,12 +725,33 @@
                 for (let d = 1; d <= daysInMonth; d++) {
                     const cell = document.createElement('div');
                     cell.className = 'calendar-day';
+                    const date = new Date(year, month - 1, d);
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                     
                     if (isCurrentMonth && d === today.getDate()) cell.classList.add('today');
 
                     const record = attendance[dateStr] || {};
-                    const status = record.status || '';
+                    let status = record.status || '';
+                    
+                    // Same logic for rendering
+                    if (!status) {
+                        if (holidays[dateStr]) {
+                            status = 'holiday';
+                        } else {
+                            let isSecSat = false;
+                            if (isSecondSaturdayEnabled && dayName === 'Saturday') {
+                                let satCount = 0;
+                                for (let i = 1; i <= d; i++) {
+                                    if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                }
+                                if (satCount === 2) isSecSat = true;
+                            }
+                            if (isSecSat || weekOffNames.includes(dayName)) {
+                                status = 'week-off';
+                            }
+                        }
+                    }
                     
                     let bgClass = '';
                     let badgeTxt = '';

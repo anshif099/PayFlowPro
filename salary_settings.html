@@ -645,12 +645,12 @@
         let currentResult = null; // To store latest calculation for approval
 
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         // UI Toggles
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "admin.html"; };
+        window.logout = () => { localStorage.clear(); location = "index.html"; };
 
         // Set Default Month to Current Month
         const monthPicker = document.getElementById('monthPicker');
@@ -701,12 +701,17 @@
                         // RBAC Filter
                         let allow = true;
                         const companyId = localStorage.getItem("companyId");
-                        if (adminRole === 'branch_admin' && e.branch !== adminBranch) {
+                        const empBranch = (e.branch || "").trim().toLowerCase();
+                        const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                        const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                        const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                        if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (adminRole === 'company_admin' && (e.companyId !== companyId || (e.branch && branchAdminBranches.has(e.branch)))) {
+                        } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
                             allow = false;
-                        } else if (adminRole === 'super_admin' && e.branch && branchAdminBranches.has(e.branch)) {
-                            allow = false;
+                        } else if (adminRole === 'super_admin') {
+                            allow = true;
                         }
 
                         if (allow) {
@@ -762,7 +767,12 @@
             const settingsSnap = await get(ref(db, "settings"));
             const weekOffNames = settingsSnap.child("weekOffs").val() || [];
             const secondSaturdayData = settingsSnap.child("secondSaturday").val();
-            const allHolidays = settingsSnap.child("holidays").val() || {};
+            const allHolidaysRaw = settingsSnap.child("holidays").val() || {};
+            // Re-key from push IDs to date strings: {pushId: {date, desc}} -> {"2026-03-20": {date, desc}}
+            const allHolidays = {};
+            Object.values(allHolidaysRaw).forEach(h => {
+                if (h && h.date) allHolidays[h.date] = h;
+            });
             const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
             const intervals = [];
             settingsSnap.child("intervals").forEach(c => intervals.push(c.val()));
@@ -788,10 +798,18 @@
             });
             const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
 
+            const today = new Date();
+            const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const isCurrentMonthGlobal = (today.getFullYear() === year && today.getMonth() + 1 === month);
+
             // Count Week Offs
             let weekOffCount = 0;
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month - 1, day);
+                
+                // Don't count future dates in current month
+                if (isCurrentMonthGlobal && day > today.getDate()) continue;
+
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                 let isWO = weekOffNames.includes(dayName);
                 if (!isWO && dayName === 'Saturday' && day >= 8 && day <= 14) {
@@ -818,7 +836,11 @@
             // Count Holidays
             let holidayCount = 0;
             Object.keys(allHolidays).forEach(dateStr => {
-                if (dateStr.startsWith(monthVal)) holidayCount++;
+                if (dateStr.startsWith(monthVal)) {
+                    if (!isCurrentMonthGlobal || dateStr <= todayDateStr) {
+                        holidayCount++;
+                    }
+                }
             });
 
             // 3. Fetch Attendance & Calculate Late/Extra

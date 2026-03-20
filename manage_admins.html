@@ -516,7 +516,7 @@
         const db = getDatabase(app);
 
         // Basic auth check
-        if (localStorage.getItem("admin") !== "true") { location = "admin.html"; }
+        if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
 
         const role = localStorage.getItem("role");
         let companyId = localStorage.getItem("companyId");
@@ -535,7 +535,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         // Super Admin: populate company selector (no banner needed, just populate branches)
         if (role === 'super_admin') {
@@ -656,7 +656,7 @@
                                     <td>${admin.branch}</td>
                                     <td>
                                         <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                            onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}')">🔑 ${t('login')}</button>
+                                            onclick="loginAs('${safeName}', '${safeEmail}', '${safeBranch}', '${safeId}', '${(admin.companyId || '').replace(/'/g, "\\'")}')">🔑 ${t('login')}</button>
                                         <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
                                             onclick="editAdmin('${safeName}', '${safeId}', '${safeEmail}', '${safeBranch}', '${status}')">✏️ ${t('edit')}</button>
                                         <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteAdmin('${id}')">🗑️ ${t('delete')}</button>
@@ -676,7 +676,7 @@
         // Load admins immediately for all roles
         loadAdmins();
 
-        window.loginAs = (name, email, branch, adminId) => {
+        window.loginAs = (name, email, branch, adminId, cId) => {
             if (confirm(`Login as ${name}?`)) {
                 if (localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'company_admin') {
                     localStorage.setItem('impersonator_role', localStorage.getItem('role'));
@@ -684,6 +684,7 @@
                 localStorage.setItem('role', 'branch_admin');
                 localStorage.setItem('name', name);
                 localStorage.setItem('branch', branch);
+                if (cId) localStorage.setItem('companyId', cId.toLowerCase());
                 localStorage.setItem('admin', 'true');
 
                 location.href = "dashboard.html";

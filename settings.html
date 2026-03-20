@@ -806,9 +806,9 @@
         import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
         const firebaseConfig = { apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain: "payflowpro-6e62d.firebaseapp.com", databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId: "payflowpro-6e62d", storageBucket: "payflowpro-6e62d.firebasestorage.app", messagingSenderId: "69298740438", appId: "1:69298740438:web:18fd85e982e083e1543d77" };
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
-        if (localStorage.getItem("admin") !== "true") { location = "admin.html" }
+        if (localStorage.getItem("admin") !== "true") { location = "index.html" }
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open') };
-        window.logout = () => { localStorage.clear(); location = "admin.html" };
+        window.logout = () => { localStorage.clear(); location = "index.html" };
 
         const role = localStorage.getItem("role");
         const branch = localStorage.getItem("branch");

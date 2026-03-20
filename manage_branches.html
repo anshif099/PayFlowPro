@@ -512,7 +512,7 @@
 
         // Basic auth check
         if (localStorage.getItem("admin") !== "true") {
-            location = "admin.html";
+            location = "index.html";
         }
 
         const role = localStorage.getItem("role");
@@ -538,7 +538,7 @@
             document.getElementById('sidebar').classList.toggle('open');
         };
 
-        window.logout = () => { localStorage.clear(); location = "admin.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         // --- MANAGE BRANCHES ---
 
@@ -610,55 +610,117 @@
             }).catch(e => alert("Error saving branch: " + e.message));
         };
 
-        onValue(ref(db, 'admins'), snapshot => {
+        let branchesData = {};
+        let adminsData = {};
+
+        function renderBranchList() {
             const list = document.getElementById('branchList');
             list.innerHTML = "";
-
             let hasBranches = false;
 
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const admin = child.val();
-                    const id = child.key;
+            const merged = {};
 
-                    // Only show branch admins for scoped company mapping!
-                    if (admin.role === 'branch_admin' && (role === 'super_admin' || admin.companyId === companyId)) {
-                        hasBranches = true;
+            // 1. Populate from global branches node
+            Object.keys(branchesData).forEach(bId => {
+                const b = branchesData[bId];
+                if (role === 'super_admin' || b.companyId === companyId) {
+                    merged[bId] = {
+                        branchId: b.branchId || bId,
+                        branchName: b.branchName || b.name || bId,
+                        companyId: b.companyId || '',
+                        companyName: b.companyName || '',
+                        adminName: '',
+                        adminEmail: '',
+                        adminKey: '',
+                        status: 'active'
+                    };
+                }
+            });
 
-                        const safeBName = (admin.branch || '').replace(/'/g, "\\'"); // Or branchName fetched from branches table. Assuming ID for now.
-                        const safeBId = (admin.branch || '').replace(/'/g, "\\'");
-                        const safeName = (admin.name || '').replace(/'/g, "\\'");
-                        const safeEmail = (admin.email || '').replace(/'/g, "\\'");
-                        const safeCName = (admin.companyName || '').replace(/'/g, "\\'");
-
-                        const status = admin.status || 'active';
-                        const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
-                        const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${status.toUpperCase()}</span>`;
-
-                        list.innerHTML += `
-                            <tr>
-                                <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${admin.branch}</span></td>
-                                <td>${admin.branch}</td>
-                                <td>${admin.companyName}</td>
-                                <td>${admin.name}</td>
-                                <td>${admin.email}</td>
-                                <td>${statusBadge}</td>
-                                <td>
-                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                        onclick="loginAs('${safeName}', '${safeEmail}', '${admin.companyId}', '${safeCName}', '${safeBId}')">🔑 Login</button>
-                                    <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
-                                        onclick="editBranch('${safeBName}', '${safeBId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
-                                    <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteBranch('${id}', '${safeBId}')">🗑️ Delete</button>
-                                </td>
-                            </tr>
-                        `;
+            // 2. Enrich/Add from admins with role === 'branch_admin'
+            Object.keys(adminsData).forEach(key => {
+                const admin = adminsData[key];
+                if (admin.role === 'branch_admin') {
+                    if (role === 'super_admin' || admin.companyId === companyId) {
+                        const bId = admin.branch;
+                        if (bId) {
+                            if (!merged[bId]) {
+                                merged[bId] = {
+                                    branchId: bId,
+                                    branchName: bId,
+                                    companyId: admin.companyId || '',
+                                    companyName: admin.companyName || '',
+                                    adminName: '',
+                                    adminEmail: '',
+                                    adminKey: '',
+                                    status: 'active'
+                                };
+                            }
+                            merged[bId].adminName = admin.name || '';
+                            merged[bId].adminEmail = admin.email || '';
+                            merged[bId].adminKey = key;
+                            merged[bId].status = admin.status || 'active';
+                            if (admin.companyName) merged[bId].companyName = admin.companyName;
+                        }
                     }
-                });
-            }
+                }
+            });
+
+            Object.values(merged).forEach(branch => {
+                hasBranches = true;
+
+                const safeBName = (branch.branchName || '').replace(/'/g, "\\'");
+                const safeBId = (branch.branchId || '').replace(/'/g, "\\'");
+                const safeName = (branch.adminName || '').replace(/'/g, "\\'");
+                const safeEmail = (branch.adminEmail || '').replace(/'/g, "\\'");
+                const safeCName = (branch.companyName || '').replace(/'/g, "\\'");
+
+                const status = branch.status || 'active';
+                const statusColor = status === 'active' ? 'var(--success)' : 'var(--danger)';
+                const statusBadge = `<span style="color:${statusColor}; font-weight:bold; font-size:12px; border:1px solid ${statusColor}; padding:2px 8px; border-radius:12px;">${status.toUpperCase()}</span>`;
+
+                list.innerHTML += `
+                    <tr>
+                        <td><span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; font-family:monospace;">${branch.branchId}</span></td>
+                        <td>${branch.branchName}</td>
+                        <td>${branch.companyName}</td>
+                        <td>${branch.adminName || '<em style="color:var(--text-muted)">No admin</em>'}</td>
+                        <td>${branch.adminEmail || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${branch.adminEmail ? `<button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                onclick="loginAs('${safeName}', '${safeEmail}', '${branch.companyId}', '${safeCName}', '${safeBId}')">🔑 Login</button>` : ''}
+                            <button class="btn-small" style="padding:6px 12px; font-size:12px; margin-right:5px; background:var(--primary); color:#000;" 
+                                onclick="editBranch('${safeBName}', '${safeBId}', '${safeName}', '${safeEmail}', '${status}')">✏️ Edit</button>
+                            <button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deleteBranch('${branch.adminKey}', '${safeBId}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
 
             if (!hasBranches) {
-                list.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No branch admins found</td></tr>`;
+                list.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No branches found</td></tr>`;
             }
+        }
+
+        onValue(ref(db, 'branches'), snapshot => {
+            branchesData = {};
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    branchesData[child.key] = child.val();
+                });
+            }
+            renderBranchList();
+        });
+
+        onValue(ref(db, 'admins'), snapshot => {
+            adminsData = {};
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    adminsData[child.key] = child.val();
+                });
+            }
+            renderBranchList();
         });
 
         window.loginAs = (name, email, scopedCompanyId, companyName, branchId) => {
@@ -695,10 +757,17 @@
 
         window.deleteBranch = (adminKey, branchId) => {
             if (confirm("Delete this branch admin and branch record?")) {
-                remove(ref(db, 'admins/' + adminKey));
+                if (adminKey && adminKey !== 'undefined') remove(ref(db, 'admins/' + adminKey));
                 remove(ref(db, 'branches/' + branchId));
                 // Also remove from company-scoped branches
-                if (companyId) {
+                // We need to know which company this branch belongs to. 
+                // In renderBranchList, we have branch.companyId. 
+                // But deleteBranch is called with adminKey and branchId.
+                // Let's find branch in branchesData to get companyId.
+                const b = branchesData[branchId];
+                if (b && b.companyId) {
+                    remove(ref(db, 'companies/' + b.companyId + '/branches/' + branchId));
+                } else if (companyId) {
                     remove(ref(db, 'companies/' + companyId + '/branches/' + branchId));
                 }
             }
