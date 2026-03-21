@@ -749,27 +749,10 @@
           const empCompanyId = (e.companyId || "").trim().toLowerCase();
           const sessionBranch = (adminBranch || "").trim().toLowerCase();
           const sessionCompanyId = (companyId || "").trim().toLowerCase();
-
-          if (adminRole === 'branch_admin') {
-            // Branch admin sees only their branch employees
-            if (empBranch !== sessionBranch) {
-              allow = false;
-            }
-          } else if (adminRole === 'company_admin') {
-            // Company admin sees only their company employees
-            if (empCompanyId) {
-              // If employee has companyId, it must match
-              if (empCompanyId !== sessionCompanyId) {
-                allow = false;
-              }
-            } else {
-              // Legacy data without companyId - reject it
-              allow = false;
-            }
-          } else if (adminRole === 'super_admin') {
-            if (empBranch && branchAdminBranches.has(empBranch)) {
-              allow = false;
-            }
+          if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
+            allow = false;
+          } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
+            allow = false;
           }
           if (!allow) return;
 

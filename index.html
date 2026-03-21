@@ -299,8 +299,8 @@
                 let adminEmail = (verifiedAdmin.email || '').trim().toLowerCase();
                 if (!adminEmail && verifiedAdmin.email) adminEmail = verifiedAdmin.email.toLowerCase(); // synthesized
 
-                // FALLBACK: If role is company_admin or missing, always try to verify/fetch from companies node
-                if (!finalRole || finalRole === 'company_admin') {
+                // FALLBACK: Always check companies node to ensure Company Admins are not accidentally downgraded by faulty admins records
+                if (true) {
                     try {
                         const compSnap = await get(ref(db, 'companies'));
                         if (compSnap.exists()) {

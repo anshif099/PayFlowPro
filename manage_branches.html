@@ -563,6 +563,11 @@
                 return;
             }
 
+            if (aEmail.split('.').length > 2) {
+                alert("Email ID format mismatch. It has 2 dots, invalid. Add another one.");
+                return;
+            }
+
             if (!currCompanyId) {
                 alert("Error: Missing scoped company ID.");
                 return;
@@ -623,7 +628,7 @@
             // 1. Populate from global branches node
             Object.keys(branchesData).forEach(bId => {
                 const b = branchesData[bId];
-                if (role === 'super_admin' || b.companyId === companyId) {
+                if (b.companyId === companyId) {
                     merged[bId] = {
                         branchId: b.branchId || bId,
                         branchName: b.branchName || b.name || bId,
@@ -641,7 +646,7 @@
             Object.keys(adminsData).forEach(key => {
                 const admin = adminsData[key];
                 if (admin.role === 'branch_admin') {
-                    if (role === 'super_admin' || admin.companyId === companyId) {
+                    if (admin.companyId === companyId) {
                         const bId = admin.branch;
                         if (bId) {
                             if (!merged[bId]) {

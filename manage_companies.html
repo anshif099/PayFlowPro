@@ -553,6 +553,11 @@
                 return;
             }
 
+            if (aEmail.split('.').length > 2) {
+                alert("Email ID format mismatch. It has 2 dots, invalid. Add another one.");
+                return;
+            }
+
             // Create a safe ID from email
             const keyId = aEmail.replace(/[^a-zA-Z0-9]/g, '_');
 

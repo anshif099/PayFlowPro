@@ -734,10 +734,8 @@
 
                         if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
+                        } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
                             allow = false;
-                        } else if (adminRole === 'super_admin') {
-                            allow = true;
                         }
                         if (allow) {
                             allowedEmpIds.add(e.empId);

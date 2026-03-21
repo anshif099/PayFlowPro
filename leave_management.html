@@ -594,10 +594,10 @@
                 const req = item.v;
                 const id = item.k;
 
-                // Branch Filter
+                // Admin Filter
                 console.log('[DEBUG item] id:', id, 'status:', req.status, 'employeeId:', req.employeeId, 'adminRole:', adminRole);
-                if (adminRole === 'branch_admin' && !allowedEmpIds.has(req.employeeId)) {
-                    console.log('[DEBUG item] FILTERED OUT by branch filter');
+                if (adminRole !== 'super_admin' && !allowedEmpIds.has(req.employeeId)) {
+                    console.log('[DEBUG item] FILTERED OUT by admin filter');
                     return;
                 }
 

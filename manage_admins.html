@@ -592,6 +592,11 @@
                 return;
             }
 
+            if (email.split('.').length > 2) {
+                alert("Email ID format mismatch. It has 2 dots, invalid. Add another one.");
+                return;
+            }
+
             // Create a safe ID from email
             const keyId = email.replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -635,7 +640,7 @@
                         // For company_admin: filter by their companyId
                         // For super_admin: show ALL branch_admins
                         if (admin.role === 'branch_admin') {
-                            if (role === 'company_admin' && admin.companyId !== companyId) return;
+                            if ((role === 'company_admin' || role === 'super_admin') && admin.companyId !== companyId) return;
 
                             hasAdmins = true;
 
