@@ -643,7 +643,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -749,9 +749,10 @@
                             empList.appendChild(option);
                         }
                     });
-                    // Re-render table if data is already loaded to show names
-                    if (allAttendanceData.length > 0) renderAttendanceTable();
                 }
+                
+                // Unconditionally render table now that employee mappings are loaded/refreshed
+                renderAttendanceTable();
             }); // Close onValue("employees")
         }); // Close onValue("admins")
 
@@ -921,6 +922,9 @@
                 if (!punchOutTime) punchOutTime = storedOfficeEnd;
             }
 
+            document.getElementById('filterFromDate').value = date;
+            document.getElementById('filterToDate').value = date;
+
             set(ref(db, `attendance/${empId}/${date}`), {
                 punchIn: punchInTime ? {
                     time: punchInTime,
@@ -989,14 +993,59 @@
                 if (!punchOutTime) punchOutTime = storedOfficeEnd;
             }
 
+            // Fetch settings for WeekOffs and Holidays
+            const globalSettingsSnap = await get(ref(db, "settings"));
+            const weekOffNames = globalSettingsSnap.child("weekOffs").val() || [];
+            const allHolidaysRaw = globalSettingsSnap.child("holidays").val() || {};
+            const secondSaturdayData = globalSettingsSnap.child("secondSaturday").val();
+
+            const allHolidays = {};
+            Object.values(allHolidaysRaw).forEach(h => {
+                if (h && h.date) allHolidays[h.date] = true;
+            });
+
             for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
                 const key = d.toISOString().split("T")[0];
+                
+                // Check for Holiday
+                if (allHolidays[key]) continue;
+
+                // Check for WeekOff
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+                let isWO = weekOffNames.includes(dayName);
+                
+                // Check Second Saturday
+                const dateNum = d.getDate();
+                if (!isWO && dayName === 'Saturday' && dateNum >= 8 && dateNum <= 14) {
+                    if (secondSaturdayData === true) {
+                        isWO = true;
+                    } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
+                        if (secondSaturdayData.enabled === true) {
+                            isWO = true;
+                        } else if (secondSaturdayData.disabledAt) {
+                            try {
+                                const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                const currentDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                                if (currentDateOnly <= disabledDateOnly) {
+                                    isWO = true;
+                                }
+                            } catch (e) { }
+                        }
+                    }
+                }
+
+                if (isWO) continue;
+
                 await set(ref(db, `attendance/${emp}/${key}`), {
                     punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
                     punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
                     status
                 });
             }
+
+            document.getElementById('filterFromDate').value = document.getElementById('bulkFrom').value;
+            document.getElementById('filterToDate').value = document.getElementById('bulkTo').value;
 
             alert("Bulk attendance completed successfully!");
             document.getElementById('bulkEmpId').value = '';
@@ -1014,9 +1063,6 @@
             allAttendanceData = [];
             if (s.exists()) {
                 s.forEach(emp => {
-                    // FILTER: Skip employees not in whitelist (unless super admin)
-                    // allowedEmpIds is populated based on employee branch/company in previous listener
-                    if (adminRole !== 'super_admin' && !allowedEmpIds.has(emp.key)) return;
 
                     emp.forEach(day => {
                         const r = day.val();
@@ -1054,6 +1100,9 @@
             list.innerHTML = "";
 
             allAttendanceData.forEach(row => {
+                // Check if admin is authorized to view this employee
+                if (adminRole !== 'super_admin' && !allowedEmpIds.has(row.empId)) return;
+
                 // Client-side filtering
                 const empName = empMap[row.empId] ? empMap[row.empId].toLowerCase() : '';
                 if (filterEmp && !row.empId.toLowerCase().includes(filterEmp) && !empName.includes(filterEmp)) return;
