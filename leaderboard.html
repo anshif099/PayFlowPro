@@ -688,7 +688,12 @@
                 if (netOffice < 0) netOffice = 0;
 
                 const weekOffs = woSnap.exists() ? woSnap.val() || [] : [];
-                const holidays = holSnap.exists() ? new Set(Object.keys(holSnap.val() || {})) : new Set();
+                const holidays = new Set();
+                if (holSnap.exists()) {
+                    Object.values(holSnap.val() || {}).forEach(h => {
+                        if (h && h.date) holidays.add(h.date);
+                    });
+                }
                 const ssData = ssSnap.exists() ? ssSnap.val() : false;
 
                 const employees = empSnap.val();

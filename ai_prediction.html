@@ -579,11 +579,17 @@
                         get(ref(db, "settings/secondSaturday"))
                     ]);
                     cachedAttData = att.exists() ? att.val() : {};
+                    const holidaySet = new Set();
+                    if (hol.exists()) {
+                        Object.values(hol.val() || {}).forEach(h => {
+                            if (h && h.date) holidaySet.add(h.date);
+                        });
+                    }
                     cachedSettings = {
                         officeTime: ot.exists() ? ot.val() : null,
                         intervals: int.exists() ? int.val() : null,
                         weekOffs: wo.exists() ? wo.val() || [] : [],
-                        holidays: hol.exists() ? new Set(Object.keys(hol.val() || {})) : new Set(),
+                        holidays: holidaySet,
                         secondSaturday: ss.exists() ? ss.val() : false
                     };
                 }
