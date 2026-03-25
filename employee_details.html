@@ -589,6 +589,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
         if (localStorage.getItem("admin") !== "true") {
             location = "index.html";
@@ -596,6 +599,10 @@
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
+        get(ref(db, "settings/currencySymbol")).then((snap) => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+        });
         
         // Parse Employee ID from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -785,7 +792,7 @@
                 document.getElementById('statWeekOff').textContent = weekOffCount;
                 document.getElementById('statHoliday').textContent = holidayCount;
                 document.getElementById('statPercent').textContent = `${attendancePercent.toFixed(1)}%`;
-                document.getElementById('statSalary').textContent = `₹${Math.round(earnedSalary)}`;
+                document.getElementById('statSalary').textContent = formatMoney(Math.round(earnedSalary));
             });
         }
 

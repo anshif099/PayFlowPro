@@ -464,7 +464,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -478,6 +478,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
         if (localStorage.getItem("admin") !== "true") {
             location = "index.html";
@@ -485,6 +488,13 @@
 
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
         window.logout = () => { localStorage.clear(); location = "index.html"; }
+        onValue(ref(db, "settings/currencySymbol"), snap => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+            document.getElementById('predSalary').textContent = formatMoney(0);
+            const empId = document.getElementById('empSelector')?.value;
+            if (empId) generatePredictions(empId);
+        });
 
         // Cache data to avoid refetching on every change
         let cachedEmpData = null;
@@ -646,7 +656,7 @@
                 else if (absenceRate > 0.1) trend = "Declining 📉";
 
                 // Update UI
-                document.getElementById('predSalary').textContent = `₹${predictedSalary}`;
+                document.getElementById('predSalary').textContent = formatMoney(predictedSalary);
                 document.getElementById('predPresent').textContent = `${predictedPresent} Days`;
                 document.getElementById('predAbsent').textContent = `${predictedAbsent} Days`;
                 document.getElementById('predWeekOffs').textContent = `${nextMonthWeekOffs} Days`;

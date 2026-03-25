@@ -640,6 +640,15 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
+        const formatSignedMoney = (value, { showPlus = false } = {}) => {
+            const formatted = formatMoney(Math.abs(toAmount(value)));
+            if (value < 0) return `-${formatted}`;
+            if (showPlus && value > 0) return `+${formatted}`;
+            return formatted;
+        };
 
         let employeesData = {};
         let currentResult = null; // To store latest calculation for approval
@@ -679,6 +688,21 @@
                 const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
             }
         })();
+
+        onValue(ref(db, "settings/currencySymbol"), snap => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+            if (empSelect.value && monthPicker.value && document.getElementById('salaryResult').style.display !== 'none') {
+                calculateSalary();
+            } else {
+                document.getElementById('finalSalary').textContent = formatMoney(currentResult?.finalSalary || 0);
+                document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ${formatMoney(currentResult?.baseSalary || 0)}`;
+                const penaltyEl = document.getElementById('penaltyAmountVal');
+                const extraEl = document.getElementById('extraAmountVal');
+                if (penaltyEl) penaltyEl.textContent = formatSignedMoney(-(currentResult?.amountToDeduct || 0));
+                if (extraEl) extraEl.textContent = formatSignedMoney(currentResult?.amountToAdd || 0, { showPlus: true });
+            }
+        });
 
 
         onValue(ref(db, "admins"), adminsSnap => {
@@ -1026,8 +1050,8 @@
             document.getElementById('weekOffDays').textContent = rangeWeekOffs;
             document.getElementById('holidayDays').textContent = rangeHolidays;
 
-            document.getElementById('finalSalary').textContent = "₹" + finalSalary.toLocaleString();
-            document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ₹` + baseSalary.toLocaleString();
+            document.getElementById('finalSalary').textContent = formatMoney(finalSalary);
+            document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ${formatMoney(baseSalary)}`;
             document.getElementById('attendancePercent').textContent = attendancePercent + "%";
 
             // Penalty UI Updates
@@ -1047,13 +1071,13 @@
                 if (pDaysEl) pDaysEl.textContent = `${netLateMins > 0 ? penaltyDays : extraDays} Days`;
 
                 const pAmtEl = document.getElementById('penaltyAmountVal');
-                if (pAmtEl) pAmtEl.textContent = `-₹${amountToDeduct.toLocaleString()}`;
+                if (pAmtEl) pAmtEl.textContent = formatSignedMoney(-amountToDeduct);
 
                 const extraRow = document.getElementById('extraRewardRow');
                 const extraAmtEl = document.getElementById('extraAmountVal');
                 if (extraRow && extraAmtEl) {
                     extraRow.style.display = extraDays > 0 ? 'flex' : 'none';
-                    extraAmtEl.textContent = `+₹${amountToAdd.toLocaleString()}`;
+                    extraAmtEl.textContent = formatSignedMoney(amountToAdd, { showPlus: true });
                 }
 
                 const pWarnEl = document.getElementById('penaltyWarning');

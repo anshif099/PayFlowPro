@@ -553,7 +553,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -567,6 +567,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
         if (localStorage.getItem("admin") !== "true") {
             location = "index.html";
@@ -579,6 +582,13 @@
         const role = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const companyId = localStorage.getItem("companyId");
+
+        onValue(ref(db, "settings/currencySymbol"), snap => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+            document.getElementById('modalAmount').innerText = formatMoney(0);
+            loadPayments();
+        });
 
         async function loadPayments() {
             const tbody = document.getElementById('paymentData');
@@ -665,7 +675,7 @@
                                 <td>${e.empId}</td>
                                 <td>${e.mobile}</td>
                                 <td>
-                                    <strong>₹${netSalary.toLocaleString()}</strong>
+                                    <strong>${formatMoney(netSalary)}</strong>
                                     ${approvedBadge}
                                 </td>
                                 <td>${bankStatusBadge}</td>
@@ -693,7 +703,7 @@
         window.openPaymentModal = (name, mobile, amount, empId, monthStr) => {
             const bank = (window._bankData && window._bankData[empId]) ? window._bankData[empId] : null;
             const modal = document.getElementById('paymentModal');
-            document.getElementById('modalAmount').innerText = `₹${amount.toLocaleString()} to ${name}`;
+            document.getElementById('modalAmount').innerText = `${formatMoney(amount)} to ${name}`;
             window._currentPayment = { empId, amount, monthStr };
 
             // Configure UPI - use saved UPI ID if available

@@ -379,7 +379,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -393,6 +393,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
         // Standard auth validation mapped for role restrictions securely across company domains
         const role = localStorage.getItem("role");
@@ -406,6 +409,13 @@
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
         window.toggleTheme = () => { document.body.classList.toggle('light-mode'); };
+
+        onValue(ref(db, "settings/currencySymbol"), snap => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+            const monthValue = document.getElementById('monthSelector').value;
+            if (monthValue) generateReport();
+        });
 
         // Default Date to Current Month
         document.addEventListener("DOMContentLoaded", () => {
@@ -733,18 +743,18 @@
                     tbody.innerHTML = `<tr><td colspan='7' style='text-align:center;'>No data matched for calculation parameters.</td></tr>`;
                 } else {
                     currentReportData.forEach(row => {
-                        let finalCellMetaHtml = `<div style="font-weight:bold; color:var(--primary);">₹${row.finalSalary}</div>`;
+                        let finalCellMetaHtml = `<div style="font-weight:bold; color:var(--primary);">${formatMoney(row.finalSalary)}</div>`;
                         if (row.isApproved) {
                             finalCellMetaHtml += `<div style="color: #64b5f6; font-size: 10px; font-weight: bold; margin-top:2px;">✅ Approved</div>`;
                         } else if (row.amountToAdd > 0) {
-                            finalCellMetaHtml += `<div style="color: #4caf50; font-size: 10px; font-weight: bold; margin-top:2px;">+ Extra Reward (₹${row.amountToAdd})</div>`;
+                            finalCellMetaHtml += `<div style="color: #4caf50; font-size: 10px; font-weight: bold; margin-top:2px;">+ Extra Reward (${formatMoney(row.amountToAdd)})</div>`;
                         }
 
                         tbody.innerHTML += `
                             <tr style="border-bottom: 1px solid var(--border);">
                                 <td style="padding:12px;">${row.id}</td>
                                 <td style="padding:12px;">${row.name}</td>
-                                <td style="padding:12px;">₹${row.baseSalary.toFixed(0)}</td>
+                                <td style="padding:12px;">${formatMoney(row.baseSalary.toFixed(0))}</td>
                                 <td style="padding:12px;">${row.present}</td>
                                 <td style="padding:12px;">${row.lateMins}</td>
                                 <td style="padding:12px;">${row.penaltyDays}</td>

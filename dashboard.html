@@ -613,6 +613,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+    const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+    const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
     if (localStorage.getItem("admin") !== "true") {
       location = "index.html";
@@ -725,8 +728,11 @@
       get(ref(db, "employees")),
       get(ref(db, "attendance")),
       get(ref(db, "leaveRequests")),
-      get(ref(db, "admins"))
-    ]).then(([empSnap, attSnap, leaveSnap, adminsSnap]) => {
+      get(ref(db, "admins")),
+      get(ref(db, "settings/currencySymbol"))
+    ]).then(([empSnap, attSnap, leaveSnap, adminsSnap, currencySnap]) => {
+      currencySymbol = currencySnap.exists() ? (currencySnap.val() || "₹") : "₹";
+      localStorage.setItem("currencySymbol", currencySymbol);
       const branchAdminBranches = new Set();
       if (adminsSnap.exists()) {
         adminsSnap.forEach(a => {
@@ -818,8 +824,8 @@
         }
 
         const priceDisplay = (displayPrice > 0)
-          ? `<span style="color:#00ffc3">₹${displayPrice}</span>`
-          : `<span style="color:gray">₹0</span>`;
+          ? `<span style="color:#00ffc3">${formatMoney(displayPrice)}</span>`
+          : `<span style="color:gray">${formatMoney(0)}</span>`;
 
         // Render Row
         tbody.innerHTML += `

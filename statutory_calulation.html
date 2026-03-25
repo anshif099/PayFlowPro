@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teamsive - Statutory Calculation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="lang.js"></script>
+  <style>
+    :root{--primary:#00ffc3;--primary-hover:#00e6af;--bg:#0b0f14;--card:#141a22;--input:#0f151d;--text:#fff;--muted:#8b92a0;--border:#1e2530;--danger:#ff6b6b;--warn:#ffa726;--sidebar:260px}
+    body.light-mode{--bg:#f0f2f5;--card:#fff;--input:#f8f9fa;--text:#1a1d21;--muted:#6c757d;--border:#e9ecef}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+    .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);padding:24px 12px;overflow-y:auto;z-index:20;transition:transform .25s ease}
+    .sidebar.open{transform:translateX(0)}
+    .brand{padding:0 12px 18px;border-bottom:1px solid var(--border)}
+    .brand h2{color:var(--primary);font-size:22px;font-weight:800}
+    .lang-select,.field,select{width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit}
+    .lang-select{margin-top:12px;padding:10px 12px}
+    .nav{display:flex;flex-direction:column;gap:6px;padding-top:20px}
+    .nav a{color:var(--muted);text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:600;font-size:14px;transition:.2s}
+    .nav a:hover,.nav a.active{background:rgba(0,255,195,.12);color:var(--primary)}
+    .main{margin-left:var(--sidebar);min-height:100vh}
+    .top{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--border);padding:20px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+    .top h1{font-size:24px;font-weight:700}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .icon-btn,.ghost-btn,.danger-btn,.primary-btn{border:none;border-radius:12px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer;transition:.2s}
+    .icon-btn,.ghost-btn{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .ghost-btn:hover,.icon-btn:hover{border-color:var(--primary);color:var(--primary)}
+    .primary-btn{background:var(--primary);color:#000}
+    .primary-btn:hover{background:var(--primary-hover)}
+    .danger-btn{background:rgba(255,107,107,.12);color:var(--danger);border:1px solid rgba(255,107,107,.25)}
+    .section{padding:28px}
+    .notice,.panel,.record{background:var(--card);border:1px solid var(--border);border-radius:20px}
+    .notice{padding:18px 20px;margin-bottom:18px;line-height:1.55;color:var(--muted)}
+    .panel{padding:22px}
+    .panel h3,.records-header h3{font-size:18px;font-weight:800;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .field-wrap{display:flex;flex-direction:column;gap:8px}
+    .hint{font-size:13px;color:var(--muted);line-height:1.45}
+    .toggle{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid var(--border);border-radius:16px;background:rgba(0,255,195,.03);margin:18px 0}
+    .toggle input{margin-top:4px;transform:scale(1.15)}
+    .hidden{display:none!important}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+    .stat{padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(0,255,195,.1),rgba(0,0,0,.08));border:1px solid rgba(0,255,195,.14)}
+    .stat small{display:block;color:var(--muted);font-weight:700;margin-bottom:10px}
+    .stat strong{font-size:28px;font-weight:800}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    .records-header{display:flex;justify-content:space-between;align-items:center;margin:22px 0 12px}
+    .records{display:grid;gap:14px}
+    .record{padding:18px}
+    .record-top,.record-actions,.record-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+    .record-title{font-size:18px;font-weight:800}
+    .badge{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800}
+    .badge.linked{background:rgba(0,255,195,.14);color:var(--primary)}
+    .badge.admin{background:rgba(255,167,38,.14);color:var(--warn)}
+    .record-meta{margin:14px 0;padding:14px;border-radius:16px;background:rgba(0,255,195,.05)}
+    .metric{min-width:140px}
+    .metric span{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .metric strong{font-size:20px}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
+    .menu-toggle{display:none}
+    @media (max-width:980px){.grid,.grid-3,.stats{grid-template-columns:1fr}.menu-toggle{display:inline-flex}.sidebar{transform:translateX(-100%)}.main{margin-left:0}.top,.section{padding:18px}}
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <h2>Teamsive</h2>
+      <select id="langSelector" class="lang-select" onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="es">Espanol</option>
+        <option value="fr">Francais</option>
+        <option value="ar">Arabic</option>
+        <option value="de">Deutsch</option>
+        <option value="ml">Malayalam</option>
+        <option value="ta">Tamil</option>
+        <option value="kn">Kannada</option>
+        <option value="te">Telugu</option>
+      </select>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="employees.html">Manage Employees</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="leave_management.html">Leave Management</a>
+      <a href="salary_settings.html">Salary Settings</a>
+      <a href="statutory_calulation.html" class="active">Statutory Calculation</a>
+      <a href="salary_payments.html">Salary Payments</a>
+      <a href="salary_report.html">Salary Report</a>
+      <a href="monthly_report.html">Monthly Report</a>
+      <a href="documents.html">Documents</a>
+      <a href="settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="icon-btn menu-toggle" onclick="toggleSidebar()">Menu</button>
+        <h1>Statutory Calculation</h1>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" onclick="toggleTheme()">Theme</button>
+        <button class="ghost-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="notice">This module is optional and reference-only. Records saved here stay separate from salary approvals, attendance salary, and salary history. Link a record only when you want it visible in an employee profile.</div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <h3 id="formTitle">Create Reference Record</h3>
+          <button class="ghost-btn hidden" id="cancelEditBtn" onclick="cancelEdit()">Cancel Edit</button>
+        </div>
+
+        <div class="grid" style="margin-bottom:14px">
+          <div class="field-wrap">
+            <label class="label" for="referenceTitle">Reference Title</label>
+            <input class="field" id="referenceTitle" type="text" placeholder="March 2026 Statutory Reference">
+          </div>
+          <div class="field-wrap">
+            <label class="label" for="linkedUserSelect">Select User</label>
+            <select id="linkedUserSelect" onchange="onEmployeeChange()">
+              <option value="">-- Select user --</option>
+            </select>
+          </div>
+        </div>
+        <input type="hidden" id="salaryMonth">
+        <input type="checkbox" id="linkToggle" class="hidden" checked>
+
+        <div class="grid grid-3" style="margin-bottom:18px">
+          <div class="field-wrap"><label class="label" for="basic">Basic</label><input class="field amount-field" id="basic" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="increment">Increment Amount</label><input class="field amount-field" id="increment" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="field-wrap"><label class="label" for="hra">HRA</label><input class="field amount-field" id="hra" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="allowances">Allowances</label><input class="field amount-field" id="allowances" type="number" min="0" step="0.01"></div>
+        </div>
+
+        <div class="grid" style="margin-bottom:8px">
+          <div class="field-wrap"><label class="label" for="pf">PF</label><input class="field amount-field" id="pf" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="esi">ESI</label><input class="field amount-field" id="esi" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="pt">PT</label><input class="field amount-field" id="pt" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="lwf">LWF</label><input class="field amount-field" id="lwf" type="number" min="0" step="0.01"></div>
+          <div class="field-wrap"><label class="label" for="tds">TDS</label><input class="field amount-field" id="tds" type="number" min="0" step="0.01"></div>
+        </div>
+
+        <div style="margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="updateProfileSalary">
+          <label for="updateProfileSalary" style="font-size:14px; cursor:pointer;">Update Employee Profile Salary (Current & Future months only)</label>
+        </div>
+
+
+        <div class="stats">
+          <div class="stat"><small>Gross Salary</small><strong id="grossPreview">&#8377;0</strong></div>
+          <div class="stat"><small>Total Deductions</small><strong id="deductionPreview">&#8377;0</strong></div>
+          <div class="stat"><small>Net Salary</small><strong id="netPreview">&#8377;0</strong></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary-btn" onclick="saveRecord()" id="saveBtn">Save Statutory Calculation</button>
+        </div>
+      </div>
+
+      <div class="records-header">
+        <h3>Saved Records</h3>
+        <div class="hint">Delete removes the record from linked user profiles automatically.</div>
+      </div>
+      <div class="records" id="records"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getDatabase, ref, onValue, push, set, update, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+    const firebaseConfig = { apiKey:"AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain:"payflowpro-6e62d.firebaseapp.com", databaseURL:"https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId:"payflowpro-6e62d", storageBucket:"payflowpro-6e62d.firebasestorage.app", messagingSenderId:"69298740438", appId:"1:69298740438:web:18fd85e982e083e1543d77" };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const $ = (id) => document.getElementById(id);
+    const scope = () => ({ role: localStorage.getItem("role") || "", companyId: localStorage.getItem("companyId") || "", branch: localStorage.getItem("branch") || "" });
+    const norm = (v) => String(v || "").trim().toLowerCase();
+    let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+    const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+    const money = (v) => `${currencySymbol}${toAmount(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+    const monthLabel = (v) => v ? new Date(`${v}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "--";
+    const clean = (v) => String(v || "").replace(/[&<>"']/g, (m) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+    const amount = (id) => parseFloat($(id).value || 0) || 0;
+
+    let employees = {};
+    let records = [];
+    let editingId = null;
+    let editingRecord = null;
+
+    if (localStorage.getItem("admin") !== "true") location = "index.html";
+    const now = new Date(); $("salaryMonth").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    if (localStorage.getItem("adminTheme") === "light") document.body.classList.add("light-mode");
+
+    window.toggleSidebar = () => $("sidebar").classList.toggle("open");
+    window.logout = () => { localStorage.clear(); location = "index.html"; };
+    window.toggleTheme = () => { document.body.classList.toggle("light-mode"); localStorage.setItem("adminTheme", document.body.classList.contains("light-mode") ? "light" : "dark"); };
+    window.toggleLinkFields = () => {};
+
+    onValue(ref(db, "settings/currencySymbol"), (snapshot) => {
+      currencySymbol = snapshot.exists() ? (snapshot.val() || "₹") : "₹";
+      localStorage.setItem("currencySymbol", currencySymbol);
+      updatePreviews();
+      renderRecords();
+    });
+
+    window.onEmployeeChange = async () => {
+      const id = $("linkedUserSelect").value;
+      const emp = employees[id];
+      if (!emp) {
+        resetForm(); // Reset form if no employee is selected
+        return;
+      }
+
+      if (!$("referenceTitle").value || $("referenceTitle").value.startsWith("Statutory Calculation")) {
+        $("referenceTitle").value = `Statutory - ${emp.name}`;
+      }
+
+      try {
+        // Fetch current salary from profile
+        const snapshot = await get(ref(db, `employees/${emp.key}/salary`));
+        if (snapshot.exists()) {
+          $("basic").value = snapshot.val();
+        }
+
+        // Auto-load most recent record for this employee
+        // records is already sorted newest first by renderRecords
+        const lastRec = records.find(r => r.linkedUserId === id);
+        if (lastRec) {
+            $("hra").value = lastRec.hra || 0;
+            $("allowances").value = lastRec.allowances || 0;
+            $("pf").value = lastRec.pf || 0;
+            $("esi").value = lastRec.esi || 0;
+            $("pt").value = lastRec.pt || 0;
+            $("lwf").value = lastRec.lwf || 0;
+            $("tds").value = lastRec.tds || 0;
+        } else {
+            // Clear fields if no past record found for this employee
+            ["hra","allowances","pf","esi","pt","lwf","tds"].forEach(f => $(f).value = "");
+        }
+        updatePreviews();
+      } catch (e) {
+        console.error("Error fetching employee data:", e);
+      }
+    };
+
+    function employeeAllowed(emp) {
+      const s = scope();
+      if (s.role === "branch_admin") return norm(emp.branch) === norm(s.branch);
+      if (s.role === "company_admin" && s.companyId) return norm(emp.companyId) === norm(s.companyId);
+      return true;
+    }
+
+    function recordAllowed(rec) {
+      const s = scope();
+      if (s.role === "branch_admin") return norm(rec.branch) === norm(s.branch);
+      if (s.role === "company_admin" && s.companyId) return norm(rec.companyId) === norm(s.companyId);
+      return true;
+    }
+
+    function updatePreviews() {
+      const gross = amount("basic") + amount("increment") + amount("hra") + amount("allowances");
+      const deductions = amount("pf") + amount("esi") + amount("pt") + amount("lwf") + amount("tds");
+      $("grossPreview").textContent = money(gross);
+      $("deductionPreview").textContent = money(deductions);
+      $("netPreview").textContent = money(gross - deductions);
+    }
+
+    function resetForm() {
+      editingId = null;
+      editingRecord = null;
+      $("formTitle").textContent = "Create Reference Record";
+      $("cancelEditBtn").classList.add("hidden");
+      $("referenceTitle").value = "";
+      $("basic").value = "";
+      $("increment").value = "";
+      $("hra").value = "";
+      $("allowances").value = "";
+      $("pf").value = "";
+      $("esi").value = "";
+      $("pt").value = "";
+      $("lwf").value = "";
+      $("tds").value = "";
+      $("updateProfileSalary").checked = false;
+      $("linkToggle").checked = true;
+      $("linkedUserSelect").value = "";
+      updatePreviews();
+      $("saveBtn").textContent = "Save Statutory Calculation";
+      const d = new Date(); $("salaryMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function fillForm(rec) {
+      editingId = rec.id;
+      editingRecord = rec;
+      $("formTitle").textContent = "Edit Reference Record";
+      $("cancelEditBtn").classList.remove("hidden");
+      $("referenceTitle").value = rec.title || "";
+      $("salaryMonth").value = rec.salaryMonth || "";
+      $("basic").value = rec.basic || 0;
+      $("increment").value = rec.increment || 0;
+      $("hra").value = rec.hra || 0;
+      $("allowances").value = rec.allowances || 0;
+      $("pf").value = rec.pf || 0;
+      $("esi").value = rec.esi || 0;
+      $("pt").value = rec.pt || 0;
+      $("lwf").value = rec.lwf || 0;
+      $("tds").value = rec.tds || 0;
+      $("linkToggle").checked = true;
+      $("linkedUserSelect").value = rec.linkedUserId || "";
+      $("saveBtn").textContent = "Update Statutory Calculation";
+      updatePreviews();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderRecords() {
+      const root = $("records");
+      if (!records.length) { root.innerHTML = `<div class="record empty">No statutory calculations yet. Create a reference record above and link it only when you want it visible in a user profile.</div>`; return; }
+      root.innerHTML = records.map((rec) => `
+        <div class="record">
+          <div class="record-top">
+            <div>
+              <div class="record-title">${clean(rec.title || "Statutory Calculation")}</div>
+              <div class="hint">${clean(monthLabel(rec.salaryMonth || ""))}</div>
+            </div>
+            <div class="badge ${rec.isLinkedToUser ? "linked" : "admin"}">${rec.isLinkedToUser ? "Linked" : "Admin Only"}</div>
+          </div>
+          ${rec.isLinkedToUser ? `<div class="hint" style="margin-top:12px">Visible in: ${clean(rec.linkedUserName || "Employee")} (${clean(rec.linkedUserId || "-")})</div>` : ""}
+          <div class="record-meta">
+            <div class="metric"><span>Gross Salary</span><strong>${money(rec.grossSalary)}</strong></div>
+            <div class="metric"><span>Total Deductions</span><strong>${money(rec.totalDeductions)}</strong></div>
+            <div class="metric"><span>Net Salary</span><strong>${money(rec.netSalary)}</strong></div>
+          </div>
+          <div class="record-actions">
+            <div class="hint">Reference only. Existing salary and attendance systems remain unchanged.</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="ghost-btn" onclick="editRecord('${rec.id}')">Edit</button>
+              ${rec.isLinkedToUser ? `<button class="ghost-btn" onclick="removeLink('${rec.id}')">Remove Link</button>` : ""}
+              <button class="danger-btn" onclick="deleteRecord('${rec.id}')">Delete</button>
+            </div>
+          </div>
+        </div>`).join("");
+    }
+
+    function loadEmployees() {
+      onValue(ref(db, "employees"), (snapshot) => {
+        const current = $("linkedUserSelect").value;
+        employees = {};
+        $("linkedUserSelect").innerHTML = `<option value="">-- Select user --</option>`;
+        if (snapshot.exists()) snapshot.forEach((child) => {
+          const value = child.val() || {};
+          const id = String(value.empId || child.key || "").trim();
+          const employee = { key: child.key, id, name: value.name || "Employee", branch: value.branch || "", companyId: value.companyId || "", salary: value.salary || "" };
+          if (!id || !employeeAllowed(employee)) return;
+          employees[id] = employee;
+          const option = document.createElement("option");
+          option.value = id; option.textContent = `${employee.name} (${id})`;
+          $("linkedUserSelect").appendChild(option);
+        });
+        if (current && employees[current]) {
+           $("linkedUserSelect").value = current;
+        } else if (!current && $("linkedUserSelect").options.length > 1) {
+           // No selection, maybe default to first? Better leave at prompt.
+        }
+      });
+    }
+
+    function loadRecords() {
+      onValue(ref(db, "statutory_calculations"), (snapshot) => {
+        const list = [];
+        if (snapshot.exists()) snapshot.forEach((child) => {
+          const rec = { id: child.key, ...(child.val() || {}) };
+          rec.basic = Number(rec.basic || 0);
+          rec.increment = Number(rec.increment || 0);
+          rec.hra = Number(rec.hra || 0);
+          rec.allowances = Number(rec.allowances || 0);
+          rec.pf = Number(rec.pf || 0);
+          rec.esi = Number(rec.esi || 0);
+          rec.pt = Number(rec.pt || 0);
+          rec.lwf = Number(rec.lwf || 0);
+          rec.tds = Number(rec.tds || 0);
+          rec.grossSalary = rec.basic + rec.increment + rec.hra + rec.allowances;
+          rec.totalDeductions = rec.pf + rec.esi + rec.pt + rec.lwf + rec.tds;
+          rec.netSalary = rec.grossSalary - rec.totalDeductions;
+          if (recordAllowed(rec)) list.push(rec);
+        });
+        records = list.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+        renderRecords();
+      });
+    }
+
+    window.cancelEdit = resetForm;
+    window.editRecord = (id) => { const rec = records.find((item) => item.id === id); if (rec) fillForm(rec); };
+    window.removeLink = async (id) => {
+      if (!confirm("Remove this record from the linked user profile?")) return;
+      await update(ref(db, `statutory_calculations/${id}`), { isLinkedToUser:false, linkedUserId:null, linkedUserName:null, linkedUserKey:null, updatedAt:new Date().toISOString() });
+      if (editingId === id && editingRecord) fillForm({ ...editingRecord, isLinkedToUser:false, linkedUserId:null, linkedUserName:null, linkedUserKey:null });
+    };
+    window.deleteRecord = async (id) => { if (confirm("Delete this statutory calculation? This also removes it from user profiles.")) { await remove(ref(db, `statutory_calculations/${id}`)); if (editingId === id) resetForm(); } };
+
+    window.saveRecord = async () => {
+      const linked = $("linkToggle").checked;
+      const employeeId = $("linkedUserSelect").value;
+      const employee = employees[employeeId];
+      const baseCompanyId = scope().companyId || "";
+      const companyId = employee?.companyId || editingRecord?.companyId || baseCompanyId;
+      const branch = employee?.branch || editingRecord?.branch || scope().branch || "";
+      if (linked && !employeeId) return alert("Select a user when linking this calculation to a profile.");
+      if (!companyId) return alert("A company scope is required. Link the record to an employee or open the page as a company or branch admin.");
+      const title = $("referenceTitle").value.trim() || `Statutory Calculation ${$("salaryMonth").value}`;
+      const record = {
+        title, salaryMonth:$("salaryMonth").value, basic:amount("basic"), increment:amount("increment"), hra:amount("hra"), allowances:amount("allowances"), pf:amount("pf"), esi:amount("esi"), pt:amount("pt"), lwf:amount("lwf"), tds:amount("tds"),
+        grossSalary:amount("basic") + amount("increment") + amount("hra") + amount("allowances"),
+        totalDeductions:amount("pf") + amount("esi") + amount("pt") + amount("lwf") + amount("tds"),
+        netSalary:(amount("basic") + amount("increment") + amount("hra") + amount("allowances")) - (amount("pf") + amount("esi") + amount("pt") + amount("lwf") + amount("tds")),
+        isLinkedToUser: linked, linkedUserId: linked ? employeeId : null, linkedUserName: linked ? (employee?.name || editingRecord?.linkedUserName || "") : null, linkedUserKey: linked ? (employee?.key || editingRecord?.linkedUserKey || null) : null,
+        companyId, branch, createdAt: editingRecord?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString()
+      };
+
+      if (editingId) {
+        await set(ref(db, `statutory_calculations/${editingId}`), record);
+      } else {
+        const newRef = push(ref(db, "statutory_calculations"));
+        await set(newRef, record);
+      }
+
+      // Salary Increment / Profile Update Logic
+      if ($("updateProfileSalary").checked && linked && employeeId) {
+        const newSalary = amount("basic") + amount("increment");
+        const monthKey = $("salaryMonth").value;
+        const empRef = ref(db, `employees/${employee.key}`);
+
+        await update(empRef, { salary: String(newSalary) });
+        await set(ref(db, `employees/${employee.key}/salary_config/${monthKey}`), newSalary);
+        alert("Employee profile salary updated!");
+      }
+
+      resetForm();
+    };
+
+    document.querySelectorAll(".amount-field").forEach((input) => input.addEventListener("input", refreshPreview));
+    refreshPreview(); loadEmployees(); loadRecords();
+  </script>
+</body>
+</html>

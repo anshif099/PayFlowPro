@@ -617,6 +617,9 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
         if (localStorage.getItem("admin") !== "true") {
             location = "index.html";
@@ -625,6 +628,10 @@
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
         const role = localStorage.getItem("role");
+        get(ref(db, "settings/currencySymbol")).then((snap) => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+        });
         const adminBranch = localStorage.getItem("branch");
         const companyId = localStorage.getItem("companyId");
 
@@ -907,7 +914,7 @@
                         <td>${e.mobile}</td>
                         <td>${e.role}</td>
                         <td>${e.branch || '-'}${deptDisplay}</td>
-                        <td>₹${e.salary}</td>
+                        <td>${formatMoney(e.salary)}</td>
                         <td>${punchModeLabel}</td>
                         <td>${shiftLabel}</td>
                         <td>${statusBadge}</td>

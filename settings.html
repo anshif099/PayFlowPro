@@ -696,6 +696,31 @@
             </div>
 
             <div class="card">
+                <h3>Currency Symbol Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Choose the default currency symbol shown across the admin web, admin app, and user app. This updates display only and does not convert values.</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="currencyCodeInput">Currency</label>
+                        <select id="currencyCodeInput">
+                            <option value="INR">INR (₹) - Indian Rupee</option>
+                            <option value="USD">USD ($) - US Dollar</option>
+                            <option value="EUR">EUR (€) - Euro</option>
+                            <option value="GBP">GBP (£) - British Pound</option>
+                            <option value="JPY">JPY (¥) - Japanese Yen</option>
+                            <option value="CNY">CNY (¥) - Chinese Yuan</option>
+                            <option value="AED">AED (AED) - UAE Dirham</option>
+                            <option value="SAR">SAR (SAR) - Saudi Riyal</option>
+                            <option value="SGD">SGD (S$) - Singapore Dollar</option>
+                            <option value="AUD">AUD (A$) - Australian Dollar</option>
+                            <option value="CAD">CAD (C$) - Canadian Dollar</option>
+                            <option value="CHF">CHF (CHF) - Swiss Franc</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="saveCurrencySetting()">💾 Save Currency Setting</button>
+            </div>
+
+            <div class="card">
                 <h3 data-i18n="week_off_days">Week-Off Days</h3>
                 <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="week_off_desc">Select
                     recurring weekly off days
@@ -812,6 +837,26 @@
 
         const role = localStorage.getItem("role");
         const branch = localStorage.getItem("branch");
+        const currencyOptions = [
+            { code: "INR", symbol: "₹" },
+            { code: "USD", symbol: "$" },
+            { code: "EUR", symbol: "€" },
+            { code: "GBP", symbol: "£" },
+            { code: "JPY", symbol: "¥" },
+            { code: "CNY", symbol: "¥" },
+            { code: "AED", symbol: "AED " },
+            { code: "SAR", symbol: "SAR " },
+            { code: "SGD", symbol: "S$" },
+            { code: "AUD", symbol: "A$" },
+            { code: "CAD", symbol: "C$" },
+            { code: "CHF", symbol: "CHF " }
+        ];
+        const findCurrency = (code, symbol) => {
+            const byCode = currencyOptions.find(item => item.code === String(code || "").trim().toUpperCase());
+            if (byCode) return byCode;
+            const bySymbol = currencyOptions.find(item => item.symbol.trim() === String(symbol || "").trim());
+            return bySymbol || currencyOptions[0];
+        };
 
         // Settings Path Logic
         let settingsRoot = "settings";
@@ -854,6 +899,27 @@
             }
             set(ref(db, `${settingsRoot}/salaryDay`), day).then(() => {
                 alert('Salary Day saved successfully!');
+            });
+        };
+
+        // Global Currency Setting
+        onValue(ref(db, `settings`), s => {
+            const settings = s.exists() ? (s.val() || {}) : {};
+            const selected = findCurrency(settings.currencyCode, settings.currencySymbol);
+            document.getElementById('currencyCodeInput').value = selected.code;
+            localStorage.setItem('currencyCode', selected.code);
+            localStorage.setItem('currencySymbol', selected.symbol);
+        });
+        window.saveCurrencySetting = () => {
+            const code = document.getElementById('currencyCodeInput').value || 'INR';
+            const selected = findCurrency(code);
+            Promise.all([
+                set(ref(db, `settings/currencyCode`), selected.code),
+                set(ref(db, `settings/currencySymbol`), selected.symbol)
+            ]).then(() => {
+                localStorage.setItem('currencyCode', selected.code);
+                localStorage.setItem('currencySymbol', selected.symbol);
+                alert('Currency setting saved successfully!');
             });
         };
 
