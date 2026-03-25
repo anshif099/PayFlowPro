@@ -9,6 +9,10 @@ const translations = {
         salary_settings: "Salary Settings",
         monthly_report: "Monthly Report",
         settings: "Settings",
+        setting: "Setting",
+        app_settings: "App Settings",
+        interval: "Interval",
+        salary_dropdown: "Salary",
         logout: "Logout",
 
         // Attendance - New
@@ -238,6 +242,10 @@ const translations = {
         salary_settings: "ശമ്പളം",
         monthly_report: "മാസ റിപ്പോർട്ട്",
         settings: "ക്രമീകരണങ്ങൾ",
+        setting: "ക്രമീകരണം",
+        app_settings: "ആപ്പ് ക്രമീകരണങ്ങൾ",
+        interval: "ഇടവേള",
+        salary_dropdown: "ശമ്പളം",
         logout: "ലോഗൗട്ട്",
 
         // Attendance - New
@@ -468,6 +476,10 @@ const translations = {
         salary_settings: "वेतन सेटिंग्स",
         monthly_report: "मासिक रिपोर्ट",
         settings: "सेटिंग्स",
+        setting: "सेटिंग",
+        app_settings: "ऐप सेटिंग्स",
+        interval: "अंतराल",
+        salary_dropdown: "वेतन",
         logout: "लॉग आउट",
 
         // Attendance - New
@@ -698,6 +710,10 @@ const translations = {
         salary_settings: "Salarios",
         monthly_report: "Reporte Mensual",
         settings: "Ajustes",
+        setting: "Ajuste",
+        app_settings: "Ajustes de App",
+        interval: "Intervalo",
+        salary_dropdown: "Salario",
         logout: "Salir",
 
         // Attendance - New
@@ -925,6 +941,10 @@ const translations = {
         salary_settings: "Salaires",
         monthly_report: "Rapport",
         settings: "Paramètres",
+        setting: "Paramètre",
+        app_settings: "Paramètres de l'App",
+        interval: "Intervalle",
+        salary_dropdown: "Salaire",
         logout: "Déconnexion",
 
         // Attendance - New
@@ -1152,7 +1172,11 @@ const translations = {
         salary_settings: "الرواتب",
         monthly_report: "التقرير الشهري",
         settings: "الإعدادات",
-        logout: "خروج",
+        setting: "الإعداد",
+        app_settings: "إعدادات التطبيق",
+        interval: "الفترة",
+        salary_dropdown: "الراتب",
+        logout: "تسجيل الخروج",
 
         // Attendance - New
         mark_single_day: "تسجيل الحضور (يوم واحد)",
@@ -1380,6 +1404,10 @@ const translations = {
         salary_settings: "Gehalt",
         monthly_report: "Bericht",
         settings: "Einstellungen",
+        setting: "Einstellung",
+        app_settings: "App-Einstellungen",
+        interval: "Intervall",
+        salary_dropdown: "Gehalt",
         logout: "Abmelden",
 
         // Attendance - New
@@ -1582,8 +1610,12 @@ const translations = {
         branch_admins: "நிர்வாகிகள் (Admins)",
         salary_settings: "சம்பள அமைப்புகள் (Salary)",
         monthly_report: "மாதாந்திர அறிக்கை (Report)",
-        settings: "அமைப்புகள் (Settings)",
-        logout: "வெளியேறு (Logout)",
+        settings: "அமைப்புகள்",
+        setting: "அமைப்பு",
+        app_settings: "செயலி அமைப்புகள்",
+        interval: "இடைவெளி",
+        salary_dropdown: "சம்பளம்",
+        logout: "வெளியேறு",
 
         // Login Page
         admin_login_title: "நிர்வாகி உள்நுழைவு (Admin Login)",
@@ -1620,8 +1652,12 @@ const translations = {
         branch_admins: "ನಿರ್ವಾಹಕರು (Admins)",
         salary_settings: "ವೇತನ ಸೆಟ್ಟಿಂಗ್ಸ್ (Salary)",
         monthly_report: "ಮಾಸಿಕ ವರದಿ (Report)",
-        settings: "ಸೆಟ್ಟಿಂಗ್ಸ್ (Settings)",
-        logout: "ಲಾಗ್ ಔಟ್ (Logout)",
+        settings: "ಸೆಟ್ಟಿಂಗ್ಸ್",
+        setting: "ಸೆಟ್ಟಿಂಗ್",
+        app_settings: "ಅಪ್ಲಿಕೇಶನ್ ಸೆಟ್ಟಿಂಗ್ಸ್",
+        interval: "ವಿರಾಮ",
+        salary_dropdown: "ವೇತನ",
+        logout: "ಲಾಗ್ ಔಟ್",
 
         // Login Page
         admin_login_title: "ಅಡ್ಮಿನ್ ಲಾಗಿನ್ (Admin Login)",
@@ -1658,8 +1694,12 @@ const translations = {
         branch_admins: "అడ్మిన్లు (Admins)",
         salary_settings: "జీతం సెట్టింగ్‌లు (Salary)",
         monthly_report: "నెలవారీ నివేదిక (Report)",
-        settings: "సెట్టింగులు (Settings)",
-        logout: "లాగ్ అవుట్ (Logout)",
+        settings: "సెట్టింగ్‌లు",
+        setting: "సెట్టింగ్",
+        app_settings: "యాప్ సెట్టింగ్‌లు",
+        interval: "విరామం",
+        salary_dropdown: "జీతం",
+        logout: "లాగ్ అవుట్",
 
         // Login Page
         admin_login_title: "అడ్మిన్ లాగిన్ (Admin Login)",

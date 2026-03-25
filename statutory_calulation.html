@@ -87,13 +87,49 @@
       <a href="employees.html">Manage Employees</a>
       <a href="attendance.html">Attendance</a>
       <a href="leave_management.html">Leave Management</a>
-      <a href="salary_settings.html">Salary Settings</a>
+      
+            <!-- Salary Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('salaryDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_dropdown">Salary</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="salaryDropdown">
+                <a href="salary_settings.html" class="nav-item" id="nav-salary-settings">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_settings">Salary Settings</span>
+                </a>
+                <a href="salary_payments.html" class="nav-item" id="nav-salary-payments">
+                    <span class="nav-icon">💳</span>
+                    <span data-i18n="salary_payments">Salary Payments</span>
+                </a>
+            </div>
       <a href="statutory_calulation.html" class="active">Statutory Calculation</a>
-      <a href="salary_payments.html">Salary Payments</a>
+      
       <a href="salary_report.html">Salary Report</a>
       <a href="monthly_report.html">Monthly Report</a>
       <a href="documents.html">Documents</a>
-      <a href="settings.html">Settings</a>
+      
+            <!-- Setting Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('settingsDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">⚙️</span>
+                    <span data-i18n="setting">Setting</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="settingsDropdown">
+                <a href="settings.html" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">🛠️</span>
+                    <span data-i18n="app_settings">App Settings</span>
+                </a>
+                <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                    <span class="nav-icon">🏢</span>
+                    <span data-i18n="manage_branches">Manage Branches</span>
+                </a>
+            </div>
     </nav>
   </aside>
 

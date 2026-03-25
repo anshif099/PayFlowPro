@@ -158,10 +158,7 @@
                 <span class="nav-icon">🏢</span>
                 <span data-i18n="manage_companies">Manage Companies</span>
             </a>
-            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🏢</span>
-                <span data-i18n="manage_branches">Manage Branches</span>
-            </a>
+            
             
             <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
@@ -194,16 +191,46 @@
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span data-i18n="interval_management">Interval Management</span></a>
-            <a href="intervals_history.html" class="nav-item active"><span class="nav-icon">⏳</span><span data-i18n="intervals_history">Intervals History</span></a>
-            <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
-                <span data-i18n="salary_settings">Salary Settings</span>
-            </a>
-            <a href="salary_payments.html" class="nav-item">
-                <span class="nav-icon">💳</span>
-                <span data-i18n="salary_payments">Salary Payments</span>
-            </a>
+            
+            <!-- Interval Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('intervalDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">⏲️</span>
+                    <span data-i18n="interval">Interval</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="intervalDropdown">
+                <a href="intervalmanagement.html" class="nav-item" id="nav-interval-management">
+                    <span class="nav-icon">⏲️</span>
+                    <span data-i18n="interval_management">Interval Management</span>
+                </a>
+                <a href="intervals_history.html" class="nav-item" id="nav-intervals-history">
+                    <span class="nav-icon">⏳</span>
+                    <span data-i18n="intervals_history">Intervals History</span>
+                </a>
+            </div>
+            
+            
+            <!-- Salary Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('salaryDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_dropdown">Salary</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="salaryDropdown">
+                <a href="salary_settings.html" class="nav-item" id="nav-salary-settings">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_settings">Salary Settings</span>
+                </a>
+                <a href="salary_payments.html" class="nav-item" id="nav-salary-payments">
+                    <span class="nav-icon">💳</span>
+                    <span data-i18n="salary_payments">Salary Payments</span>
+                </a>
+            </div>
+            
             <a href="salary_report.html" class="nav-item">
                 <span class="nav-icon">📈</span>
                 <span data-i18n="salary_report">Salary Report</span>
@@ -236,7 +263,25 @@
                 <span class="nav-icon">💬</span>
                 <span data-i18n="manage_feedback">Feedback / Support</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            
+            <!-- Setting Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('settingsDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">⚙️</span>
+                    <span data-i18n="setting">Setting</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="settingsDropdown">
+                <a href="settings.html" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">🛠️</span>
+                    <span data-i18n="app_settings">App Settings</span>
+                </a>
+                <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                    <span class="nav-icon">🏢</span>
+                    <span data-i18n="manage_branches">Manage Branches</span>
+                </a>
+            </div>
         </nav>
   </div>
 
@@ -255,18 +300,31 @@
     <div class="dashboard-section">
       <div class="card">
         <div class="controls-bar">
-           <input type="date" id="datePicker">
+           <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+             <div style="display:flex; flex-direction:column; gap:4px;">
+               <label style="font-size:12px; color:var(--text-muted);" data-i18n="from_date">From Date</label>
+               <input type="date" id="datePickerFrom">
+             </div>
+             <div style="display:flex; flex-direction:column; gap:4px;">
+               <label style="font-size:12px; color:var(--text-muted);" data-i18n="to_date">To Date</label>
+               <input type="date" id="datePickerTo">
+             </div>
+             <button onclick="clearFilters()" style="margin-top:20px; background:transparent; border:1px solid var(--border); color:var(--primary); padding:8px 16px; border-radius:8px; cursor:pointer;" data-i18n="clear_filters">Clear Filters</button>
+           </div>
            <input type="text" id="searchInput" placeholder="Search employee row or interval...">
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
+              <tr>
+                <th>Date</th>
                 <th>Employee</th>
                 <th>Interval Name</th>
                 <th>Punch In</th>
                 <th>Punch Out</th>
                 <th>Consumed</th>
+              </tr>
               </tr>
             </thead>
             <tbody id="historyTableBody">
@@ -307,39 +365,34 @@
     const adminBranch = localStorage.getItem("branch");
     const companyId = localStorage.getItem("companyId");
 
-    const datePicker = document.getElementById('datePicker');
+    const datePickerFrom = document.getElementById('datePickerFrom');
+    const datePickerTo = document.getElementById('datePickerTo');
     const searchInput = document.getElementById('searchInput');
     const tbody = document.getElementById('historyTableBody');
     const noData = document.getElementById('noDataMsg');
     
-    // Set Default Date
+    // Set Default Date (Today)
     const today = new Date().toISOString().split('T')[0];
-    datePicker.value = today;
+    datePickerFrom.value = today;
+    datePickerTo.value = today;
+
+    window.clearFilters = () => {
+        datePickerFrom.value = "";
+        datePickerTo.value = "";
+        searchInput.value = "";
+        loadData();
+    };
 
     let allRecords = [];
 
     async function loadData() {
         allRecords = [];
-        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Loading...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Loading...</td></tr>";
         noData.style.display = "none";
         
         try {
-            const dateStr = datePicker.value;
-            if(!dateStr) return;
-
-            // Fetch Branch Admin constraints
-            const branchAdminBranches = new Set();
-            if (adminRole === 'super_admin' || adminRole === 'company_admin') {
-                const adminsSnap = await get(ref(db, "admins"));
-                if (adminsSnap.exists()) {
-                    adminsSnap.forEach(a => {
-                        const admin = a.val();
-                        if (admin.role === 'branch_admin' && admin.branch) {
-                            branchAdminBranches.add(admin.branch);
-                        }
-                    });
-                }
-            }
+            const fromDate = datePickerFrom.value;
+            const toDate = datePickerTo.value;
 
             // Fetch valid employees
             const empSnap = await get(ref(db, "employees"));
@@ -360,29 +413,44 @@
                 });
             }
 
-            // Fetch interval records for the active date
+            // Fetch all interval records and filter locally
             for (const [sanitizedId, emp] of Object.entries(validEmployees)) {
-                const punchSnap = await get(ref(db, `employees/${sanitizedId}/interval_punches/${dateStr}`));
+                const punchSnap = await get(ref(db, `employees/${sanitizedId}/interval_punches`));
                 if (punchSnap.exists()) {
-                    punchSnap.forEach(pSnap => {
-                        const p = pSnap.val();
-                        allRecords.push({
-                           empName: emp.name || 'Unknown',
-                           empId: emp.id,
-                           intervalName: p.name || 'Interval',
-                           punchIn: p.punchIn || null,
-                           punchOut: p.punchOut || null,
-                           extraMins: p.extraMins || 0
+                    punchSnap.forEach(dateSnap => {
+                        const dateKey = dateSnap.key; // yyyy-MM-dd
+                        
+                        // Range filtering
+                        if (fromDate && dateKey < fromDate) return;
+                        if (toDate && dateKey > toDate) return;
+
+                        dateSnap.forEach(pSnap => {
+                            const p = pSnap.val();
+                            allRecords.push({
+                               date: dateKey,
+                               empName: emp.name || 'Unknown',
+                               empId: emp.id,
+                               intervalName: p.name || 'Interval',
+                               punchIn: p.punchIn || null,
+                               punchOut: p.punchOut || null,
+                               extraMins: p.extraMins || 0
+                            });
                         });
                     });
                 }
             }
             
+            // Sort by date desc, then punchIn desc
+            allRecords.sort((a, b) => {
+                if (b.date !== a.date) return b.date.localeCompare(a.date);
+                return (b.punchIn || "").localeCompare(a.punchIn || "");
+            });
+
             renderTable();
 
         } catch(err) {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan='5' style='text-align:center; color:red;'>Failed to load data.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>Failed to load data.</td></tr>`;
         }
     }
 
@@ -437,6 +505,7 @@
 
              const tr = document.createElement('tr');
              tr.innerHTML = `
+                <td style="font-size:12px; color:var(--primary); font-weight:600;">${r.date}</td>
                 <td>
                     <div style="font-weight:600; color:var(--text);">${r.empName}</div>
                     <div style="font-size:12px; color:var(--text-muted);">ID: ${r.empId}</div>
@@ -450,7 +519,8 @@
         });
     }
 
-    datePicker.addEventListener('change', loadData);
+    datePickerFrom.addEventListener('change', loadData);
+    datePickerTo.addEventListener('change', loadData);
     searchInput.addEventListener('input', renderTable);
 
     loadData();

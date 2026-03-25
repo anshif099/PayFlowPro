@@ -141,10 +141,7 @@
                 <span class="nav-icon">🏢</span>
                 <span data-i18n="manage_companies">Manage Companies</span>
             </a>
-            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🏢</span>
-                <span data-i18n="manage_branches">Manage Branches</span>
-            </a>
+            
             
             <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
@@ -177,16 +174,46 @@
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span data-i18n="interval_management">Interval Management</span></a>
-            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span data-i18n="intervals_history">Intervals History</span></a>
-            <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
-                <span data-i18n="salary_settings">Salary Settings</span>
-            </a>
-            <a href="salary_payments.html" class="nav-item">
-                <span class="nav-icon">💳</span>
-                <span data-i18n="salary_payments">Salary Payments</span>
-            </a>
+            
+            <!-- Interval Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('intervalDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">⏲️</span>
+                    <span data-i18n="interval">Interval</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="intervalDropdown">
+                <a href="intervalmanagement.html" class="nav-item" id="nav-interval-management">
+                    <span class="nav-icon">⏲️</span>
+                    <span data-i18n="interval_management">Interval Management</span>
+                </a>
+                <a href="intervals_history.html" class="nav-item" id="nav-intervals-history">
+                    <span class="nav-icon">⏳</span>
+                    <span data-i18n="intervals_history">Intervals History</span>
+                </a>
+            </div>
+            
+            
+            <!-- Salary Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('salaryDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_dropdown">Salary</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="salaryDropdown">
+                <a href="salary_settings.html" class="nav-item" id="nav-salary-settings">
+                    <span class="nav-icon">💰</span>
+                    <span data-i18n="salary_settings">Salary Settings</span>
+                </a>
+                <a href="salary_payments.html" class="nav-item" id="nav-salary-payments">
+                    <span class="nav-icon">💳</span>
+                    <span data-i18n="salary_payments">Salary Payments</span>
+                </a>
+            </div>
+            
             <a href="salary_report.html" class="nav-item">
                 <span class="nav-icon">📈</span>
                 <span data-i18n="salary_report">Salary Report</span>
@@ -219,7 +246,25 @@
                 <span class="nav-icon">💬</span>
                 <span data-i18n="manage_feedback">Feedback / Support</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            
+            <!-- Setting Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('settingsDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">⚙️</span>
+                    <span data-i18n="setting">Setting</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="settingsDropdown">
+                <a href="settings.html" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">🛠️</span>
+                    <span data-i18n="app_settings">App Settings</span>
+                </a>
+                <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                    <span class="nav-icon">🏢</span>
+                    <span data-i18n="manage_branches">Manage Branches</span>
+                </a>
+            </div>
         </nav>
     </div>
 
