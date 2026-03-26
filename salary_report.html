@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Report - Teamsive Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -96,7 +97,7 @@
 
         .nav-item:hover,
         .nav-item.active {
-            background: rgba(0, 255, 195, 0.08);
+            background: var(--primary-hover-bg);
             color: var(--primary);
         }
 
@@ -372,8 +373,7 @@
                 <h1>Salary Report</h1>
             </div>
             <div class="top-bar-actions">
-                <button onclick="toggleTheme()"
-                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                
                 <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
@@ -453,7 +453,7 @@
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
-        window.toggleTheme = () => { document.body.classList.toggle('light-mode'); };
+        
 
         onValue(ref(db, "settings/currencySymbol"), snap => {
             currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";

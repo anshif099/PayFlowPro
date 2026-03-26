@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Branches - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -94,12 +95,12 @@
         }
 
         .nav-item:hover {
-            background: rgba(0, 255, 195, 0.08);
+            background: var(--primary-hover-bg);
             color: var(--primary);
         }
 
         .nav-item.active {
-            background: rgba(0, 255, 195, 0.15);
+            background: var(--primary-active-bg);
             color: var(--primary);
             font-weight: 600;
         }
@@ -472,8 +473,7 @@
                 <h1>Manage Branches</h1>
             </div>
             <div class="top-bar-actions">
-                <button onclick="toggleTheme()"
-                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
+                
                 <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>

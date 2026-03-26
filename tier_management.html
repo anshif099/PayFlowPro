@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tier Management - Teamsive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --sidebar-width: 260px;
+        }
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; padding: 32px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        
+        .card { background: var(--bg-card); border-radius: 16px; padding: 28px; border: 1px solid var(--border); margin-bottom: 24px; }
+        .card h3 { margin-bottom: 20px; font-size: 18px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        select, input { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+        .feature-item { display: flex; align-items: center; gap: 10px; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
+        .feature-item input { width: auto; margin: 0; }
+
+        button { padding: 12px 24px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; font-size: 15px; }
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+    <div class="main-content" style="margin-left: 0; max-width: 800px; margin: 0 auto; padding-top: 50px;">
+        <div class="top-bar">
+            <h1>🛠️ Manage Tiers</h1>
+            <button onclick="location='subscriptions.html'" style="width: auto; background: transparent; border: 1px solid var(--border); color: var(--text);">Back</button>
+        </div>
+
+        <div class="card">
+            <h3>Select Tier to Configure</h3>
+            <div class="form-group">
+                <select id="tierSelect" onchange="fetchTierData(this.value)">
+                    <option value="free_trial">Free Trial</option>
+                    <option value="bronze">Bronze</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                    <option value="platinum">Platinum</option>
+                    <option value="diamond">Diamond</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Default Validity (Days)</label>
+                <input type="number" id="validityInput" placeholder="e.g., 30">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Allocate Features</h3>
+            <div class="feature-grid" id="featureGrid">
+                <!-- Features injected here -->
+            </div>
+            <div style="margin-top: 32px;">
+                <button onclick="saveTierData()">Save Tier Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain: "payflowpro-6e62d.firebaseapp.com", databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId: "payflowpro-6e62d", storageBucket: "payflowpro-6e62d.firebasestorage.app", messagingSenderId: "69298740438", appId: "1:69298740438:web:18fd85e982e083e1543d77" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const featureLabels = {
+            'employees': '👥 Employees',
+            'interval': '⏲️ Interval',
+            'attendance': '✅ Attendance',
+            'leaves': '🏖️ Leaves',
+            'salary': '💰 Salary',
+            'monthly_report': '📑 Monthly Report',
+            'salary_report': '📈 Salary Report',
+            'statutory_calculation': '⚖️ Statutory',
+            'documents': '📄 Documents',
+            'leaderboard': '🏆 Leaderboard',
+            'ai_prediction': '🧠 AI Prediction',
+            'feedback': '💬 Feedback',
+            'notes': '📝 Notes',
+            'branches': '🏢 Branches'
+        };
+
+        const allocatedFeatures = {};
+
+        function initFeatures() {
+            const grid = document.getElementById('featureGrid');
+            for (const key in featureLabels) {
+                const item = document.createElement('div');
+                item.className = 'feature-item';
+                item.onclick = () => {
+                    const cb = item.querySelector('input');
+                    cb.checked = !cb.checked;
+                    allocatedFeatures[key] = cb.checked;
+                };
+                item.innerHTML = `<input type="checkbox" id="cb_${key}"> <span>${featureLabels[key]}</span>`;
+                grid.appendChild(item);
+                allocatedFeatures[key] = false;
+                
+                // Prevent click on checkbox from bubbling
+                item.querySelector('input').onclick = (e) => {
+                    e.stopPropagation();
+                    allocatedFeatures[key] = e.target.checked;
+                };
+            }
+        }
+
+        window.fetchTierData = async (tier) => {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            const snapshot = await get(ref(db, `plan_definitions/${tier}`));
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                document.getElementById('validityInput').value = data.validity || 30;
+                const features = data.features || {};
+                for (const key in featureLabels) {
+                    const cb = document.getElementById(`cb_${key}`);
+                    cb.checked = features[key] === true;
+                    allocatedFeatures[key] = cb.checked;
+                }
+            } else {
+                document.getElementById('validityInput').value = 30;
+                for (const key in featureLabels) {
+                    document.getElementById(`cb_${key}`).checked = false;
+                    allocatedFeatures[key] = false;
+                }
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        };
+
+        window.saveTierData = async () => {
+            const tier = document.getElementById('tierSelect').value;
+            const validity = parseInt(document.getElementById('validityInput').value) || 30;
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                await set(ref(db, `plan_definitions/${tier}`), {
+                    name: tier.toUpperCase().replace('_', ' '),
+                    validity: validity,
+                    features: allocatedFeatures,
+                    updatedAt: new Date().toISOString()
+                });
+                alert('Tier saved successfully!');
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        };
+
+        initFeatures();
+        fetchTierData('free_trial');
+    </script>
+</body>
+</html>

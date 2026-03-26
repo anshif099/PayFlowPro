@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Teamsive Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -94,12 +95,12 @@
         }
 
         .nav-item:hover {
-            background: rgba(0, 255, 195, .08);
+            background: var(--primary-hover-bg);
             color: var(--primary)
         }
-
+ 
         .nav-item.active {
-            background: rgba(0, 255, 195, .15);
+            background: var(--primary-active-bg);
             color: var(--primary);
             font-weight: 600
         }
@@ -528,6 +529,79 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary)
         }
+
+        /* Color Picker Styles */
+        .color-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+        }
+
+        .color-box.selected {
+            border-color: var(--text);
+            transform: scale(1.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-input);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: #000;
+        }
     </style>
 </head>
 
@@ -716,7 +790,31 @@
             </div>
         </div>
 
-        <div class="dashboard-section">
+        <div class="dashboard-section" id="settings-container">
+            <div class="card">
+                <h3>🎨 Theme & Appearance</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px">Customize the look and feel of your admin dashboard.</p>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h4 style="font-size:15px; margin-bottom:4px;">Dark Mode</h4>
+                        <p style="color:var(--text-muted); font-size:13px;">Toggle between dark and light themes.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle" onchange="toggleDarkLight(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+                    <h4 style="font-size:15px; margin-bottom:4px;">Primary Color</h4>
+                    <p style="color:var(--text-muted); font-size:13px;">Choose an accent color that represents your brand.</p>
+                    <div class="color-options" id="colorPrimaryPicker">
+                        <!-- Colors will be injected here -->
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <h3 data-i18n="office_time_settings">Office Time Settings</h3>
                 <div class="form-grid">
@@ -878,7 +976,74 @@
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
         if (localStorage.getItem("admin") !== "true") { location = "index.html" }
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open') };
+        if (localStorage.getItem("admin") !== "true") { location = "index.html" }
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open') };
         window.logout = () => { localStorage.clear(); location = "index.html" };
+
+        // Theme Initialization
+        const themeColors = [
+            '#00ffc3', // Default Green
+            '#00a8ff', // Blue
+            '#ff4d4d', // Red
+            '#ff9f43', // Orange
+            '#a29bfe', // Purple
+            '#fd79a8', // Pink
+            '#55efc4', // Mint
+            '#fab1a0'  // Peach
+        ];
+
+        window.toggleDarkLight = (isDark) => {
+            window.themeManager.setTheme(isDark ? 'dark' : 'light');
+        };
+
+        const currentTheme = localStorage.getItem('admin_theme') || 'dark';
+        document.getElementById('themeToggle').checked = currentTheme === 'dark';
+
+        const colorPicker = document.getElementById('colorPrimaryPicker');
+        const currentPrimary = localStorage.getItem('admin_primary_color') || '#00ffc3';
+
+        themeColors.forEach(color => {
+            const box = document.createElement('div');
+            box.className = 'color-box' + (color.toLowerCase() === currentPrimary.toLowerCase() ? ' selected' : '');
+            box.style.backgroundColor = color;
+            box.onclick = () => {
+                document.querySelectorAll('.color-box').forEach(b => b.classList.remove('selected'));
+                box.classList.add('selected');
+                window.themeManager.setPrimaryColor(color);
+                // Sync with Firebase
+                set(ref(db, `settings/primaryColor`), color);
+            };
+            colorPicker.appendChild(box);
+        });
+
+        // Listen for remote primary color updates
+        onValue(ref(db, `settings/primaryColor`), s => {
+            if (s.exists()) {
+                const color = s.val();
+                if (color !== localStorage.getItem('admin_primary_color')) {
+                    window.themeManager.setPrimaryColor(color);
+                    // Update picker selection
+                    document.querySelectorAll('.color-box').forEach(b => {
+                        if (window.themeManager.rgbToHex(b.style.backgroundColor) === color.toLowerCase()) {
+                            b.classList.add('selected');
+                        } else {
+                            b.classList.remove('selected');
+                        }
+                    });
+                }
+            }
+        });
+
+        // Helper: RGB to Hex (since browser returns rgb)
+        window.themeManager.rgbToHex = (rgb) => {
+            if (!rgb) return '';
+            const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            if (!match) return rgb;
+            const r = parseInt(match[1]).toString(16).padStart(2, '0');
+            const g = parseInt(match[2]).toString(16).padStart(2, '0');
+            const b = parseInt(match[3]).toString(16).padStart(2, '0');
+            return `#${r}${g}${b}`;
+        };
 
         const role = localStorage.getItem("role");
         const branch = localStorage.getItem("branch");

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Prediction - Teamsive Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -22,6 +23,16 @@
             --warning: #ffa726;
             --sidebar-width: 260px;
         }
+
+    body.light-mode {
+        --bg-dark: #f0f2f5;
+        --bg-card: #ffffff;
+        --bg-input: #f8f9fa;
+        --text: #1a1d21;
+        --text-muted: #6c757d;
+        --border: #e9ecef;
+    }
+
 
         * {
             margin: 0;
@@ -86,12 +97,12 @@
         }
 
         .nav-item:hover {
-            background: rgba(0, 255, 195, 0.08);
+            background: var(--primary-hover-bg);
             color: var(--primary);
         }
 
         .nav-item.active {
-            background: rgba(0, 255, 195, 0.15);
+            background: var(--primary-active-bg);
             color: var(--primary);
             font-weight: 600;
         }

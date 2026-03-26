@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Subscriptions - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -43,8 +44,8 @@
         .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .sidebar-nav { margin-top: 24px; padding: 0 12px; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
-        .nav-item:hover { background: rgba(0, 255, 195, 0.08); color: var(--primary); }
-        .nav-item.active { background: rgba(0, 255, 195, 0.15); color: var(--primary); font-weight: 600; }
+        .nav-item:hover { background: var(--primary-hover-bg); color: var(--primary); }
+        .nav-item.active { background: var(--primary-active-bg); color: var(--primary); font-weight: 600; }
         .nav-icon { width: 20px; height: 20px; font-size: 18px; }
 
         /* ============ MAIN CONTENT ============ */
@@ -276,14 +277,18 @@
                 <h1>Subscriptions Overview</h1>
             </div>
             <div class="top-bar-actions">
-                <button onclick="toggleTheme()" style="background:transparent;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:50%;cursor:pointer">🌓</button>
                 <button class="btn-cancel" onclick="logout()" style="padding: 8px 16px;">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
             <div class="card">
-                <h3>Company Subscriptions</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Company Subscriptions</h3>
+                    <button onclick="location='tier_management.html'" style="display: flex; align-items: center; gap: 8px; background: var(--primary-hover-bg); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; padding: 10px 16px;">
+                        <span>⚙️</span> Manage Tiers
+                    </button>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -311,12 +316,7 @@
             <p id="modalCompanyName" style="margin-bottom: 20px; color: var(--primary); font-weight: bold;"></p>
             <label>Select Plan</label>
             <select id="planSelect">
-                <option value="free_trial">Free Trial (14 Days)</option>
-                <option value="1_month">1 Month</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly (3 Months)</option>
-                <option value="half_year">Half Year (6 Months)</option>
-                <option value="yearly">Yearly (12 Months)</option>
+                <!-- Tiers will be loaded here -->
             </select>
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Cancel</button>
@@ -369,6 +369,21 @@
         window.logout = () => { localStorage.clear(); location = "index.html"; }
 
         let currentTargetCompanyId = null;
+        let planDefinitions = {};
+
+        // Fetch Tier Definitions
+        onValue(ref(db, 'plan_definitions'), (snapshot) => {
+            planDefinitions = snapshot.exists() ? snapshot.val() : {};
+            const planSelect = document.getElementById('planSelect');
+            planSelect.innerHTML = "";
+            for (const key in planDefinitions) {
+                const plan = planDefinitions[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.innerText = `${plan.name} (${plan.validity} Days)`;
+                planSelect.appendChild(option);
+            }
+        });
 
         onValue(ref(db, 'companies'), (snapshot) => {
             const list = document.getElementById('companyList');
@@ -488,15 +503,10 @@
         };
 
         function getDurationDays(plan) {
-            switch(plan) {
-                case 'free_trial': return 14;
-                case '1_month': return 30;
-                case 'monthly': return 30;
-                case 'quarterly': return 90;
-                case 'half_year': return 180;
-                case 'yearly': return 365;
-                default: return 30;
+            if (planDefinitions[plan]) {
+                return planDefinitions[plan].validity || 30;
             }
+            return 30;
         }
 
         function generateRandomCode() {
