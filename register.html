@@ -602,7 +602,7 @@
         <div class="success-modal">
             <div class="success-icon">🎉</div>
             <h2>Registration Successful!</h2>
-            <p class="success-subtitle">Your company has been registered with a Free Trial subscription. Save the details below.</p>
+            <p class="success-subtitle">Your company is registered! Copy your details below — you'll need the Subscription Code to activate your Free Trial on first login.</p>
 
             <div class="info-card">
                 <div class="info-label">Company ID</div>
@@ -612,8 +612,8 @@
                 </div>
             </div>
 
-            <div class="info-card">
-                <div class="info-label">Subscription Code (Free Trial)</div>
+            <div class="info-card" style="border-color: rgba(255,167,38,0.4); background: rgba(255,167,38,0.05);">
+                <div class="info-label" style="color: var(--warning);">🔑 Subscription Activation Code</div>
                 <div class="info-value warning" id="resultSubCode">
                     <span id="resultSubCodeText">—</span>
                     <button class="copy-btn" onclick="copyToClipboard('resultSubCodeText', this)">📋 Copy</button>
@@ -621,7 +621,7 @@
             </div>
 
             <div class="modal-note">
-                ⚠️ <strong>Important:</strong> Please save your Company ID and Subscription Code. You'll need the Company ID to log in. The subscription code serves as your activation reference.
+                🔑 <strong>Action Required:</strong> When you login for the first time, a popup will ask for your Subscription Code. Enter the code above to activate your <strong>Free Trial</strong>. If you don't enter it, you'll be automatically logged out.
             </div>
 
             <button class="done-btn" onclick="closeSuccessModal()">✅ Got it, I'm done</button>
@@ -772,27 +772,24 @@
                         status: 'active'
                     }),
 
-                    // Save Subscription (auto-activated)
+                    // Save Subscription (NOT activated yet — admin activates on first login with code)
                     set(ref(db, 'subscriptions/' + companyId), {
                         plan: 'free_trial',
                         duration: trialDays,
                         createdAt: now.toISOString(),
-                        activated: true,
-                        activationDate: now.toISOString().split('T')[0],
-                        expiryDate: expiry.toISOString().split('T')[0],
+                        activated: false,
                         activationCode: subCode,
                         registeredVia: 'self_registration'
                     }),
 
-                    // Save Activation Code
+                    // Save Activation Code (unused — company admin enters this on first login)
                     set(ref(db, 'activationCodes/' + subCode), {
                         code: subCode,
                         companyId: companyId,
                         plan: 'free_trial',
                         duration: trialDays,
                         createdAt: now.toISOString(),
-                        used: true,
-                        usedAt: now.toISOString()
+                        used: false
                     })
                 ];
 
