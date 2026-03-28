@@ -641,14 +641,29 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="companySubModal">
-      <div class="modal">
-          <h3>Activate Subscription</h3>
-          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Your subscription has expired or hasn't been activated yet. Please enter your activation code.</p>
-          <input type="text" id="activationCodeInput" placeholder="SUB-XXXX-XXXX">
-          <button onclick="activateSubscriptionCode()">Activate</button>
+  <!-- Activation Modal - NON-DISMISSIBLE, auto-logout on timeout -->
+  <div class="modal-overlay" id="companySubModal" onclick="return false;" style="cursor:default;">
+      <div class="modal" style="max-width:420px; width:90%;">
+          <div style="font-size:48px; margin-bottom:12px;">🔑</div>
+          <h3>Activate Your Subscription</h3>
+          <p style="color:var(--text-muted); font-size:13px; margin-bottom:8px; line-height:1.6;">
+              Your account requires a subscription activation code.<br>
+              Please enter the code provided by your admin to continue.
+          </p>
+          <div id="countdownBanner" style="background:rgba(255,92,92,0.1); border:1px solid var(--danger); border-radius:8px; padding:10px; margin-bottom:16px; font-size:13px; color:var(--danger); font-weight:600;">
+              ⏳ Auto-logout in <span id="countdownTimer">120</span>s
+          </div>
+          <input type="text" id="activationCodeInput" placeholder="SUB-XXXX-XXXX"
+              style="text-transform:uppercase; letter-spacing:2px; font-family:monospace; font-size:16px; text-align:center;"
+              onkeydown="if(event.key==='Enter') activateSubscriptionCode()">
+          <div style="display:flex; gap:10px; margin-top:4px;">
+              <button onclick="activateSubscriptionCode()" style="flex:1;">✅ Activate</button>
+              <button onclick="window.logout()" style="flex:0.5; background:transparent; border:1px solid var(--border); color:var(--text-muted);">Logout</button>
+          </div>
+          <p id="activateMsg" style="margin-top:12px; font-size:13px; display:none;"></p>
       </div>
   </div>
+
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -698,6 +713,24 @@
 
          if (needsActivation) {
             document.getElementById('companySubModal').style.display = 'flex';
+
+            // Start 120-second countdown auto-logout
+            let secondsLeft = 120;
+            const timerEl = document.getElementById('countdownTimer');
+            const bannerEl = document.getElementById('countdownBanner');
+            window._subCountdown = setInterval(() => {
+                secondsLeft--;
+                if (timerEl) timerEl.textContent = secondsLeft;
+                // Turn banner red-urgent below 30s
+                if (secondsLeft <= 30 && bannerEl) {
+                    bannerEl.style.background = 'rgba(255,92,92,0.25)';
+                    bannerEl.style.animation = 'pulse 0.8s infinite alternate';
+                }
+                if (secondsLeft <= 0) {
+                    clearInterval(window._subCountdown);
+                    window.logout();
+                }
+            }, 1000);
          } else {
              const planLabel = (sub.plan || 'free_trial').replace(/_/g, ' ');
              document.getElementById('subWidgetPlan').innerText = planLabel;
