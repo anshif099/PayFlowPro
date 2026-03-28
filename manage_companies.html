@@ -243,6 +243,21 @@
             color: white;
         }
 
+        .btn-share {
+            background: linear-gradient(135deg, var(--primary), #00e6af);
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-share:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 255, 195, 0.3);
+        }
+
         /* ============ TABLE ============ */
         .table-container {
             overflow-x: auto;
@@ -273,6 +288,113 @@
 
         tr:hover {
             background: rgba(0, 255, 195, 0.03);
+        }
+
+        /* ============ SHARE MODAL ============ */
+        .share-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            backdrop-filter: blur(6px);
+        }
+
+        .share-modal-overlay.active {
+            display: flex;
+        }
+
+        .share-modal {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 36px;
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .share-modal h3 {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .share-modal p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .share-link-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .share-link-box input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px dashed var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            font-size: 13px;
+            font-family: monospace;
+        }
+
+        .share-link-box input:focus {
+            outline: none;
+        }
+
+        .share-link-box button {
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        .share-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .share-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .btn-native-share {
+            background: #4285f4;
+            color: white;
+            border: none;
+        }
+
+        .btn-native-share:hover {
+            background: #3367d6;
+        }
+
+        .btn-close-share {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-close-share:hover {
+            background: rgba(255,255,255,0.05);
         }
 
         @media (max-width: 768px) {
@@ -481,7 +603,7 @@
                 <h1>Manage Companies</h1>
             </div>
             <div class="top-bar-actions">
-                
+                <button class="btn-share" onclick="openShareModal()">🔗 Share Registration Form</button>
                 <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
@@ -542,6 +664,23 @@
         </div>
     </div>
 
+    <!-- SHARE MODAL -->
+    <div class="share-modal-overlay" id="shareModal">
+        <div class="share-modal">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔗</div>
+            <h3>Share Registration Form</h3>
+            <p>Share this link with companies so they can self-register with a Free Trial subscription.</p>
+            <div class="share-link-box">
+                <input type="text" id="shareLink" readonly>
+                <button onclick="copyShareLink()">📋 Copy</button>
+            </div>
+            <div class="share-actions">
+                <button class="btn-native-share" id="nativeShareBtn" onclick="nativeShare()">📤 Share</button>
+                <button class="btn-close-share" onclick="closeShareModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
@@ -577,6 +716,50 @@
         };
 
         window.logout = () => { localStorage.clear(); location = "index.html"; }
+
+        // --- SHARE REGISTRATION FORM ---
+        function getRegisterUrl() {
+            const base = window.location.href.replace(/\/[^/]*$/, '/');
+            return base + 'register.html';
+        }
+
+        window.openShareModal = () => {
+            const link = getRegisterUrl();
+            document.getElementById('shareLink').value = link;
+            document.getElementById('shareModal').classList.add('active');
+
+            // Hide native share if not supported
+            if (!navigator.share) {
+                document.getElementById('nativeShareBtn').style.display = 'none';
+            }
+        };
+
+        window.closeShareModal = () => {
+            document.getElementById('shareModal').classList.remove('active');
+        };
+
+        window.copyShareLink = () => {
+            const input = document.getElementById('shareLink');
+            input.select();
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = input.nextElementSibling;
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => btn.innerHTML = orig, 2000);
+            });
+        };
+
+        window.nativeShare = async () => {
+            try {
+                await navigator.share({
+                    title: 'Register on Teamsive',
+                    text: 'Register your company on Teamsive and start your Free Trial!',
+                    url: getRegisterUrl()
+                });
+            } catch (e) {
+                // User cancelled or not supported
+            }
+        };
 
         // --- MANAGE COMPANIES ---
 

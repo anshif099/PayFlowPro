@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Your Company - Teamsive</title>
+    <meta name="description" content="Register your company on Teamsive and start your Free Trial today. Manage employees, attendance, salary and more.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --primary-glow: rgba(0, 255, 195, 0.15);
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffb700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0, 255, 195, 0.04) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(0, 255, 195, 0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(0, 200, 255, 0.02) 0%, transparent 50%);
+            animation: bgFloat 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(1deg); }
+            66% { transform: translate(-20px, 20px) rotate(-1deg); }
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 640px;
+            padding: 24px;
+        }
+
+        /* Header */
+        .reg-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .reg-header .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .reg-header .brand-icon {
+            font-size: 32px;
+        }
+
+        .reg-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Card */
+        .reg-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 36px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(0, 255, 195, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reg-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #00c8ff, var(--primary));
+            background-size: 200% auto;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .reg-card h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reg-card .subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+
+        /* Section Divider */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary);
+            margin-bottom: 16px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 13px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(139, 146, 160, 0.5);
+        }
+
+        .form-group input:disabled,
+        .form-group select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Subscription Badge */
+        .subscription-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(0, 255, 195, 0.08), rgba(0, 200, 255, 0.05));
+            border: 1px solid rgba(0, 255, 195, 0.2);
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+
+        .subscription-badge .badge-icon {
+            font-size: 28px;
+        }
+
+        .subscription-badge .badge-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .subscription-badge .badge-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 24px 0;
+        }
+
+        /* Submit */
+        .submit-btn {
+            width: 100%;
+            padding: 15px 24px;
+            background: linear-gradient(135deg, var(--primary), #00e6af);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 195, 0.3);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Loading spinner */
+        .btn-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.2);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SUCCESS MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            backdrop-filter: blur(8px);
+            padding: 24px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-modal {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px 36px;
+            max-width: 460px;
+            width: 100%;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(0, 255, 195, 0.15), rgba(0, 200, 255, 0.1));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            border: 2px solid rgba(0, 255, 195, 0.3);
+        }
+
+        .success-modal h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+
+        .success-modal .success-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: var(--bg-input);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .info-card .info-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .info-card .info-value {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .info-card .info-value.primary {
+            color: var(--primary);
+        }
+
+        .info-card .info-value.warning {
+            color: var(--warning);
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .copy-btn.copied {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .modal-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            line-height: 1.5;
+            padding: 12px;
+            background: rgba(255, 183, 0, 0.08);
+            border: 1px solid rgba(255, 183, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .done-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .done-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Footer */
+        .reg-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .reg-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .reg-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reg-card {
+                padding: 28px 20px;
+            }
+
+            .success-modal {
+                padding: 32px 24px;
+            }
+        }
+
+        /* Error text */
+        .error-text {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error input {
+            border-color: var(--danger);
+        }
+
+        .form-group.error .error-text {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-wrapper">
+        <!-- Header -->
+        <div class="reg-header">
+            <div class="brand">
+                <span class="brand-icon">💼</span>
+                Teamsive
+            </div>
+            <p>Register your company and start managing your team with a <strong style="color: var(--primary);">Free Trial</strong></p>
+        </div>
+
+        <!-- Registration Card -->
+        <div class="reg-card">
+            <h2>🚀 Company Registration</h2>
+            <p class="subtitle">Fill in your details to create your company account</p>
+
+            <form id="registerForm" onsubmit="return false;">
+                <!-- Company Details -->
+                <div class="section-label">Company Details</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="companyName">Company Name</label>
+                        <input type="text" id="companyName" placeholder="e.g. Acme Corp" required>
+                        <span class="error-text" id="companyNameError">Company name is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="companyId">Company ID (Alias)</label>
+                        <input type="text" id="companyId" placeholder="e.g. acme_corp" required>
+                        <span class="error-text" id="companyIdError">Company ID is required</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Admin Details -->
+                <div class="section-label">Admin Account</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="adminName">Admin Name</label>
+                        <input type="text" id="adminName" placeholder="Your full name" required>
+                        <span class="error-text" id="adminNameError">Admin name is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmail">Admin Email (Login ID)</label>
+                        <input type="email" id="adminEmail" placeholder="you@company.com" required>
+                        <span class="error-text" id="adminEmailError">Valid email is required</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Subscription -->
+                <div class="section-label">Subscription Plan</div>
+                <div class="form-group full-width" style="margin-bottom: 28px;">
+                    <div class="subscription-badge">
+                        <span class="badge-icon">🎁</span>
+                        <div class="badge-info">
+                            <h4>Free Trial</h4>
+                            <p id="trialDuration">Loading trial details...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="submit-btn" id="submitBtn" onclick="submitRegistration()">
+                    <span id="btnText">✨ Register & Start Free Trial</span>
+                    <div class="btn-spinner" id="btnSpinner"></div>
+                </button>
+            </form>
+        </div>
+
+        <div class="reg-footer">
+            Already have an account? <a href="index.html">Login here</a>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-overlay" id="successModal">
+        <div class="success-modal">
+            <div class="success-icon">🎉</div>
+            <h2>Registration Successful!</h2>
+            <p class="success-subtitle">Your company has been registered with a Free Trial subscription. Save the details below.</p>
+
+            <div class="info-card">
+                <div class="info-label">Company ID</div>
+                <div class="info-value primary" id="resultCompanyId">
+                    <span id="resultCompanyIdText">—</span>
+                    <button class="copy-btn" onclick="copyToClipboard('resultCompanyIdText', this)">📋 Copy</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Subscription Code (Free Trial)</div>
+                <div class="info-value warning" id="resultSubCode">
+                    <span id="resultSubCodeText">—</span>
+                    <button class="copy-btn" onclick="copyToClipboard('resultSubCodeText', this)">📋 Copy</button>
+                </div>
+            </div>
+
+            <div class="modal-note">
+                ⚠️ <strong>Important:</strong> Please save your Company ID and Subscription Code. You'll need the Company ID to log in. The subscription code serves as your activation reference.
+            </div>
+
+            <button class="done-btn" onclick="closeSuccessModal()">✅ Got it, I'm done</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Load Free Trial plan info
+        async function loadTrialInfo() {
+            try {
+                const snapshot = await get(ref(db, 'plan_definitions/free_trial'));
+                if (snapshot.exists()) {
+                    const plan = snapshot.val();
+                    const days = plan.validity || 14;
+                    document.getElementById('trialDuration').textContent = `${days} days free access • No credit card required`;
+                } else {
+                    document.getElementById('trialDuration').textContent = '14 days free access • No credit card required';
+                }
+            } catch (e) {
+                document.getElementById('trialDuration').textContent = 'Free access • No credit card required';
+            }
+        }
+
+        loadTrialInfo();
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'SUB-';
+            for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            code += '-';
+            for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
+        }
+
+        function showError(fieldId, errorId, msg) {
+            const group = document.getElementById(fieldId).closest('.form-group');
+            group.classList.add('error');
+            document.getElementById(errorId).textContent = msg;
+        }
+
+        window.submitRegistration = async function () {
+            clearErrors();
+
+            const companyName = document.getElementById('companyName').value.trim();
+            let companyId = document.getElementById('companyId').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const adminName = document.getElementById('adminName').value.trim();
+            const adminEmail = document.getElementById('adminEmail').value.trim();
+
+            // Validation
+            let hasError = false;
+
+            if (!companyName) {
+                showError('companyName', 'companyNameError', 'Company name is required');
+                hasError = true;
+            }
+            if (!companyId) {
+                showError('companyId', 'companyIdError', 'Company ID is required');
+                hasError = true;
+            }
+            if (!adminName) {
+                showError('adminName', 'adminNameError', 'Admin name is required');
+                hasError = true;
+            }
+            if (!adminEmail) {
+                showError('adminEmail', 'adminEmailError', 'Admin email is required');
+                hasError = true;
+            }
+            if (adminEmail && !adminEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showError('adminEmail', 'adminEmailError', 'Please enter a valid email');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Update the companyId field with sanitized value
+            document.getElementById('companyId').value = companyId;
+
+            // Show loading
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            document.getElementById('btnText').textContent = 'Registering...';
+            document.getElementById('btnSpinner').style.display = 'inline-block';
+
+            try {
+                // Check if company ID already exists
+                const companySnap = await get(ref(db, 'companies/' + companyId));
+                if (companySnap.exists()) {
+                    showError('companyId', 'companyIdError', 'This Company ID is already taken. Try a different one.');
+                    submitBtn.disabled = false;
+                    document.getElementById('btnText').textContent = '✨ Register & Start Free Trial';
+                    document.getElementById('btnSpinner').style.display = 'none';
+                    return;
+                }
+
+                // Get free trial plan details
+                const planSnap = await get(ref(db, 'plan_definitions/free_trial'));
+                let trialDays = 14;
+                if (planSnap.exists()) {
+                    trialDays = planSnap.val().validity || 14;
+                }
+
+                // Generate subscription code
+                const subCode = generateRandomCode();
+                const now = new Date();
+                const expiry = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+
+                const keyId = adminEmail.replace(/[^a-zA-Z0-9]/g, '_');
+
+                // Save everything to Firebase
+                const promises = [
+                    // Save Company
+                    update(ref(db, 'companies/' + companyId), {
+                        companyName: companyName,
+                        companyId: companyId,
+                        adminName: adminName,
+                        adminEmail: adminEmail,
+                        createdAt: now.toISOString(),
+                        registeredVia: 'self_registration'
+                    }),
+
+                    // Save Admin
+                    update(ref(db, 'admins/' + keyId), {
+                        name: adminName,
+                        email: adminEmail,
+                        companyId: companyId,
+                        companyName: companyName,
+                        role: 'company_admin',
+                        status: 'active'
+                    }),
+
+                    // Save Subscription (auto-activated)
+                    set(ref(db, 'subscriptions/' + companyId), {
+                        plan: 'free_trial',
+                        duration: trialDays,
+                        createdAt: now.toISOString(),
+                        activated: true,
+                        activationDate: now.toISOString().split('T')[0],
+                        expiryDate: expiry.toISOString().split('T')[0],
+                        activationCode: subCode,
+                        registeredVia: 'self_registration'
+                    }),
+
+                    // Save Activation Code
+                    set(ref(db, 'activationCodes/' + subCode), {
+                        code: subCode,
+                        companyId: companyId,
+                        plan: 'free_trial',
+                        duration: trialDays,
+                        createdAt: now.toISOString(),
+                        used: true,
+                        usedAt: now.toISOString()
+                    })
+                ];
+
+                await Promise.all(promises);
+
+                // Show success modal
+                document.getElementById('resultCompanyIdText').textContent = companyId;
+                document.getElementById('resultSubCodeText').textContent = subCode;
+                document.getElementById('successModal').classList.add('active');
+
+                // Reset form
+                document.getElementById('registerForm').reset();
+
+            } catch (e) {
+                alert('Registration failed: ' + e.message);
+            }
+
+            submitBtn.disabled = false;
+            document.getElementById('btnText').textContent = '✨ Register & Start Free Trial';
+            document.getElementById('btnSpinner').style.display = 'none';
+        };
+
+        window.copyToClipboard = function (elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        };
+
+        window.closeSuccessModal = function () {
+            document.getElementById('successModal').classList.remove('active');
+        };
+    </script>
+
+</body>
+</html>
