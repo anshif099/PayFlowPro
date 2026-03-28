@@ -366,6 +366,11 @@
     .modal input { width: 100%; padding: 12px; margin-bottom: 20px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; text-align: center; font-family: monospace; letter-spacing: 2px; }
     .modal button { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; }
     .modal button:hover { background: var(--primary-hover); }
+
+    @keyframes pulse {
+        from { opacity: 1; }
+        to   { opacity: 0.6; }
+    }
   </style>
 </head>
 
@@ -759,18 +764,25 @@
 
     window.activateSubscriptionCode = async () => {
        const code = document.getElementById('activationCodeInput').value.trim().toUpperCase();
-       if (!code) return alert("Enter activation code");
+       const msgEl = document.getElementById('activateMsg');
+
+       const showMsg = (text, isError) => {
+           msgEl.style.display = 'block';
+           msgEl.style.color = isError ? 'var(--danger)' : 'var(--success)';
+           msgEl.textContent = text;
+       };
+
+       if (!code) return showMsg('Please enter your activation code first.', true);
 
        try {
            const snap = await get(ref(db, 'activationCodes/' + code));
-           if (!snap.exists()) return alert("Invalid activation code. Please check and try again.");
+           if (!snap.exists()) return showMsg('❌ Invalid code. Please check and try again.', true);
 
            const codeData = snap.val();
-           if (codeData.used) return alert("This activation code has already been used.");
+           if (codeData.used) return showMsg('❌ This code has already been used.', true);
 
-           // Allow code if no companyId restriction OR matches this company
            if (codeData.companyId && codeData.companyId !== companyIdForSub) {
-               return alert("This activation code is not valid for your company.");
+               return showMsg('❌ This code is not valid for your company.', true);
            }
 
            const today = new Date();
@@ -793,11 +805,14 @@
                activationCode: code
            });
 
+           // Stop the auto-logout countdown
+           if (window._subCountdown) clearInterval(window._subCountdown);
+
+           showMsg('✅ Activated! Loading dashboard...', false);
            document.getElementById('companySubModal').style.display = 'none';
-           alert("✅ Subscription Activated Successfully!");
-           location.reload();
+           setTimeout(() => location.reload(), 800);
        } catch (err) {
-           alert("Error activating subscription: " + err.message);
+           showMsg('Error: ' + err.message, true);
        }
     };
 
