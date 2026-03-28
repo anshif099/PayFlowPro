@@ -791,6 +791,41 @@
         </div>
 
         <div class="dashboard-section" id="settings-container">
+            <!-- Subscription Status Card for company_admin -->
+            <div class="card" id="subscriptionCard" style="display:none; border: 1px solid rgba(0,255,195,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+                    <div>
+                        <h3 style="margin-bottom:4px;">&#x1F4CB; Your Subscription</h3>
+                        <p style="color:var(--text-muted);font-size:13px;">Your current plan and access level</p>
+                    </div>
+                    <span id="subStatusBadge" style="font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; border:1px solid var(--primary); color:var(--primary);">LOADING...</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:24px;">
+                    <div style="background:var(--bg-input); padding:16px; border-radius:10px; border:1px solid var(--border);">
+                        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">Current Plan</div>
+                        <div id="subPlanName" style="font-size:18px; font-weight:700; color:var(--primary); text-transform:capitalize;">&#x2014;</div>
+                    </div>
+                    <div style="background:var(--bg-input); padding:16px; border-radius:10px; border:1px solid var(--border);">
+                        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">Activated On</div>
+                        <div id="subActivatedOn" style="font-size:15px; font-weight:600; color:var(--text);">&#x2014;</div>
+                    </div>
+                    <div style="background:var(--bg-input); padding:16px; border-radius:10px; border:1px solid var(--border);">
+                        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">Expires On</div>
+                        <div id="subExpiresOn" style="font-size:15px; font-weight:600; color:var(--warning);">&#x2014;</div>
+                    </div>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:20px;">
+                    <h4 style="font-size:14px; margin-bottom:6px;">&#x1F511; Enter Upgrade Code</h4>
+                    <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Have a subscription code from your admin? Enter it here to upgrade your plan.</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="activationCodeInput" placeholder="e.g. SUB-ABCD-1234" style="flex:1; min-width:200px; font-family:monospace; text-transform:uppercase; letter-spacing:2px;">
+                        <button onclick="redeemCode()" style="white-space:nowrap;">Redeem Code</button>
+                    </div>
+                    <p id="redeemMsg" style="margin-top:10px; font-size:13px; display:none;"></p>
+                </div>
+            </div>
+
+
             <div class="card">
                 <h3>🎨 Theme & Appearance</h3>
                 <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px">Customize the look and feel of your admin dashboard.</p>
@@ -971,7 +1006,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, remove, push, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
         const firebaseConfig = { apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain: "payflowpro-6e62d.firebaseapp.com", databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId: "payflowpro-6e62d", storageBucket: "payflowpro-6e62d.firebasestorage.app", messagingSenderId: "69298740438", appId: "1:69298740438:web:18fd85e982e083e1543d77" };
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
         if (localStorage.getItem("admin") !== "true") { location = "index.html" }
@@ -1045,7 +1080,108 @@
             return `#${r}${g}${b}`;
         };
 
-        const role = localStorage.getItem("role");
+        
+        // ---- Subscription Status for company_admin ----
+        if (role === 'company_admin') {
+            const companyId = localStorage.getItem('companyId');
+            const card = document.getElementById('subscriptionCard');
+            if (card) card.style.display = 'block';
+
+            if (companyId) {
+                get(ref(db, 'subscriptions/' + companyId)).then(snap => {
+                    if (snap.exists()) {
+                        const sub = snap.val();
+                        const planId = sub.plan || 'free_trial';
+                        const planName = planId.replace(/_/g, ' ').toUpperCase();
+                        const isExpired = sub.expiryDate && new Date(sub.expiryDate) < new Date();
+                        const statusText = !sub.activated ? 'PENDING' : isExpired ? 'EXPIRED' : 'ACTIVE';
+                        const statusColor = !sub.activated ? 'var(--warning)' : isExpired ? 'var(--danger)' : 'var(--success)';
+
+                        document.getElementById('subPlanName').textContent = planName;
+                        document.getElementById('subActivatedOn').textContent = sub.activationDate || '—';
+                        document.getElementById('subExpiresOn').textContent = sub.expiryDate || '—';
+                        document.getElementById('subExpiresOn').style.color = isExpired ? 'var(--danger)' : 'var(--warning)';
+                        const badge = document.getElementById('subStatusBadge');
+                        badge.textContent = statusText;
+                        badge.style.color = statusColor;
+                        badge.style.borderColor = statusColor;
+                    } else {
+                        document.getElementById('subPlanName').textContent = 'No Subscription';
+                        document.getElementById('subStatusBadge').textContent = 'NONE';
+                    }
+                });
+            }
+        }
+
+        window.redeemCode = async () => {
+            const code = (document.getElementById('activationCodeInput').value || '').trim().toUpperCase();
+            const msgEl = document.getElementById('redeemMsg');
+            msgEl.style.display = 'none';
+
+            if (!code) {
+                msgEl.style.display = 'block';
+                msgEl.style.color = 'var(--danger)';
+                msgEl.textContent = 'Please enter a code.';
+                return;
+            }
+
+            const companyId = localStorage.getItem('companyId');
+            try {
+                const codeSnap = await get(ref(db, 'activationCodes/' + code));
+                if (!codeSnap.exists()) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger)';
+                    msgEl.textContent = 'Invalid code. Please check and try again.';
+                    return;
+                }
+                const codeData = codeSnap.val();
+                if (codeData.used) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger)';
+                    msgEl.textContent = 'This code has already been used.';
+                    return;
+                }
+                if (codeData.companyId && codeData.companyId !== companyId) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger)';
+                    msgEl.textContent = 'This code is not valid for your company.';
+                    return;
+                }
+
+                // Fetch plan details for duration
+                const planSnap = await get(ref(db, 'plan_definitions/' + codeData.plan));
+                const duration = planSnap.exists() ? (planSnap.val().validity || codeData.duration || 30) : (codeData.duration || 30);
+                const now = new Date();
+                const expiry = new Date(now.getTime() + duration * 24 * 60 * 60 * 1000);
+
+                await update(ref(db, 'subscriptions/' + companyId), {
+                    plan: codeData.plan,
+                    duration: duration,
+                    activated: true,
+                    activationDate: now.toISOString().split('T')[0],
+                    expiryDate: expiry.toISOString().split('T')[0],
+                    activationCode: code
+                });
+
+                await update(ref(db, 'activationCodes/' + code), {
+                    used: true,
+                    usedAt: now.toISOString(),
+                    usedBy: companyId
+                });
+
+                msgEl.style.display = 'block';
+                msgEl.style.color = 'var(--success)';
+                msgEl.textContent = 'Plan activated successfully! Refreshing...';
+                setTimeout(() => location.reload(), 1500);
+            } catch(e) {
+                msgEl.style.display = 'block';
+                msgEl.style.color = 'var(--danger)';
+                msgEl.textContent = 'Error: ' + e.message;
+            }
+        };
+        // ---- End Subscription ----
+
+const role = localStorage.getItem("role");
         const branch = localStorage.getItem("branch");
         const currencyOptions = [
             { code: "INR", symbol: "₹" },

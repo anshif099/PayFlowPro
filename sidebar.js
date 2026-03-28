@@ -62,35 +62,50 @@
         }, 100);
     }
 
-    // Access Control Logic
+    // Access Control Logic — uses dynamic import to get its own Firebase instance
     async function initAccessControl() {
         if (role !== 'company_admin' || !companyId) return;
 
         try {
-            // We use the same Firebase reference as other pages, assuming it's already initialized or using global ref
-            // Since sidebar.js is included AFTER Firebase usually, we'll wait for a bit
-            setTimeout(async () => {
-                if (typeof firebase === 'undefined' && typeof db === 'undefined') return;
-                
-                // Fetch company's subscription
-                const subRef = ref(db, `subscriptions/${companyId}`);
-                const snapshot = await get(subRef);
-                
-                if (snapshot.exists()) {
-                    const subData = snapshot.val();
-                    const planId = subData.plan || 'free_trial';
-                    
-                    // Fetch plan features
-                    const planRef = ref(db, `plan_definitions/${planId}`);
-                    const planSnap = await get(planRef);
-                    
-                    if (planSnap.exists()) {
-                        const planData = planSnap.val();
-                        const allowedFeatures = planData.features || {};
-                        applyLocks(allowedFeatures, planData.name);
-                    }
+            const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js');
+            const { getDatabase, ref, get } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js');
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+                authDomain: "payflowpro-6e62d.firebaseapp.com",
+                databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+                projectId: "payflowpro-6e62d",
+                storageBucket: "payflowpro-6e62d.firebasestorage.app",
+                messagingSenderId: "69298740438",
+                appId: "1:69298740438:web:18fd85e982e083e1543d77"
+            };
+
+            // Reuse existing app if already initialized
+            const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            // Fetch company's subscription
+            const subSnap = await get(ref(db, `subscriptions/${companyId}`));
+
+            if (subSnap.exists()) {
+                const subData = subSnap.val();
+                const planId = subData.plan || 'free_trial';
+
+                // Fetch plan features
+                const planSnap = await get(ref(db, `plan_definitions/${planId}`));
+
+                if (planSnap.exists()) {
+                    const planData = planSnap.val();
+                    const allowedFeatures = planData.features || {};
+                    applyLocks(allowedFeatures, planData.name || planId);
+                } else {
+                    // No plan definition found — lock everything as safe default
+                    applyLocks({}, planId);
                 }
-            }, 500);
+            } else {
+                // No subscription found at all — lock everything
+                applyLocks({}, 'No Plan');
+            }
         } catch (e) { console.error("Access Control Error:", e); }
     }
 
