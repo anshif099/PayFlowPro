@@ -6,10 +6,18 @@
     // Initialize Theme
     function initTheme() {
         const theme = localStorage.getItem('admin_theme') || 'dark';
-        if (theme === 'light') {
-            document.body.classList.add('light-mode');
+        const applyBodyClass = () => {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        };
+
+        if (document.body) {
+            applyBodyClass();
         } else {
-            document.body.classList.remove('light-mode');
+            document.addEventListener('DOMContentLoaded', applyBodyClass);
         }
 
         const primaryColor = localStorage.getItem('admin_primary_color') || defaultPrimary;
@@ -62,32 +70,25 @@
         applySidebarColors();
     }
 
-    // Apply sidebar color CSS to sidebar elements after DOM ready
+    // Apply sidebar color CSS instantly via a dynamic style block
     function applySidebarColors() {
-        const applyFn = () => {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.style.backgroundColor = 'var(--sidebar-bg)';
-                sidebar.style.borderRightColor = 'var(--sidebar-bg)';
+        let styleTag = document.getElementById('dynamic-sidebar-theme');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'dynamic-sidebar-theme';
+            // Insert into head as soon as it's available
+            if (document.head) {
+                document.head.appendChild(styleTag);
+            } else {
+                document.addEventListener('DOMContentLoaded', () => document.head.appendChild(styleTag));
             }
-            // Sidebar header text
-            const sidebarHeader = document.querySelector('.sidebar-header h2');
-            if (sidebarHeader) {
-                sidebarHeader.style.color = 'var(--sidebar-text)';
-            }
-            // Nav items
-            document.querySelectorAll('.sidebar .nav-item').forEach(item => {
-                if (!item.classList.contains('active')) {
-                    item.style.color = 'var(--sidebar-text-muted)';
-                }
-            });
-        };
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', applyFn);
-        } else {
-            setTimeout(applyFn, 50);
         }
+        
+        styleTag.innerHTML = `
+            .sidebar { background-color: var(--sidebar-bg) !important; border-right-color: var(--sidebar-bg) !important; }
+            .sidebar-header h2 { color: var(--sidebar-text) !important; }
+            .sidebar .nav-item:not(.active) { color: var(--sidebar-text-muted) !important; }
+        `;
     }
 
     // Apply company logo to sidebar header
@@ -113,7 +114,7 @@
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', applyFn);
         } else {
-            setTimeout(applyFn, 50);
+            applyFn();
         }
     }
 
@@ -323,10 +324,10 @@
             document.documentElement.style.removeProperty('--sidebar-bg');
             document.documentElement.style.removeProperty('--sidebar-text');
             document.documentElement.style.removeProperty('--sidebar-text-muted');
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.style.backgroundColor = '';
-                sidebar.style.borderRightColor = '';
+            
+            const styleTag = document.getElementById('dynamic-sidebar-theme');
+            if (styleTag) {
+                styleTag.remove();
             }
         },
         setLogoUrl: function(url) {
@@ -343,10 +344,75 @@
         rgbToHex: rgbToHex
     };
 
-    // Run on load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTheme);
-    } else {
-        initTheme();
+    // Run immediately to prevent FOUC (Flash of Unstyled Content)
+    initTheme();
+
+    // Globally sync theme from Firebase in the background (no UI blocking)
+    async function syncThemeFromFirebase() {
+        const admin = localStorage.getItem('admin');
+        if (admin !== 'true') return;
+
+        try {
+            const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js');
+            const { getDatabase, ref, get } = await import('https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js');
+            
+            const firebaseConfig = {
+                apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+                authDomain: "payflowpro-6e62d.firebaseapp.com",
+                databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+                projectId: "payflowpro-6e62d",
+                storageBucket: "payflowpro-6e62d.firebasestorage.app",
+                messagingSenderId: "69298740438",
+                appId: "1:69298740438:web:18fd85e982e083e1543d77"
+            };
+
+            const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            // Fetch primary color
+            const pSnap = await get(ref(db, 'settings/primaryColor'));
+            if (pSnap.exists()) {
+                const pColor = pSnap.val();
+                if (pColor && pColor !== localStorage.getItem('admin_primary_color')) {
+                    localStorage.setItem('admin_primary_color', pColor);
+                    window.themeManager.setPrimaryColor(pColor);
+                }
+            }
+
+            // Fetch secondary/sidebar color
+            const sSnap = await get(ref(db, 'settings/secondaryColor'));
+            if (sSnap.exists()) {
+                const sColor = sSnap.val();
+                if (sColor && sColor !== localStorage.getItem('admin_secondary_color')) {
+                    localStorage.setItem('admin_secondary_color', sColor);
+                    window.themeManager.setSecondaryColor(sColor);
+                }
+            }
+
+            // Fetch company logo
+            const lSnap = await get(ref(db, 'settings/companyLogo/url'));
+            if (lSnap.exists()) {
+                const url = lSnap.val();
+                if (url && url !== localStorage.getItem('admin_logo_url')) {
+                    localStorage.setItem('admin_logo_url', url);
+                    window.themeManager.setLogoUrl(url);
+                }
+            } else {
+                if (localStorage.getItem('admin_logo_url')) {
+                    window.themeManager.clearLogo();
+                }
+            }
+            
+        } catch (e) {
+            console.error("Background theme sync failed:", e);
+        }
     }
+
+    // Run sync in idle or immediate background
+    if (window.requestIdleCallback) {
+        requestIdleCallback(syncThemeFromFirebase);
+    } else {
+        setTimeout(syncThemeFromFirebase, 1000);
+    }
+
 })();

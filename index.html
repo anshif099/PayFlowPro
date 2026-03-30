@@ -139,6 +139,21 @@
         let verifiedAdmin = null;
         let verifiedKey = null;
 
+        // Pre-fetch settings before redirecting to prevent theme loading delay on next page
+        async function prefetchTheme() {
+            try {
+                const snap = await get(ref(db, 'settings'));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    if (data.primaryColor) localStorage.setItem('admin_primary_color', data.primaryColor);
+                    if (data.secondaryColor) localStorage.setItem('admin_secondary_color', data.secondaryColor);
+                    else localStorage.removeItem('admin_secondary_color');
+                    if (data.companyLogo?.url) localStorage.setItem('admin_logo_url', data.companyLogo.url);
+                    else localStorage.removeItem('admin_logo_url');
+                }
+            } catch (e) { console.error('Prefetch error:', e); }
+        }
+
         window.resetFlow = () => {
             document.getElementById("idStep").style.display = "block";
             document.getElementById("passwordStep").style.display = "none";
@@ -258,6 +273,7 @@
                     localStorage.setItem("admin", "true");
                     localStorage.setItem("role", "super_admin");
                     localStorage.setItem("name", "Teamsive");
+                    await prefetchTheme();
                     location.href = "dashboard.html";
                 }
 
@@ -332,6 +348,7 @@
                 if (finalCompanyName) {
                     localStorage.setItem("companyName", finalCompanyName);
                 }
+                await prefetchTheme();
                 location.href = "dashboard.html";
             }
 
@@ -382,6 +399,7 @@
                 if (verifiedAdmin.companyName) {
                     localStorage.setItem("companyName", verifiedAdmin.companyName);
                 }
+                await prefetchTheme();
                 location.href = "dashboard.html";
             }
 
