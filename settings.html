@@ -602,6 +602,182 @@
             transform: translateX(26px);
             background-color: #000;
         }
+
+        /* Logo Upload Styles */
+        .logo-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-input);
+            position: relative;
+        }
+
+        .logo-upload-area:hover,
+        .logo-upload-area.drag-over {
+            border-color: var(--primary);
+            background: rgba(0, 255, 195, 0.03);
+            transform: translateY(-1px);
+        }
+
+        .logo-upload-area .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+
+        .logo-upload-area p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 4px 0;
+        }
+
+        .logo-upload-area .browse-link {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .logo-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .logo-preview-img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-preview-info {
+            flex: 1;
+        }
+
+        .logo-preview-info h5 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .logo-preview-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .extracted-colors-container {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .extracted-color-swatch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .extracted-color-swatch .swatch {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .extracted-color-swatch .swatch:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .extracted-color-swatch span {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-apply-theme {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: var(--primary-text, #000);
+            border: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-apply-theme:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 255, 195, 0.3);
+        }
+
+        .btn-outline-small {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-small:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .logo-status-msg {
+            font-size: 13px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .logo-status-msg.success {
+            display: block;
+            background: rgba(0, 255, 195, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(0, 255, 195, 0.2);
+        }
+
+        .logo-status-msg.error {
+            display: block;
+            background: rgba(255, 92, 92, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(255, 92, 92, 0.2);
+        }
+
+        .logo-status-msg.loading {
+            display: block;
+            background: rgba(255, 167, 38, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(255, 167, 38, 0.2);
+        }
     </style>
 </head>
 
@@ -848,6 +1024,52 @@
                         <!-- Colors will be injected here -->
                     </div>
                 </div>
+
+                <!-- Company Logo Upload Section -->
+                <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+                    <h4 style="font-size:15px; margin-bottom:4px;">🏢 Company Logo</h4>
+                    <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">Upload your company logo to auto-generate a matching color theme. Two dominant colors will be extracted — one for the primary accent and one for the sidebar.</p>
+                    
+                    <!-- Logo Preview (shown when logo exists) -->
+                    <div id="logoPreviewSection" style="display:none; margin-bottom:16px;">
+                        <div class="logo-preview-container">
+                            <img id="logoPreviewImg" class="logo-preview-img" src="" alt="Company Logo">
+                            <div class="logo-preview-info">
+                                <h5 id="logoFileName">Company Logo</h5>
+                                <p id="logoFileSize">Current logo</p>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-outline-small" onclick="changeLogoFile()" title="Change Logo">📷 Change</button>
+                                <button class="btn-outline-small" onclick="removeLogo()" style="color:var(--danger);border-color:var(--danger);" title="Remove Logo">🗑️ Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Area (shown when no logo) -->
+                    <div id="logoUploadArea" class="logo-upload-area">
+                        <div class="upload-icon">📤</div>
+                        <p><strong>Drag & drop your logo here</strong></p>
+                        <p>or <span class="browse-link" onclick="document.getElementById('logoFileInput').click()">browse files</span></p>
+                        <p style="font-size:12px; margin-top:8px; opacity:0.5;">PNG, JPG, SVG • Max 2MB</p>
+                    </div>
+                    <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none;" onchange="handleLogoSelect(event)">
+                    
+                    <!-- Extracted Colors Section -->
+                    <div id="extractedColorsSection" style="display:none; margin-top:20px; padding:16px; background:var(--bg-input); border-radius:12px; border:1px solid var(--border);">
+                        <h5 style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;">🎨 Extracted Colors</h5>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">These colors were detected from your logo. Click "Apply as Theme" to use them.</p>
+                        <div class="extracted-colors-container" id="extractedColorSwatches">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+                            <button class="btn-apply-theme" onclick="applyLogoTheme()">✨ Apply as Theme</button>
+                            <button class="btn-outline-small" onclick="resetToDefaultTheme()">↩️ Reset to Default</button>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div id="logoStatusMsg" class="logo-status-msg"></div>
+                </div>
             </div>
 
             <div class="card">
@@ -1069,16 +1291,214 @@
             }
         });
 
-        // Helper: RGB to Hex (since browser returns rgb)
-        window.themeManager.rgbToHex = (rgb) => {
-            if (!rgb) return '';
-            const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-            if (!match) return rgb;
-            const r = parseInt(match[1]).toString(16).padStart(2, '0');
-            const g = parseInt(match[2]).toString(16).padStart(2, '0');
-            const b = parseInt(match[3]).toString(16).padStart(2, '0');
-            return `#${r}${g}${b}`;
+        // Listen for remote secondary color updates
+        onValue(ref(db, `settings/secondaryColor`), s => {
+            if (s.exists()) {
+                const color = s.val();
+                window.themeManager.setSecondaryColor(color);
+            }
+        });
+
+        // ---- Company Logo Logic ----
+        let _pendingLogoFile = null;
+        let _extractedColors = [];
+
+        // Load existing logo from Firebase
+        onValue(ref(db, `settings/companyLogo`), s => {
+            if (s.exists()) {
+                const logoData = s.val();
+                if (logoData.url) {
+                    window.themeManager.setLogoUrl(logoData.url);
+                    _showLogoPreview(logoData.url, logoData.fileName || 'Company Logo', '');
+
+                    if (logoData.primaryColor) {
+                        _extractedColors = [logoData.primaryColor, logoData.secondaryColor || '#1e2530'];
+                        _showExtractedColors(_extractedColors);
+                    }
+                }
+            }
+        });
+
+        function _showLogoPreview(url, name, size) {
+            document.getElementById('logoUploadArea').style.display = 'none';
+            document.getElementById('logoPreviewSection').style.display = 'block';
+            document.getElementById('logoPreviewImg').src = url;
+            document.getElementById('logoFileName').textContent = name;
+            document.getElementById('logoFileSize').textContent = size || 'Uploaded logo';
+        }
+
+        function _showExtractedColors(colors) {
+            const container = document.getElementById('extractedColorSwatches');
+            container.innerHTML = '';
+            const labels = ['Primary', 'Sidebar'];
+            colors.forEach((color, idx) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'extracted-color-swatch';
+                swatch.innerHTML = `
+                    <div class="swatch" style="background-color:${color};" title="${color}"></div>
+                    <span>${labels[idx] || 'Color ' + (idx+1)}</span>
+                    <span style="font-size:10px;opacity:0.7;">${color}</span>
+                `;
+                container.appendChild(swatch);
+            });
+            document.getElementById('extractedColorsSection').style.display = 'block';
+        }
+
+        function _setLogoStatus(msg, type) {
+            const el = document.getElementById('logoStatusMsg');
+            el.className = 'logo-status-msg ' + type;
+            el.textContent = msg;
+            if (type === 'success') {
+                setTimeout(() => { el.style.display = 'none'; }, 4000);
+            }
+        }
+
+        // Drag and drop support
+        const uploadArea = document.getElementById('logoUploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('drag-over');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) _processLogoFile(files[0]);
+            });
+            uploadArea.addEventListener('click', () => {
+                document.getElementById('logoFileInput').click();
+            });
+        }
+
+        window.handleLogoSelect = (e) => {
+            const file = e.target.files[0];
+            if (file) _processLogoFile(file);
         };
+
+        window.changeLogoFile = () => {
+            document.getElementById('logoFileInput').click();
+        };
+
+        async function _processLogoFile(file) {
+            // Validate
+            if (!file.type.match(/image\/(png|jpe?g|svg\+xml|webp)/)) {
+                _setLogoStatus('Please upload a PNG, JPG, SVG, or WebP image.', 'error');
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                _setLogoStatus('File is too large. Maximum size is 2MB.', 'error');
+                return;
+            }
+
+            _pendingLogoFile = file;
+            _setLogoStatus('⏳ Processing logo...', 'loading');
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const dataUrl = e.target.result;
+                const sizeKb = (file.size / 1024).toFixed(1) + ' KB';
+                _showLogoPreview(dataUrl, file.name, sizeKb);
+
+                // Extract colors
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = async () => {
+                    try {
+                        const colors = await window.themeManager.extractColors(img, 2);
+                        _extractedColors = colors;
+                        _showExtractedColors(colors);
+
+                        // Save base64 directly to Firebase RTDB
+                        await set(ref(db, `settings/companyLogo`), {
+                            url: dataUrl,
+                            fileName: file.name,
+                            primaryColor: colors[0],
+                            secondaryColor: colors[1] || null,
+                            uploadedAt: new Date().toISOString()
+                        });
+
+                        window.themeManager.setLogoUrl(dataUrl);
+                        _setLogoStatus('✅ Logo uploaded successfully! Click "Apply as Theme" to use the extracted colors.', 'success');
+                    } catch (err) {
+                        console.error('Logo upload error:', err);
+                        _setLogoStatus('❌ Upload failed: ' + err.message, 'error');
+                    }
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.applyLogoTheme = () => {
+            if (_extractedColors.length < 1) {
+                _setLogoStatus('No colors extracted yet. Please upload a logo first.', 'error');
+                return;
+            }
+
+            // Apply primary color
+            window.themeManager.setPrimaryColor(_extractedColors[0]);
+            document.querySelectorAll('.color-box').forEach(b => b.classList.remove('selected'));
+            set(ref(db, `settings/primaryColor`), _extractedColors[0]);
+
+            // Apply secondary color to sidebar
+            if (_extractedColors[1]) {
+                window.themeManager.setSecondaryColor(_extractedColors[1]);
+                set(ref(db, `settings/secondaryColor`), _extractedColors[1]);
+            }
+
+            _setLogoStatus('✅ Theme colors applied from your logo!', 'success');
+        };
+
+        window.resetToDefaultTheme = () => {
+            window.themeManager.setPrimaryColor('#00ffc3');
+            window.themeManager.clearSecondaryColor();
+            set(ref(db, `settings/primaryColor`), '#00ffc3');
+            remove(ref(db, `settings/secondaryColor`));
+
+            // Re-select default color box
+            document.querySelectorAll('.color-box').forEach(b => {
+                if (window.themeManager.rgbToHex(b.style.backgroundColor) === '#00ffc3') {
+                    b.classList.add('selected');
+                } else {
+                    b.classList.remove('selected');
+                }
+            });
+
+            _setLogoStatus('Theme reset to default colors.', 'success');
+        };
+
+        window.removeLogo = async () => {
+            if (!confirm('Remove the company logo? The theme colors will be preserved.')) return;
+
+            _setLogoStatus('⏳ Removing logo...', 'loading');
+
+            try {
+                // Remove from Firebase RTDB
+                await remove(ref(db, `settings/companyLogo`));
+
+                // Clear local state
+                window.themeManager.clearLogo();
+                _pendingLogoFile = null;
+                _extractedColors = [];
+
+                // Reset UI
+                document.getElementById('logoUploadArea').style.display = '';
+                document.getElementById('logoPreviewSection').style.display = 'none';
+                document.getElementById('extractedColorsSection').style.display = 'none';
+                document.getElementById('logoFileInput').value = '';
+
+                _setLogoStatus('Logo removed.', 'success');
+            } catch (err) {
+                _setLogoStatus('❌ Failed to remove logo: ' + err.message, 'error');
+            }
+        };
+
+        // ---- End Logo Logic ----
 
         
         // ---- Subscription Status for company_admin ----
