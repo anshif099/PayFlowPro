@@ -613,10 +613,14 @@
                 return;
             }
 
-            if (!currCompanyId) {
+            // If Super Admin has no company context, allow saving as a platform branch
+            if (!currCompanyId && role !== 'super_admin') {
                 alert("Error: Missing scoped company ID.");
                 return;
             }
+
+            const finalCompanyId = currCompanyId || '';
+            const finalCompanyName = currCompanyName || '';
 
             // Create a safe ID from email
             const keyId = aEmail.replace(/[^a-zA-Z0-9]/g, '_');
@@ -625,22 +629,25 @@
                 branchName: bName,
                 branchId: bId,
                 name: bName,
-                companyId: currCompanyId,
-                companyName: currCompanyName,
+                companyId: finalCompanyId,
+                companyName: finalCompanyName,
                 createdAt: new Date().toISOString()
             };
 
             // Save to global branches node
             update(ref(db, 'branches/' + bId), branchData).then(() => {
-                // Also save under company-scoped branches so the employee form dropdown can find it
-                return update(ref(db, 'companies/' + currCompanyId + '/branches/' + bId), branchData);
+                // Also save under company-scoped branches if companyId is present
+                if (finalCompanyId) {
+                    return update(ref(db, 'companies/' + finalCompanyId + '/branches/' + bId), branchData);
+                }
+                return Promise.resolve();
             }).then(() => {
-                // Save Branch Admin Account mapping to this company and branch
+                // Save Branch Admin Account mapping
                 return update(ref(db, 'admins/' + keyId), {
                     name: aName,
                     email: aEmail,
-                    companyId: currCompanyId,
-                    companyName: currCompanyName,
+                    companyId: finalCompanyId,
+                    companyName: finalCompanyName,
                     branch: bId,
                     role: 'branch_admin',
                     status: status
@@ -673,7 +680,8 @@
             // 1. Populate from global branches node
             Object.keys(branchesData).forEach(bId => {
                 const b = branchesData[bId];
-                if (b.companyId === companyId) {
+                // Show match or if Super Admin and branch is platform-level
+                if (b.companyId === companyId || (role === 'super_admin' && (!b.companyId || b.companyId === ''))) {
                     merged[bId] = {
                         branchId: b.branchId || bId,
                         branchName: b.branchName || b.name || bId,
@@ -691,7 +699,7 @@
             Object.keys(adminsData).forEach(key => {
                 const admin = adminsData[key];
                 if (admin.role === 'branch_admin') {
-                    if (admin.companyId === companyId) {
+                    if (admin.companyId === companyId || (role === 'super_admin' && (!admin.companyId || admin.companyId === ''))) {
                         const bId = admin.branch;
                         if (bId) {
                             if (!merged[bId]) {

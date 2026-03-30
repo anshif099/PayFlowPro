@@ -872,7 +872,10 @@
           if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
             allow = false;
           } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
-            allow = false;
+             // Super Admins see all platform-level employees (no companyId) by default
+             if (sessionCompanyId !== "" || empCompanyId !== "") {
+                allow = false;
+             }
           }
           if (!allow) return;
 

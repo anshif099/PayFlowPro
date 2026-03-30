@@ -581,6 +581,7 @@
 
                     <div class="form-group" id="companyGroup" style="display: none;">
                         <label data-i18n="company">Company</label>
+                        <div id="companyDisplay" style="padding: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text); opacity: 0.8; font-size: 14px; display: none;"></div>
                         <select id="companySelect">
                             <option value="">Select Company</option>
                         </select>
@@ -596,9 +597,22 @@
                     <div class="form-group">
                         <label data-i18n="punch_mode">Punch Mode</label>
                         <select id="punchMode">
-                            <option value="office" data-i18n="office_only">Office Only (GPS Required)</option>
                             <option value="anywhere" data-i18n="anywhere">Anywhere (No GPS Check)</option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="verification_status">Verification Status</label>
+                        <select id="verificationStatus">
+                            <option value="pending" data-i18n="pending">Pending</option>
+                            <option value="verified" data-i18n="verified">Verified</option>
+                            <option value="rejected" data-i18n="rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="onboarding_date">Onboarding Date</label>
+                        <input type="date" id="onboardingDate">
                     </div>
                     <div class="form-group">
                         <label data-i18n="shift_type">Shift Type</label>
@@ -716,7 +730,20 @@
                     });
                 }
             });
-        } else if (role === 'branch_admin') {
+        } else {
+            // SHOW READONLY COMPANY NAME FOR OTHERS
+            const companyGroup = document.getElementById('companyGroup');
+            const companyDisplay = document.getElementById('companyDisplay');
+            const companySelect = document.getElementById('companySelect');
+            if (companyGroup) companyGroup.style.display = 'block';
+            if (companyDisplay) {
+                companyDisplay.innerText = localStorage.getItem('companyName') || 'Assigned Company';
+                companyDisplay.style.display = 'block';
+            }
+            if (companySelect) companySelect.style.display = 'none';
+        }
+
+        if (role === 'branch_admin') {
             // Can't manage admins or branches
         }
 
@@ -743,7 +770,9 @@
                 // Global branches — super admin sees ALL, others filtered by companyId
                 Object.keys(globalBranches).forEach(k => {
                     const b = globalBranches[k];
-                    if (role === 'super_admin' || b.companyId === companyId) {
+                    const bCompanyId = b.companyId || '';
+                    const sessionCompanyId = companyId || '';
+                    if (role === 'super_admin' || bCompanyId === sessionCompanyId) {
                         const name = b.name || b.branchName || k;
                         merged[name] = name;
                     }
@@ -832,6 +861,8 @@
             const shiftEndValue = document.getElementById('shiftEnd').value;
             const branchVal = document.getElementById('branch').value;
             const deptVal = document.getElementById('department').value;
+            const verifStatus = document.getElementById('verificationStatus').value;
+            const onboardingVal = document.getElementById('onboardingDate').value;
             const selectedCompanyId = document.getElementById('companySelect')?.value || companyId;
 
             if (!empIdVal || !nameVal) {
@@ -860,6 +891,8 @@
                 branch: branchVal,
                 department: deptVal,
                 companyId: selectedCompanyId,
+                verificationStatus: verifStatus,
+                onboardingDate: onboardingVal,
                 status: 'active'
             };
 
@@ -876,7 +909,7 @@
                     document.getElementById('mobile').value = '';
                     document.getElementById('role').value = '';
                     document.getElementById('salary').value = '';
-                    document.getElementById('punchMode').value = 'office';
+                    document.getElementById('punchMode').value = 'anywhere';
                     document.getElementById('shiftType').value = 'fixed';
                     document.getElementById('shiftStart').value = '';
                     document.getElementById('shiftEnd').value = '';
@@ -966,7 +999,7 @@
                         <td>
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
-                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}')">✏️ Edit</button>
+                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}')">✏️ Edit</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
@@ -994,7 +1027,7 @@
             }
         };
 
-        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId) => {
+        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId, verifStatus, onboardingVal) => {
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
             document.getElementById('mobile').value = mobile;
@@ -1002,10 +1035,16 @@
             document.getElementById('branch').value = branch;
             document.getElementById('department').value = department;
             document.getElementById('salary').value = salary;
-            document.getElementById('punchMode').value = punchModeValue || 'office';
+            document.getElementById('punchMode').value = punchModeValue || 'anywhere';
             document.getElementById('shiftType').value = shiftTypeValue || 'fixed';
             document.getElementById('shiftStart').value = shiftStartValue || '';
             document.getElementById('shiftEnd').value = shiftEndValue || '';
+            document.getElementById('verificationStatus').value = verifStatus || 'pending';
+            document.getElementById('onboardingDate').value = onboardingVal || '';
+            
+            // Note: We need to pull onboardingDate if it exists - fetch from listing
+            // For now, assume it's passed or just clear it.
+            // Actually, we should pass it to the function.
             
             if (role === 'super_admin' && empCompanyId) {
                 const companySelect = document.getElementById('companySelect');
