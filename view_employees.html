@@ -662,13 +662,13 @@
                             const sessionBranch = (adminBranch || "").trim().toLowerCase();
                             const sessionCompanyId = (companyId || "").trim().toLowerCase();
 
+                            const empBranchName = (e.branch || "").trim();
                             if (role === 'branch_admin' && empBranch !== sessionBranch) {
                                 allow = false;
-                            } else if ((role === 'company_admin' || role === 'super_admin') && empCompanyId !== sessionCompanyId) {
-                                // For Super Admin, only filter if sessionCompanyId is not empty (i.e. they are impersonating)
-                                if (sessionCompanyId !== "" || empCompanyId !== "") {
-                                    allow = false;
-                                }
+                            } else if (role === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
+                                allow = false;
+                            } else if (role === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+                                allow = false;
                             }
                             if (allow) window.allEmployeesData.push(e);
                         });

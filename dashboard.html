@@ -869,13 +869,13 @@
           const empCompanyId = (e.companyId || "").trim().toLowerCase();
           const sessionBranch = (adminBranch || "").trim().toLowerCase();
           const sessionCompanyId = (companyId || "").trim().toLowerCase();
+          const empBranchName = (e.branch || "").trim();
           if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
             allow = false;
-          } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
-             // Super Admins see all platform-level employees (no companyId) by default
-             if (sessionCompanyId !== "" || empCompanyId !== "") {
-                allow = false;
-             }
+          } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
+            allow = false;
+          } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+            allow = false;
           }
           if (!allow) return;
 

@@ -777,20 +777,25 @@
                         const sessionBranch = (adminBranch || "").trim().toLowerCase();
                         const sessionCompanyId = (companyId || "").trim().toLowerCase();
 
+                        const empBranchName = (e.branch || "").trim();
                         if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
+                        } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
+                            allow = false;
+                        } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
                             allow = false;
                         }
                         if (allow) {
-                            allowedEmpIds.add(e.empId);
-                            empMap[e.empId] = e.name;
+                            allowedEmpIds.add(c.key);
+                            if (e.empId) allowedEmpIds.add(e.empId);
+
+                            empMap[c.key] = e.name;
+                            if (e.empId) empMap[e.empId] = e.name;
 
                             // Populate datalist with Value=ID, Label=Name
-                            // This allows searching by Name but selecting fills ID
                             const option = document.createElement('option');
-                            option.value = e.empId;
-                            option.label = e.name; // Chrome shows this on right, matches both
+                            option.value = e.empId || c.key;
+                            option.label = e.name; 
                             empList.appendChild(option);
                         }
                     });

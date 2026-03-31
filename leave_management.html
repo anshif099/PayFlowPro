@@ -611,13 +611,17 @@
             }
         };
 
-        if (adminRole !== 'super_admin') {
-            // Hide Branch Admins link
-            const navs = document.querySelectorAll('.nav-item');
-            navs.forEach(nav => {
-                if (nav.href.includes('manage_admins.html')) nav.style.display = 'none';
-            });
-        }
+        // --- Sidebar Logic ---
+        (function(){
+            if (adminRole === 'super_admin') {
+                const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+            } else if (adminRole === 'company_admin') {
+                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
+                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
+            }
+        })();
 
         // Render Function
         const renderLeaveTables = () => {
@@ -640,31 +644,34 @@
                 const id = item.k;
 
                 // Admin Filter
-                console.log('[DEBUG item] id:', id, 'status:', req.status, 'employeeId:', req.employeeId, 'adminRole:', adminRole);
+                const sessionCompanyId = (localStorage.getItem("companyId") || "").trim().toLowerCase();
                 if (adminRole !== 'super_admin' && !allowedEmpIds.has(req.employeeId)) {
-                    console.log('[DEBUG item] FILTERED OUT by admin filter');
                     return;
+                }
+                // Impersonation filter for Super Admin (if they have a company selected)
+                if (adminRole === 'super_admin' && sessionCompanyId !== "") {
+                    if (!allowedEmpIds.has(req.employeeId)) return;
+                }
+
+                let approvedDays = 0;
+                if (req.fromDate) {
+                    const reqDate = new Date(req.fromDate);
+                    const reqMonth = reqDate.getMonth();
+                    const reqYear = reqDate.getFullYear();
+                    leaveRequestsRaw.forEach(pastItem => {
+                        const pReq = pastItem.v;
+                        if (pReq.employeeId === req.employeeId && pReq.status === 'approved' && pReq.fromDate) {
+                            const pDate = new Date(pReq.fromDate);
+                            if (pDate.getMonth() === reqMonth && pDate.getFullYear() === reqYear) {
+                                approvedDays += parseInt(pReq.days || 0);
+                            }
+                        }
+                    });
                 }
 
                 if (req.status === 'pending') {
                     hasPending = true;
-                    // Calculate approved days in the same month
-                    let approvedDays = 0;
-                    if (req.fromDate) {
-                        const reqDate = new Date(req.fromDate);
-                        const reqMonth = reqDate.getMonth();
-                        const reqYear = reqDate.getFullYear();
-                        
-                        leaveRequestsRaw.forEach(pastItem => {
-                            const pReq = pastItem.v;
-                            if (pReq.employeeId === req.employeeId && pReq.status === 'approved' && pReq.fromDate) {
-                                const pDate = new Date(pReq.fromDate);
-                                if (pDate.getMonth() === reqMonth && pDate.getFullYear() === reqYear) {
-                                    approvedDays += parseInt(pReq.days || 0);
-                                }
-                            }
-                        });
-                    }
+
                     const leaveTypeLabel = req.leaveTypeLabel || 'Paid Leave';
                     const leaveType = req.leaveType || 'paid';
                     let actionButtons = '';
@@ -754,16 +761,17 @@
                         const sessionBranch = (adminBranch || "").trim().toLowerCase();
                         const sessionCompanyId = (companyId || "").trim().toLowerCase();
 
+                        const empBranchName = (e.branch || "").trim();
                         if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
+                        } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                             allow = false;
-                        } else if (adminRole === 'super_admin') {
-                            allow = true;
+                        } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+                            allow = false;
                         }
                         if (allow) {
-                            allowedEmpIds.add(e.empId);
-                            if (!e.empId) allowedEmpIds.add(c.key);
+                            allowedEmpIds.add(c.key); // Always add Firebase UID (UID)
+                            if (e.empId) allowedEmpIds.add(e.empId); // Also add custom ID if exists
                         }
                     });
                 }
