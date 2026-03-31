@@ -505,10 +505,10 @@
                     </div>
 
                     <div class="results-grid">
-                        <div class="pred-card">
-                            <span class="pred-title">Date Registered</span>
-                            <span class="pred-val" id="ppJoining" style="font-size: 18px;">-</span>
-                        </div>
+                         <div class="pred-card">
+                             <span class="pred-title">Work Experience</span>
+                             <span class="pred-val" id="ppJoining" style="font-size: 14px;">-</span>
+                         </div>
                         <div class="pred-card">
                             <span class="pred-title">Trust Score</span>
                             <span class="pred-val" id="ppTrust" style="color:var(--success)">100%</span>
@@ -721,11 +721,47 @@
                 sEl.style.borderColor = verified ? '#00ffc3' : '#ffa726';
                 sEl.style.backgroundColor = verified ? 'rgba(0, 255, 195, 0.1)' : 'rgba(255, 167, 38, 0.1)';
 
-                const trust = verified ? '95%' : '75%';
-                document.getElementById('ppTrust').textContent = trust;
+                const visibilityMap = emp.passportVisibility || {};
+                const isAttendanceVisible = visibilityMap.attendance !== false;
+                
+                // Attendance Calculation for Trust Score
+                let personalAttendanceScore = 0.85; 
+                try {
+                    const attSnap = await get(ref(db, "attendance/" + empId));
+                    if (attSnap.exists()) {
+                        const empAtt = attSnap.val();
+                        const now = new Date();
+                        const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                        const startOfPrevMonth = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), 1);
+                        const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                        
+                        let presentDays = 0;
+                        Object.keys(empAtt).forEach(date => {
+                            const d = new Date(date);
+                            if (d >= startOfPrevMonth && d <= endOfPrevMonth) {
+                                const status = (empAtt[date].status || "").toLowerCase();
+                                if (status === 'in' || status === 'out') presentDays++;
+                            }
+                        });
+                        personalAttendanceScore = Math.min(1.0, presentDays / 24.0);
+                    }
+                } catch(e) { console.error("Trust calc error", e); }
 
-                const startDate = emp.onboardingDate || emp.createdAt || '-';
-                document.getElementById('ppJoining').textContent = startDate.split('T')[0];
+                const profileScore = 0.4 + (emp.name ? 0.1 : 0) + (emp.mobile ? 0.1 : 0);
+                const finalTrust = (profileScore + (personalAttendanceScore * 0.4)) * 100;
+
+                const trustEl = document.getElementById('ppTrust');
+                if (isAttendanceVisible) {
+                    trustEl.textContent = Math.round(finalTrust) + '%';
+                    trustEl.style.color = 'var(--success)';
+                } else {
+                    trustEl.textContent = 'Hidden';
+                    trustEl.style.color = 'var(--text-muted)';
+                }
+
+                const startDate = (emp.onboardingDate || emp.createdAt || '-').split('T')[0];
+                const shareExperience = visibilityMap.experience !== false;
+                document.getElementById('ppJoining').textContent = shareExperience ? `${startDate} to Present` : startDate;
 
                 const ppImg = document.getElementById('ppImage');
                 if (emp.profileImageUrl) {
@@ -734,8 +770,6 @@
                     ppImg.innerHTML = '🛡️';
                 }
 
-                const visibilityMap = emp.passportVisibility || {};
-                
                 // Salary Identity
                 const isSalaryVisible = visibilityMap.salary === true;
                 const salEl = document.getElementById('ppSalaryId');
