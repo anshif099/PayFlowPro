@@ -32,7 +32,8 @@
         'manage_branches.html': 'branches',
         'nav-manage-branches': 'branches',
         'manage_admins.html': 'branches',
-        'nav-branch-admins': 'branches'
+        'nav-branch-admins': 'branches',
+        'teamsive_passport.html': 'teamsive_passport'
     };
 
     function normalizeBranchLinks() {

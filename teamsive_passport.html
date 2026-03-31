@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Prediction - Teamsive Admin</title>
+    <title>Teamsive Passport - Teamsive Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="theme.js"></script>
     <script src="lang.js"></script>
@@ -418,7 +418,7 @@
                 <span class="nav-icon">📄</span>
                 <span data-i18n="documents">Documents</span>
             </a>
-                        <a href="teamsive_passport.html" class="nav-item">
+                        <a href="teamsive_passport.html" class="nav-item active">
                 <span class="nav-icon">🛂</span>
                 <span data-i18n="teamsive_passport">Teamsive Passport</span>
             </a>
@@ -426,7 +426,7 @@
                 <span class="nav-icon">🏆</span>
                 <span data-i18n="leaderboard">Leaderboard</span>
             </a>
-            <a href="ai_prediction.html" class="nav-item active">
+            <a href="ai_prediction.html" class="nav-item">
                 <span class="nav-icon">🧠</span>
                 <span data-i18n="ai_prediction">AI Prediction</span>
             </a>
@@ -469,7 +469,7 @@
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <h1>AI Prediction (Next Month)</h1>
+                <h1>Teamsive Passport Network</h1>
             </div>
             <div class="top-bar-actions">
                 <button class="btn-logout" onclick="logout()">Logout</button>
@@ -486,39 +486,43 @@
                     </select>
                 </div>
 
-                <div id="loader" class="loader">Analyzing historical data patterns...</div>
+                
+                <div id="loader" class="loader">Fetching Verified Passport Data...</div>
 
                 <div id="resultsContainer" class="results-container">
-                    <h3 style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">AI Forecast
-                    </h3>
-                    <div class="results-grid">
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Salary</span>
-                            <span class="pred-val" id="predSalary">₹0</span>
+                    <h3 style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">Digital Identity</h3>
+                    
+                    <div style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+                        <div id="ppImage" style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary-active-bg); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+                        <div style="flex: 1;">
+                            <div style="color: #00ffc3; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Teamsive Network ID</div>
+                            <div id="ppName" style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">-</div>
+                            <div id="ppRole" style="color: var(--text-muted); font-size: 13px;">-</div>
                         </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Present</span>
-                            <span class="pred-val" id="predPresent" style="color:var(--success)">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Absent</span>
-                            <span class="pred-val" id="predAbsent" style="color:var(--danger)">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Predicted Week Offs</span>
-                            <span class="pred-val" id="predWeekOffs" style="color:#C0C0C0">0 Days</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Leave Probability</span>
-                            <span class="pred-val" id="predLeaveProb" style="color:var(--warning)">Low</span>
-                        </div>
-                        <div class="pred-card">
-                            <span class="pred-title">Leaderboard Trend</span>
-                            <span class="pred-val" id="predTrend" style="color:#3b82f6">Stable</span>
+                        <div style="text-align: right;">
+                            <div id="ppStatus" style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; border: 1px solid var(--border);">-</div>
                         </div>
                     </div>
-                </div>
-            </div>
+
+                    <div class="results-grid">
+                        <div class="pred-card">
+                            <span class="pred-title">Date Registered</span>
+                            <span class="pred-val" id="ppJoining" style="font-size: 18px;">-</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Trust Score</span>
+                            <span class="pred-val" id="ppTrust" style="color:var(--success)">100%</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Marketplace Access</span>
+                            <span class="pred-val" id="ppHireFlow" style="color:#3b82f6; font-size: 18px;">Active</span>
+                        </div>
+                        <div class="pred-card">
+                            <span class="pred-title">Salary Identity</span>
+                            <span class="pred-val" id="ppSalaryId" style="color:var(--warning); font-size: 18px;">Hidden</span>
+                        </div>
+                    </div>
+</div>
         </div>
     </div>
 
@@ -548,13 +552,7 @@
 
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
         window.logout = () => { localStorage.clear(); location = "index.html"; }
-        onValue(ref(db, "settings/currencySymbol"), snap => {
-            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
-            localStorage.setItem("currencySymbol", currencySymbol);
-            document.getElementById('predSalary').textContent = formatMoney(0);
-            const empId = document.getElementById('empSelector')?.value;
-            if (empId) generatePredictions(empId);
-        });
+        initPage();
 
         // Cache data to avoid refetching on every change
         let cachedEmpData = null;
@@ -700,116 +698,68 @@
             return workingDays;
         }
 
+        
         window.generatePredictions = async (empId) => {
             if (!empId) {
                 document.getElementById('resultsContainer').style.display = 'none';
                 return;
             }
-
             document.getElementById('resultsContainer').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
 
             try {
-                if (!cachedSettings || !cachedAttData) {
-                    const settingsRoot = cachedSettingsRoot || await resolveSettingsRoot(localStorage.getItem("companyId"), localStorage.getItem("branch"));
-                    cachedSettingsRoot = settingsRoot;
-                    const [att, ot, int, wo, hol, ss] = await Promise.all([
-                        get(ref(db, "attendance")),
-                        get(ref(db, `${settingsRoot}/officeTime`)),
-                        get(ref(db, `${settingsRoot}/intervals`)),
-                        get(ref(db, `${settingsRoot}/weekOffs`)),
-                        get(ref(db, `${settingsRoot}/holidays`)),
-                        get(ref(db, `${settingsRoot}/secondSaturday`))
-                    ]);
-                    cachedAttData = att.exists() ? att.val() : {};
-                    const holidaySet = new Set();
-                    if (hol.exists()) {
-                        Object.values(hol.val() || {}).forEach(h => {
-                            if (h && h.date) holidaySet.add(h.date);
-                        });
-                    }
-                    cachedSettings = {
-                        officeTime: ot.exists() ? ot.val() : null,
-                        intervals: int.exists() ? int.val() : null,
-                        weekOffs: wo.exists() ? wo.val() || [] : [],
-                        holidays: holidaySet,
-                        secondSaturday: ss.exists() ? ss.val() : false
-                    };
+                const emp = cachedEmpData[empId];
+                if(!emp) return;
+                
+                document.getElementById('ppName').textContent = emp.name + ' (' + emp.empId + ')';
+                document.getElementById('ppRole').textContent = (emp.role || 'Employee') + ' • ' + (emp.department || 'General');
+                
+                const verified = emp.verificationStatus === 'verified';
+                const sEl = document.getElementById('ppStatus');
+                sEl.textContent = verified ? 'VERIFIED IDENTITY' : 'PENDING VERIFICATION';
+                sEl.style.color = verified ? '#00ffc3' : '#ffa726';
+                sEl.style.borderColor = verified ? '#00ffc3' : '#ffa726';
+                sEl.style.backgroundColor = verified ? 'rgba(0, 255, 195, 0.1)' : 'rgba(255, 167, 38, 0.1)';
+
+                const trust = verified ? '95%' : '75%';
+                document.getElementById('ppTrust').textContent = trust;
+
+                const startDate = emp.onboardingDate || emp.createdAt || '-';
+                document.getElementById('ppJoining').textContent = startDate.split('T')[0];
+
+                const ppImg = document.getElementById('ppImage');
+                if (emp.profileImageUrl) {
+                    ppImg.innerHTML = `<img src="${emp.profileImageUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                } else {
+                    ppImg.innerHTML = '🛡️';
                 }
 
-                const emp = cachedEmpData[empId];
-                const baseSalary = parseInt(emp.salary || "0");
+                const visibilityMap = emp.passportVisibility || {};
+                
+                // Salary Identity
+                const isSalaryVisible = visibilityMap.salary === true;
+                const salEl = document.getElementById('ppSalaryId');
+                if (isSalaryVisible) {
+                    salEl.textContent = 'Visible (' + formatMoney(emp.salary) + ')';
+                    salEl.style.color = 'var(--success)';
+                } else {
+                    salEl.textContent = 'Hidden (Opt-Out)';
+                    salEl.style.color = 'var(--warning)';
+                }
 
-                // Real basic date calculations
-                const now = new Date();
-                let nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                const nextMonthEnd = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
-
-                const nextMonthWorkingDays = getWorkingDays(nextMonth, nextMonthEnd, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
-                const totalNextMonthDays = nextMonthEnd.getDate();
-                const nextMonthWeekOffs = totalNextMonthDays - nextMonthWorkingDays.length;
-
-                // Analyze current month attendance
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-                const currentMonthWorking = getWorkingDays(startOfMonth, yesterday > startOfMonth ? yesterday : startOfMonth, cachedSettings.weekOffs, cachedSettings.secondSaturday, cachedSettings.holidays, emp.joiningDate);
-
-                const myAttendance = cachedAttData[empId] || {};
-                let present = 0, absent = 0, leaves = 0;
-
-                currentMonthWorking.forEach(date => {
-                    const record = myAttendance[date] || {};
-                    const status = record.status || 'absent';
-                    if (status === 'absent') absent++;
-                    else if (status.includes('leave')) leaves++;
-                    else present++;
-                });
-
-                // Prediction logic matching Flutter App
-                let absenceRate = currentMonthWorking.length > 0 ? absent / currentMonthWorking.length : 0.05;
-                let leaveRate = currentMonthWorking.length > 0 ? leaves / currentMonthWorking.length : 0;
-
-                if (absenceRate < 0.05) absenceRate = 0;
-
-                let predictedAbsent = Math.round(nextMonthWorkingDays.length * absenceRate);
-                let predictedLeaves = Math.round((nextMonthWorkingDays.length / 30) * leaves);
-                let predictedPresent = nextMonthWorkingDays.length - predictedAbsent - predictedLeaves;
-                if (predictedPresent < 0) predictedPresent = 0;
-
-                const dailySalary = baseSalary / totalNextMonthDays;
-                let predictedSalary = Math.round(baseSalary - (predictedAbsent * dailySalary));
-                if (predictedSalary < 0) predictedSalary = 0;
-
-                let leaveProb = "Low";
-                if (leaveRate > 0.1) leaveProb = "High";
-                else if (leaveRate > 0.03) leaveProb = "Medium";
-
-                let trend = "Stable";
-                if (absenceRate == 0 && present > 10) trend = "Improving 📈";
-                else if (absenceRate > 0.1) trend = "Declining 📉";
-
-                // Update UI
-                document.getElementById('predSalary').textContent = formatMoney(predictedSalary);
-                document.getElementById('predPresent').textContent = `${predictedPresent} Days`;
-                document.getElementById('predAbsent').textContent = `${predictedAbsent} Days`;
-                document.getElementById('predWeekOffs').textContent = `${nextMonthWeekOffs} Days`;
-                document.getElementById('predLeaveProb').textContent = leaveProb;
-
-                const trendEl = document.getElementById('predTrend');
-                trendEl.textContent = trend;
-                trendEl.style.color = trend.includes("Improving") ? 'var(--success)' : trend.includes("Declining") ? 'var(--danger)' : '#3b82f6';
+                // Marketplace Access
+                const isMarketplace = visibilityMap.optIntoHireFlow === true;
+                const hfEl = document.getElementById('ppHireFlow');
+                hfEl.textContent = isMarketplace ? 'Opted-In' : 'Private';
+                hfEl.style.color = isMarketplace ? 'var(--success)' : 'var(--text-muted)';
 
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('resultsContainer').style.display = 'block';
-
-            } catch (e) {
+            } catch(e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
             }
         };
-
-        initPage();
-    </script>
+</script>
 
     <script src="sidebar.js"></script>
 </body>
