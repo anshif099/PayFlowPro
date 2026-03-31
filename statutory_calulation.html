@@ -7,19 +7,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="lang.js"></script>
   <style>
-    :root{--primary:#00ffc3;--primary-hover:#00e6af;--bg:#0b0f14;--card:#141a22;--input:#0f151d;--text:#fff;--muted:#8b92a0;--border:#1e2530;--danger:#ff6b6b;--warn:#ffa726;--sidebar:260px}
+    :root{--primary:#00ffc3;--primary-hover:#00e6af;--primary-hover-bg:rgba(0,255,195,.08);--primary-active-bg:rgba(0,255,195,.14);--bg:#0b0f14;--card:#141a22;--input:#0f151d;--text:#fff;--muted:#8b92a0;--border:#1e2530;--danger:#ff6b6b;--warn:#ffa726;--success:#00ffc3;--sidebar:260px}
     body.light-mode{--bg:#f0f2f5;--card:#fff;--input:#f8f9fa;--text:#1a1d21;--muted:#6c757d;--border:#e9ecef}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-    .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);padding:24px 12px;overflow-y:auto;z-index:20;transition:transform .25s ease}
+    .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;transition:transform .25s ease}
     .sidebar.open{transform:translateX(0)}
-    .brand{padding:0 12px 18px;border-bottom:1px solid var(--border)}
-    .brand h2{color:var(--primary);font-size:22px;font-weight:800}
+    .sidebar-header,.brand{padding:0 24px 24px;border-bottom:1px solid var(--border)}
+    .sidebar-header h2,.brand h2{color:var(--primary);font-size:22px;font-weight:800;display:flex;align-items:center;gap:8px}
     .lang-select,.field,select{width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit}
-    .lang-select{margin-top:12px;padding:10px 12px}
-    .nav{display:flex;flex-direction:column;gap:6px;padding-top:20px}
-    .nav a{color:var(--muted);text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:600;font-size:14px;transition:.2s}
-    .nav a:hover,.nav a.active{background:rgba(0,255,195,.12);color:var(--primary)}
+    .lang-select{margin-top:10px;padding:10px 12px}
+    .sidebar-nav,.nav{margin-top:24px;padding:0 12px;display:flex;flex-direction:column}
+    .nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:4px;border-radius:8px;color:var(--muted);cursor:pointer;transition:all .2s ease;font-weight:500;font-size:14px;text-decoration:none}
+    .nav-item:hover{background:var(--primary-hover-bg);color:var(--primary)}
+    .nav-item.active{background:var(--primary-active-bg);color:var(--primary);font-weight:600}
+    .nav-icon{width:20px;height:20px;font-size:18px}
+    .nav-dropdown{display:none;flex-direction:column;padding-left:32px;margin-bottom:4px}
+    .nav-dropdown.show{display:flex}
+    .dropdown-toggle{justify-content:space-between}
+    .nav-dropdown .nav-item{padding:10px 16px;font-size:13px;margin-bottom:2px}
+    .nav-dropdown .nav-icon{font-size:16px}
     .main{margin-left:var(--sidebar);min-height:100vh}
     .top{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--border);padding:20px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
     .top h1{font-size:24px;font-weight:700}
@@ -82,11 +89,64 @@
         <option value="te">Telugu</option>
       </select>
     </div>
-    <nav class="nav">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="employees.html">Manage Employees</a>
-      <a href="attendance.html">Attendance</a>
-      <a href="leave_management.html">Leave Management</a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-icon">&#128202;</span>
+        <span data-i18n="dashboard">Dashboard</span>
+      </a>
+      <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+        <span class="nav-icon">&#127970;</span>
+        <span data-i18n="manage_companies">Manage Companies</span>
+      </a>
+
+      <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="nav-icon">&#128101;</span>
+          <span data-i18n="employees">Employees</span>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="nav-dropdown" id="empDropdown">
+        <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+          <span class="nav-icon">&#128220;</span>
+          <span data-i18n="list_employees">List Employees</span>
+        </a>
+        <a href="employees.html" class="nav-item" id="nav-manage-employees">
+          <span class="nav-icon">&#9999;</span>
+          <span data-i18n="manage_employees">Manage Employees</span>
+        </a>
+      </div>
+
+      <a href="attendance.html" class="nav-item" id="nav-attendance" style="display:none;">
+        <span class="nav-icon">&#9989;</span>
+        <span data-i18n="attendance">Attendance</span>
+      </a>
+      <a href="leave_management.html" class="nav-item">
+        <span class="nav-icon">&#127958;</span>
+        <span data-i18n="leave_management">Leave Management</span>
+      </a>
+      <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+        <span class="nav-icon">&#128737;</span>
+        <span data-i18n="branch_admins">Branch Admins</span>
+      </a>
+
+      <div class="nav-item dropdown-toggle" onclick="toggleDropdown('intervalDropdown', this)" style="cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="nav-icon">&#9202;</span>
+          <span data-i18n="interval">Interval</span>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="nav-dropdown" id="intervalDropdown">
+        <a href="intervalmanagement.html" class="nav-item" id="nav-interval-management">
+          <span class="nav-icon">&#9202;</span>
+          <span data-i18n="interval_management">Interval Management</span>
+        </a>
+        <a href="intervals_history.html" class="nav-item" id="nav-intervals-history">
+          <span class="nav-icon">&#9203;</span>
+          <span data-i18n="intervals_history">Intervals History</span>
+        </a>
+      </div>
       
             <!-- Salary Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('salaryDropdown', this)" style="cursor:pointer;">
@@ -106,11 +166,43 @@
                     <span data-i18n="salary_payments">Salary Payments</span>
                 </a>
             </div>
-      <a href="statutory_calulation.html" class="active">Statutory Calculation</a>
+      <a href="statutory_calulation.html" class="nav-item active" id="nav-statutory-calculation">
+        <span class="nav-icon">&#9878;</span>
+        <span>Statutory Calculation</span>
+      </a>
       
-      <a href="salary_report.html">Salary Report</a>
-      <a href="monthly_report.html">Monthly Report</a>
-      <a href="documents.html">Documents</a>
+      <a href="salary_report.html" class="nav-item">
+        <span class="nav-icon">&#128200;</span>
+        <span data-i18n="salary_report">Salary Report</span>
+      </a>
+      <a href="monthly_report.html" class="nav-item">
+        <span class="nav-icon">&#128209;</span>
+        <span data-i18n="monthly_report">Monthly Report</span>
+      </a>
+      <a href="documents.html" class="nav-item">
+        <span class="nav-icon">&#128196;</span>
+        <span data-i18n="documents">Documents</span>
+      </a>
+      <a href="leaderboard.html" class="nav-item">
+        <span class="nav-icon">&#127942;</span>
+        <span data-i18n="leaderboard">Leaderboard</span>
+      </a>
+      <a href="ai_prediction.html" class="nav-item">
+        <span class="nav-icon">&#129504;</span>
+        <span data-i18n="ai_prediction">AI Prediction</span>
+      </a>
+      <a href="subscriptions.html" class="nav-item" id="nav-subscriptions">
+        <span class="nav-icon">&#128203;</span>
+        <span data-i18n="subscriptions">Subscriptions</span>
+      </a>
+      <a href="manage_notes.html" class="nav-item">
+        <span class="nav-icon">&#128221;</span>
+        <span data-i18n="manage_notes">Manage Notes</span>
+      </a>
+      <a href="manage_feedback.html" class="nav-item">
+        <span class="nav-icon">&#128172;</span>
+        <span data-i18n="manage_feedback">Feedback / Support</span>
+      </a>
       
             <!-- Setting Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('settingsDropdown', this)" style="cursor:pointer;">
@@ -219,6 +311,7 @@
     const $ = (id) => document.getElementById(id);
     const scope = () => ({ role: localStorage.getItem("role") || "", companyId: localStorage.getItem("companyId") || "", branch: localStorage.getItem("branch") || "" });
     const norm = (v) => String(v || "").trim().toLowerCase();
+    let allowedBranchTokens = new Set();
     let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
     const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
     const money = (v) => `${currencySymbol}${toAmount(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
@@ -268,8 +361,9 @@
 
         // Auto-load most recent record for this employee
         // records is already sorted newest first by renderRecords
-        const lastRec = records.find(r => r.linkedUserId === id);
+        const lastRec = records.find((r) => r.linkedUserId === id || r.linkedUserKey === emp.key);
         if (lastRec) {
+            $("increment").value = lastRec.increment || 0;
             $("hra").value = lastRec.hra || 0;
             $("allowances").value = lastRec.allowances || 0;
             $("pf").value = lastRec.pf || 0;
@@ -279,7 +373,7 @@
             $("tds").value = lastRec.tds || 0;
         } else {
             // Clear fields if no past record found for this employee
-            ["hra","allowances","pf","esi","pt","lwf","tds"].forEach(f => $(f).value = "");
+            ["increment","hra","allowances","pf","esi","pt","lwf","tds"].forEach(f => $(f).value = "");
         }
         updatePreviews();
       } catch (e) {
@@ -287,18 +381,74 @@
       }
     };
 
+    function buildAllowedBranchTokens(branchesSource, sessionBranchValue) {
+      const tokens = new Set();
+      const normalizedSessionBranch = norm(sessionBranchValue);
+
+      if (!normalizedSessionBranch) {
+        return tokens;
+      }
+
+      tokens.add(normalizedSessionBranch);
+
+      const collectBranchTokens = (key, rawBranch) => {
+        const branch = rawBranch || {};
+        const branchTokens = [
+          key,
+          branch.branchId,
+          branch.name,
+          branch.branchName
+        ].map(norm).filter(Boolean);
+
+        if (branchTokens.includes(normalizedSessionBranch)) {
+          branchTokens.forEach((token) => tokens.add(token));
+        }
+      };
+
+      if (branchesSource && typeof branchesSource.exists === "function") {
+        if (branchesSource.exists()) {
+          branchesSource.forEach((child) => collectBranchTokens(child.key, child.val()));
+        }
+      } else if (branchesSource && typeof branchesSource === "object") {
+        Object.entries(branchesSource).forEach(([key, value]) => {
+          if (value && typeof value === "object") {
+            collectBranchTokens(key, value);
+          }
+        });
+      }
+
+      return tokens;
+    }
+
+    function matchesScopedCompany(value) {
+      const sessionCompanyId = norm(scope().companyId);
+      if (!sessionCompanyId) {
+        return true;
+      }
+      return norm(value) === sessionCompanyId;
+    }
+
+    function matchesScopedBranch(value) {
+      const session = scope();
+      if (session.role !== "branch_admin") {
+        return true;
+      }
+
+      const branchValue = norm(value);
+      if (!branchValue) {
+        return false;
+      }
+
+      const allowedTokens = allowedBranchTokens.size ? allowedBranchTokens : new Set([norm(session.branch)]);
+      return allowedTokens.has(branchValue);
+    }
+
     function employeeAllowed(emp) {
-      const s = scope();
-      if (s.role === "branch_admin") return norm(emp.branch) === norm(s.branch);
-      if (s.role === "company_admin" && s.companyId) return norm(emp.companyId) === norm(s.companyId);
-      return true;
+      return matchesScopedCompany(emp.companyId) && matchesScopedBranch(emp.branch);
     }
 
     function recordAllowed(rec) {
-      const s = scope();
-      if (s.role === "branch_admin") return norm(rec.branch) === norm(s.branch);
-      if (s.role === "company_admin" && s.companyId) return norm(rec.companyId) === norm(s.companyId);
-      return true;
+      return matchesScopedCompany(rec.companyId) && matchesScopedBranch(rec.branch);
     }
 
     function updatePreviews() {
@@ -307,6 +457,25 @@
       $("grossPreview").textContent = money(gross);
       $("deductionPreview").textContent = money(deductions);
       $("netPreview").textContent = money(gross - deductions);
+    }
+
+    function refreshPreview() {
+      updatePreviews();
+    }
+
+    function findSelectableEmployeeId(rec) {
+      if (rec.linkedUserId && employees[rec.linkedUserId]) {
+        return rec.linkedUserId;
+      }
+
+      if (rec.linkedUserKey) {
+        const match = Object.values(employees).find((employee) => employee.key === rec.linkedUserKey);
+        if (match) {
+          return match.id;
+        }
+      }
+
+      return rec.linkedUserId || "";
     }
 
     function resetForm() {
@@ -349,7 +518,7 @@
       $("lwf").value = rec.lwf || 0;
       $("tds").value = rec.tds || 0;
       $("linkToggle").checked = true;
-      $("linkedUserSelect").value = rec.linkedUserId || "";
+      $("linkedUserSelect").value = findSelectableEmployeeId(rec);
       $("saveBtn").textContent = "Update Statutory Calculation";
       updatePreviews();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -389,6 +558,7 @@
         const current = $("linkedUserSelect").value;
         employees = {};
         $("linkedUserSelect").innerHTML = `<option value="">-- Select user --</option>`;
+        let visibleEmployees = 0;
         if (snapshot.exists()) snapshot.forEach((child) => {
           const value = child.val() || {};
           const id = String(value.empId || child.key || "").trim();
@@ -398,7 +568,17 @@
           const option = document.createElement("option");
           option.value = id; option.textContent = `${employee.name} (${id})`;
           $("linkedUserSelect").appendChild(option);
+          visibleEmployees += 1;
         });
+
+        if (visibleEmployees === 0) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "-- No matching users found --";
+          option.disabled = true;
+          $("linkedUserSelect").appendChild(option);
+        }
+
         if (current && employees[current]) {
            $("linkedUserSelect").value = current;
         } else if (!current && $("linkedUserSelect").options.length > 1) {
@@ -480,8 +660,23 @@
       resetForm();
     };
 
+    async function initializePage() {
+      try {
+        const branchesSnap = await get(ref(db, "branches"));
+        allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, scope().branch);
+      } catch (error) {
+        console.error("Error loading branches for statutory page:", error);
+        allowedBranchTokens = buildAllowedBranchTokens(null, scope().branch);
+      }
+
+      refreshPreview();
+      loadEmployees();
+      loadRecords();
+    }
+
     document.querySelectorAll(".amount-field").forEach((input) => input.addEventListener("input", refreshPreview));
-    refreshPreview(); loadEmployees(); loadRecords();
+    initializePage();
   </script>
+  <script src="sidebar.js"></script>
 </body>
 </html>

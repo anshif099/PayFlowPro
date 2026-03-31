@@ -556,26 +556,97 @@
         let cachedEmpData = null;
         let cachedAttData = null;
         let cachedSettings = null;
+        let cachedSettingsRoot = null;
+
+        const normalizeValue = (value) => (value || "").toString().trim().toLowerCase();
+
+        function buildAllowedBranchTokens(branchesSnap, sessionBranchValue) {
+            const allowedTokens = new Set();
+            const normalizedSessionBranch = normalizeValue(sessionBranchValue);
+
+            if (!normalizedSessionBranch) {
+                return allowedTokens;
+            }
+
+            allowedTokens.add(normalizedSessionBranch);
+
+            if (branchesSnap.exists()) {
+                branchesSnap.forEach(child => {
+                    const branch = child.val() || {};
+                    const tokens = [
+                        child.key,
+                        branch.branchId,
+                        branch.name,
+                        branch.branchName
+                    ].map(normalizeValue).filter(Boolean);
+
+                    if (tokens.includes(normalizedSessionBranch)) {
+                        tokens.forEach(token => allowedTokens.add(token));
+                    }
+                });
+            }
+
+            return allowedTokens;
+        }
+
+        async function resolveSettingsRoot(companyId, branch) {
+            let settingsRoot = "settings";
+
+            if (companyId) {
+                const companySettingsSnap = await get(ref(db, `settings/companies/${companyId}`));
+                if (companySettingsSnap.exists()) {
+                    settingsRoot = `settings/companies/${companyId}`;
+                }
+            }
+
+            if (settingsRoot === "settings" && branch) {
+                const branchSettingsSnap = await get(ref(db, `settings/branches/${branch}`));
+                if (branchSettingsSnap.exists()) {
+                    settingsRoot = `settings/branches/${branch}`;
+                }
+            }
+
+            return settingsRoot;
+        }
 
         async function initPage() {
             const role = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
+            const companyId = localStorage.getItem("companyId");
 
             try {
-                const empSnap = await get(ref(db, "employees"));
+                const [empSnap, branchesSnap] = await Promise.all([
+                    get(ref(db, "employees")),
+                    get(ref(db, "branches"))
+                ]);
+                cachedSettingsRoot = await resolveSettingsRoot(companyId, adminBranch);
                 if (empSnap.exists()) {
                     cachedEmpData = empSnap.val();
                     const selector = document.getElementById('empSelector');
+                    const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
+                    const sessionCompanyId = normalizeValue(companyId);
+                    let visibleEmployees = 0;
 
                     Object.keys(cachedEmpData).forEach(id => {
                         const emp = cachedEmpData[id];
-                        if (role !== 'super_admin' && emp.branch !== adminBranch) return;
+                        const empBranch = normalizeValue(emp.branch);
+                        const empCompanyId = normalizeValue(emp.companyId);
+                        if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) return;
+                        if ((role === 'company_admin' || role === 'super_admin') && empCompanyId !== sessionCompanyId) return;
 
                         const opt = document.createElement('option');
                         opt.value = id;
                         opt.textContent = `${emp.name} (${emp.empId})`;
                         selector.appendChild(opt);
+                        visibleEmployees++;
                     });
+
+                    if (visibleEmployees === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = '-- No employees found --';
+                        selector.appendChild(opt);
+                    }
                 }
             } catch (e) {
                 console.error("Error loading employees", e);
@@ -636,13 +707,15 @@
 
             try {
                 if (!cachedSettings || !cachedAttData) {
+                    const settingsRoot = cachedSettingsRoot || await resolveSettingsRoot(localStorage.getItem("companyId"), localStorage.getItem("branch"));
+                    cachedSettingsRoot = settingsRoot;
                     const [att, ot, int, wo, hol, ss] = await Promise.all([
                         get(ref(db, "attendance")),
-                        get(ref(db, "settings/officeTime")),
-                        get(ref(db, "settings/intervals")),
-                        get(ref(db, "settings/weekOffs")),
-                        get(ref(db, "settings/holidays")),
-                        get(ref(db, "settings/secondSaturday"))
+                        get(ref(db, `${settingsRoot}/officeTime`)),
+                        get(ref(db, `${settingsRoot}/intervals`)),
+                        get(ref(db, `${settingsRoot}/weekOffs`)),
+                        get(ref(db, `${settingsRoot}/holidays`)),
+                        get(ref(db, `${settingsRoot}/secondSaturday`))
                     ]);
                     cachedAttData = att.exists() ? att.val() : {};
                     const holidaySet = new Set();

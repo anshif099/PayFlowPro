@@ -571,6 +571,57 @@
             loadLeaderboard();
         };
 
+        const normalizeValue = (value) => (value || "").toString().trim().toLowerCase();
+
+        function buildAllowedBranchTokens(branchesSnap, sessionBranchValue) {
+            const allowedTokens = new Set();
+            const normalizedSessionBranch = normalizeValue(sessionBranchValue);
+
+            if (!normalizedSessionBranch) {
+                return allowedTokens;
+            }
+
+            allowedTokens.add(normalizedSessionBranch);
+
+            if (branchesSnap.exists()) {
+                branchesSnap.forEach(child => {
+                    const branch = child.val() || {};
+                    const tokens = [
+                        child.key,
+                        branch.branchId,
+                        branch.name,
+                        branch.branchName
+                    ].map(normalizeValue).filter(Boolean);
+
+                    if (tokens.includes(normalizedSessionBranch)) {
+                        tokens.forEach(token => allowedTokens.add(token));
+                    }
+                });
+            }
+
+            return allowedTokens;
+        }
+
+        async function resolveSettingsRoot(companyId, branch) {
+            let settingsRoot = "settings";
+
+            if (companyId) {
+                const companySettingsSnap = await get(ref(db, `settings/companies/${companyId}`));
+                if (companySettingsSnap.exists()) {
+                    settingsRoot = `settings/companies/${companyId}`;
+                }
+            }
+
+            if (settingsRoot === "settings" && branch) {
+                const branchSettingsSnap = await get(ref(db, `settings/branches/${branch}`));
+                if (branchSettingsSnap.exists()) {
+                    settingsRoot = `settings/branches/${branch}`;
+                }
+            }
+
+            return settingsRoot;
+        }
+
         function parseTime(timeStr) {
             if (!timeStr) return 0;
             const parts = timeStr.split(':');
@@ -710,23 +761,28 @@
             document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Calculating...</div>';
 
             try {
-                const [empSnap, attSnap, officeSnap, intSnap, woSnap, holSnap, ssSnap] = await Promise.all([
+                const role = localStorage.getItem("role");
+                const adminBranch = localStorage.getItem("branch");
+                const companyId = localStorage.getItem("companyId");
+                const settingsRoot = await resolveSettingsRoot(companyId, adminBranch);
+
+                const [empSnap, attSnap, branchesSnap, officeSnap, intSnap, woSnap, holSnap, ssSnap] = await Promise.all([
                     get(ref(db, "employees")),
                     get(ref(db, "attendance")),
-                    get(ref(db, "settings/officeTime")),
-                    get(ref(db, "settings/intervals")),
-                    get(ref(db, "settings/weekOffs")),
-                    get(ref(db, "settings/holidays")),
-                    get(ref(db, "settings/secondSaturday"))
+                    get(ref(db, "branches")),
+                    get(ref(db, `${settingsRoot}/officeTime`)),
+                    get(ref(db, `${settingsRoot}/intervals`)),
+                    get(ref(db, `${settingsRoot}/weekOffs`)),
+                    get(ref(db, `${settingsRoot}/holidays`)),
+                    get(ref(db, `${settingsRoot}/secondSaturday`))
                 ]);
 
                 if (!empSnap.exists()) {
                     document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No employees found.</div>';
                     return;
                 }
-
-                const role = localStorage.getItem("role");
-                const adminBranch = localStorage.getItem("branch");
+                const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
+                const sessionCompanyId = normalizeValue(companyId);
 
                 let officeStart = 9 * 60, officeEnd = 18 * 60, intervals = 0;
                 if (officeSnap.exists()) {
@@ -758,7 +814,10 @@
 
                 for (let empId in employees) {
                     const emp = employees[empId];
-                    if (role !== 'super_admin' && emp.branch !== adminBranch) continue;
+                    const empBranch = normalizeValue(emp.branch);
+                    const empCompanyId = normalizeValue(emp.companyId);
+                    if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) continue;
+                    if ((role === 'company_admin' || role === 'super_admin') && empCompanyId !== sessionCompanyId) continue;
 
                     const activeWorkingDays = getWorkingDays(currentFilter, weekOffs, ssData, holidays, emp.joiningDate);
 

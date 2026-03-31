@@ -823,11 +823,9 @@
       if (r === 'super_admin') {
         const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
         const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-        const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
         const el4 = document.getElementById('nav-attendance'); if (el4) el4.style.display = 'flex';
       } else if (r === 'company_admin') {
         const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-        const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
         const el4 = document.getElementById('nav-attendance'); if (el4) el4.style.display = 'flex';
       } else if (r === 'branch_admin') {
         // Hide attendance card for branch admin
@@ -836,45 +834,63 @@
       }
     })();
 
+    const normalizeBranchValue = (value) => (value || "").toString().trim().toLowerCase();
 
-    // 1. Fetch Employees, Attendance, Leave Requests, and Admins
-    Promise.all([
-      get(ref(db, "employees")),
-      get(ref(db, "attendance")),
-      get(ref(db, "leaveRequests")),
-      get(ref(db, "admins")),
-      get(ref(db, "settings/currencySymbol"))
-    ]).then(([empSnap, attSnap, leaveSnap, adminsSnap, currencySnap]) => {
-      currencySymbol = currencySnap.exists() ? (currencySnap.val() || "₹") : "₹";
-      localStorage.setItem("currencySymbol", currencySymbol);
-      const branchAdminBranches = new Set();
-      if (adminsSnap.exists()) {
-        adminsSnap.forEach(a => {
-          const admin = a.val();
-          if (admin.role === 'branch_admin' && admin.branch) {
-            branchAdminBranches.add(admin.branch);
+    function buildAllowedBranchTokens(branchesSnap, sessionBranchValue) {
+      const allowedTokens = new Set();
+      const normalizedSessionBranch = normalizeBranchValue(sessionBranchValue);
+
+      if (!normalizedSessionBranch) {
+        return allowedTokens;
+      }
+
+      allowedTokens.add(normalizedSessionBranch);
+
+      if (branchesSnap.exists()) {
+        branchesSnap.forEach(child => {
+          const branch = child.val() || {};
+          const tokens = [
+            child.key,
+            branch.branchId,
+            branch.name,
+            branch.branchName
+          ].map(normalizeBranchValue).filter(Boolean);
+
+          if (tokens.includes(normalizedSessionBranch)) {
+            tokens.forEach(token => allowedTokens.add(token));
           }
         });
       }
 
+      return allowedTokens;
+    }
+
+
+    // 1. Fetch Employees, Attendance, Leave Requests, and Branches
+    Promise.all([
+      get(ref(db, "employees")),
+      get(ref(db, "attendance")),
+      get(ref(db, "leaveRequests")),
+      get(ref(db, "branches")),
+      get(ref(db, "settings/currencySymbol"))
+    ]).then(([empSnap, attSnap, leaveSnap, branchesSnap, currencySnap]) => {
+      currencySymbol = currencySnap.exists() ? (currencySnap.val() || "₹") : "₹";
+      localStorage.setItem("currencySymbol", currencySymbol);
       const employees = [];
       const companyId = localStorage.getItem("companyId");
+      const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
 
       // Process Employees
       if (empSnap.exists()) {
         empSnap.forEach(c => {
           const e = c.val();
           let allow = true;
-          const empBranch = (e.branch || "").trim().toLowerCase();
-          const empCompanyId = (e.companyId || "").trim().toLowerCase();
-          const sessionBranch = (adminBranch || "").trim().toLowerCase();
-          const sessionCompanyId = (companyId || "").trim().toLowerCase();
-          const empBranchName = (e.branch || "").trim();
-          if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
+          const empBranch = normalizeBranchValue(e.branch);
+          const empCompanyId = normalizeBranchValue(e.companyId);
+          const sessionCompanyId = normalizeBranchValue(companyId);
+          if (adminRole === 'branch_admin' && !allowedBranchTokens.has(empBranch)) {
             allow = false;
-          } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
-            allow = false;
-          } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+          } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
             allow = false;
           }
           if (!allow) return;

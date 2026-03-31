@@ -602,6 +602,56 @@
         };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
 
+        const normalizeValue = (value) => (value || "").toString().trim().toLowerCase();
+
+        function buildAllowedBranchTokens(branchesSnap, sessionBranchValue) {
+            const allowedTokens = new Set();
+            const normalizedSessionBranch = normalizeValue(sessionBranchValue);
+
+            if (!normalizedSessionBranch) {
+                return allowedTokens;
+            }
+
+            allowedTokens.add(normalizedSessionBranch);
+
+            if (branchesSnap.exists()) {
+                branchesSnap.forEach(child => {
+                    const branch = child.val() || {};
+                    const tokens = [
+                        child.key,
+                        branch.branchId,
+                        branch.name,
+                        branch.branchName
+                    ].map(normalizeValue).filter(Boolean);
+
+                    if (tokens.includes(normalizedSessionBranch)) {
+                        tokens.forEach(token => allowedTokens.add(token));
+                    }
+                });
+            }
+
+            return allowedTokens;
+        }
+
+        function getEmployeeDocuments(docsMap, employeeId) {
+            const rawEmpId = (employeeId || "").toString().trim();
+            if (!rawEmpId) return [];
+
+            const sanitizedId = rawEmpId.replace(/[.#$\[\]]/g, '_');
+            const candidateKeys = [sanitizedId, rawEmpId];
+
+            for (const key of candidateKeys) {
+                const docValue = docsMap[key];
+                if (docValue && typeof docValue === 'object') {
+                    return Object.values(docValue)
+                        .filter(doc => doc && typeof doc === 'object')
+                        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                }
+            }
+
+            return [];
+        }
+
         function formatBytes(bytes) {
             if (bytes === 0 || !bytes) return '0 B';
             const k = 1024;
@@ -613,10 +663,12 @@
         async function loadDocuments() {
             const role = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
+            const companyId = localStorage.getItem("companyId");
 
             try {
                 const employeesSnap = await get(ref(db, "employees"));
                 const docsSnap = await get(ref(db, "documents"));
+                const branchesSnap = await get(ref(db, "branches"));
 
                 const container = document.getElementById('employeesContainer');
                 container.innerHTML = '';
@@ -627,16 +679,19 @@
                 }
 
                 const docsMap = docsSnap.exists() ? docsSnap.val() : {};
+                const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
+                const sessionCompanyId = normalizeValue(companyId);
 
                 let count = 0;
                 employeesSnap.forEach(snap => {
-                    const emp = snap.val();
-                    if (role !== 'super_admin' && emp.branch !== adminBranch) return;
+                    const emp = snap.val() || {};
+                    const empId = (emp.empId || snap.key || "").toString().trim();
+                    const empBranch = normalizeValue(emp.branch);
+                    const empCompanyId = normalizeValue(emp.companyId);
+                    if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) return;
+                    if ((role === 'company_admin' || role === 'super_admin') && empCompanyId !== sessionCompanyId) return;
 
-                    const rawEmpId = (emp.empId || "").trim();
-                    const sanitizedId = rawEmpId.replace(/[.#$\[\]]/g, '_');
-                    const empDocsObj = docsMap[sanitizedId] || {};
-                    const empDocs = Object.values(empDocsObj).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    const empDocs = getEmployeeDocuments(docsMap, empId);
 
                     let docsHtml = '';
                     if (empDocs.length === 0) {
@@ -645,7 +700,7 @@
                         empDocs.forEach(doc => {
                             const d = new Date(doc.timestamp || 0);
                             const dateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-                            const isPdf = doc.type === 'pdf';
+                            const isPdf = (doc.type || '').toString().toLowerCase() === 'pdf';
                             const icon = isPdf ? '📄' : '🖼️';
 
                             docsHtml += `
@@ -653,7 +708,7 @@
                                     <div class="doc-details">
                                         <span class="doc-icon">${icon}</span>
                                         <div>
-                                            <div class="doc-name" title="${doc.name}">${doc.name}</div>
+                                            <div class="doc-name" title="${doc.name || 'Document'}">${doc.name || 'Document'}</div>
                                             <div class="doc-meta">${dateStr} • ${formatBytes(doc.size)}</div>
                                         </div>
                                     </div>
@@ -670,8 +725,8 @@
                             <div class="employee-card-header">
                                 <div class="avatar">🧑</div>
                                 <div class="emp-info">
-                                    <h4>${emp.name}</h4>
-                                    <p>${emp.empId} • ${emp.role}</p>
+                                    <h4>${emp.name || 'Unknown Employee'}</h4>
+                                    <p>${empId || '-'} • ${emp.role || '-'}</p>
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -685,7 +740,7 @@
                 });
 
                 if (count === 0) {
-                    container.innerHTML = '<div class="no-docs" style="grid-column: 1/-1;">No matching employees found in your branch.</div>';
+                    container.innerHTML = '<div class="no-docs" style="grid-column: 1/-1;">No matching employees found.</div>';
                 }
 
             } catch (e) {

@@ -3,6 +3,9 @@
     const role = localStorage.getItem("role");
     const companyId = localStorage.getItem("companyId");
     const impersonatorRole = localStorage.getItem("impersonator_role");
+    const currentPage = window.location.pathname.split('/').pop() || '';
+    const canManageBranches = role === "super_admin" || role === "company_admin";
+    let isNormalizingBranchLinks = false;
 
     // Feature Mapping (Must match TierManagementPage in Flutter/Web)
     const FEATURE_MAPPING = {
@@ -20,6 +23,7 @@
         'monthly_report.html': 'monthly_report',
         'salary_report.html': 'salary_report',
         'statutory_calulation.html': 'statutory_calculation',
+        'nav-statutory-calculation': 'statutory_calculation',
         'documents.html': 'documents',
         'leaderboard.html': 'leaderboard',
         'ai_prediction.html': 'ai_prediction',
@@ -30,6 +34,143 @@
         'manage_admins.html': 'branches',
         'nav-branch-admins': 'branches'
     };
+
+    function normalizeBranchLinks() {
+        if (isNormalizingBranchLinks) return;
+        isNormalizingBranchLinks = true;
+
+        document.querySelectorAll('#nav-branch-admins').forEach(item => {
+            item.style.setProperty('display', 'none', 'important');
+            item.setAttribute('aria-hidden', 'true');
+            item.setAttribute('hidden', 'hidden');
+            item.classList.remove('active');
+        });
+
+        document.querySelectorAll('#nav-manage-branches').forEach(item => {
+            item.setAttribute('href', 'manage_branches.html');
+            if (canManageBranches) {
+                item.style.setProperty('display', 'flex', 'important');
+                item.removeAttribute('aria-hidden');
+                item.removeAttribute('hidden');
+            } else {
+                item.style.setProperty('display', 'none', 'important');
+                item.setAttribute('aria-hidden', 'true');
+                item.setAttribute('hidden', 'hidden');
+            }
+            if (currentPage === 'manage_branches.html' || currentPage === 'manage_admins.html') {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        isNormalizingBranchLinks = false;
+    }
+
+    function scheduleBranchLinkNormalization() {
+        normalizeBranchLinks();
+        setTimeout(normalizeBranchLinks, 0);
+        setTimeout(normalizeBranchLinks, 100);
+        setTimeout(normalizeBranchLinks, 500);
+        setTimeout(normalizeBranchLinks, 1500);
+        window.addEventListener('load', normalizeBranchLinks);
+        document.addEventListener('DOMContentLoaded', normalizeBranchLinks);
+    }
+
+    function normalizeSubscriptionLinks() {
+        const isSuperAdmin = role === "super_admin";
+        const isSubscriptionPage = currentPage === 'subscriptions.html';
+        const subscriptionItems = document.querySelectorAll('.sidebar-nav a[href="subscriptions.html"], .sidebar-nav a[href="my_subscription.html"]');
+
+        subscriptionItems.forEach(item => {
+            item.setAttribute('href', 'subscriptions.html');
+
+            const labelEl = item.querySelector('span[data-i18n]') ||
+                Array.from(item.querySelectorAll('span')).find(span => !span.classList.contains('nav-icon'));
+
+            if (labelEl) {
+                if (isSuperAdmin) {
+                    labelEl.setAttribute('data-i18n', 'subscriptions');
+                    labelEl.textContent = typeof t === 'function' ? t('subscriptions') : 'Subscriptions';
+                } else {
+                    labelEl.removeAttribute('data-i18n');
+                    labelEl.textContent = 'My Subscription';
+                }
+            }
+
+            if (isSubscriptionPage) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    function scheduleSubscriptionLinkNormalization() {
+        normalizeSubscriptionLinks();
+        setTimeout(normalizeSubscriptionLinks, 0);
+        setTimeout(normalizeSubscriptionLinks, 100);
+        setTimeout(normalizeSubscriptionLinks, 500);
+        window.addEventListener('load', normalizeSubscriptionLinks);
+        document.addEventListener('DOMContentLoaded', normalizeSubscriptionLinks);
+    }
+
+    function createStatutoryNavItem() {
+        const item = document.createElement('a');
+        item.href = 'statutory_calulation.html';
+        item.className = 'nav-item';
+        item.id = 'nav-statutory-calculation';
+        item.innerHTML = `
+            <span class="nav-icon">&#9878;</span>
+            <span>Statutory Calculation</span>
+        `;
+        return item;
+    }
+
+    function normalizeStatutoryLinks() {
+        const containers = document.querySelectorAll('.sidebar-nav');
+        const isActivePage = currentPage === 'statutory_calulation.html';
+
+        containers.forEach(container => {
+            let statutoryLink = container.querySelector('a[href="statutory_calulation.html"]');
+
+            if (!statutoryLink) {
+                statutoryLink = createStatutoryNavItem();
+
+                const monthlyReportLink = container.querySelector('a[href="monthly_report.html"]');
+                const salaryReportLink = container.querySelector('a[href="salary_report.html"]');
+                const documentsLink = container.querySelector('a[href="documents.html"]');
+
+                if (monthlyReportLink) {
+                    monthlyReportLink.insertAdjacentElement('afterend', statutoryLink);
+                } else if (salaryReportLink) {
+                    salaryReportLink.insertAdjacentElement('afterend', statutoryLink);
+                } else if (documentsLink) {
+                    documentsLink.insertAdjacentElement('beforebegin', statutoryLink);
+                } else {
+                    container.appendChild(statutoryLink);
+                }
+            }
+
+            statutoryLink.setAttribute('href', 'statutory_calulation.html');
+            statutoryLink.id = statutoryLink.id || 'nav-statutory-calculation';
+
+            if (isActivePage) {
+                statutoryLink.classList.add('active');
+            } else {
+                statutoryLink.classList.remove('active');
+            }
+        });
+    }
+
+    function scheduleStatutoryLinkNormalization() {
+        normalizeStatutoryLinks();
+        setTimeout(normalizeStatutoryLinks, 0);
+        setTimeout(normalizeStatutoryLinks, 100);
+        setTimeout(normalizeStatutoryLinks, 500);
+        window.addEventListener('load', normalizeStatutoryLinks);
+        document.addEventListener('DOMContentLoaded', normalizeStatutoryLinks);
+    }
 
     if (impersonatorRole === 'super_admin' || impersonatorRole === 'company_admin') {
         setTimeout(() => {
@@ -183,7 +324,7 @@
                         Upgrade to a higher tier to unlock this and more premium features.
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <button onclick="location='subscriptions.html'" style="background: var(--primary); color: #000; padding: 12px; font-weight: bold;">View Plans & Upgrade</button>
+                        <button onclick="location='subscriptions.html'" style="background: var(--primary); color: #000; padding: 12px; font-weight: bold;">${role === 'super_admin' ? 'View Plans & Upgrade' : 'Open My Subscription'}</button>
                         <button onclick="document.getElementById('upgradeModal').style.display='none'" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px;">Maybe Later</button>
                     </div>
                 </div>
@@ -218,6 +359,10 @@
         if (el3) el3.style.display = "flex";
         initAccessControl();
     }
+
+    scheduleBranchLinkNormalization();
+    scheduleSubscriptionLinkNormalization();
+    scheduleStatutoryLinkNormalization();
 })();
 
 window.toggleDropdown = function(id, el) {

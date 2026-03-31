@@ -563,8 +563,51 @@
         // Basic auth check
         if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
 
-        const role = localStorage.getItem("role");
+        const role = localStorage.getItem("role") || "";
         const adminName = localStorage.getItem("name") || "Admin";
+        const companyId = localStorage.getItem("companyId") || "";
+        const adminBranch = localStorage.getItem("branch") || "";
+
+        function normalizeOwnerValue(value) {
+            return String(value || "").trim().toLowerCase();
+        }
+
+        function buildOwnerKey(name, ownerRole, ownerCompanyId, ownerBranch) {
+            return [
+                normalizeOwnerValue(ownerRole),
+                normalizeOwnerValue(ownerCompanyId),
+                normalizeOwnerValue(ownerBranch),
+                normalizeOwnerValue(name)
+            ].join("|");
+        }
+
+        function noteBelongsToCurrentAdmin(note) {
+            const currentOwnerKey = buildOwnerKey(adminName, role, companyId, adminBranch);
+            const noteOwnerKey = normalizeOwnerValue(note.ownerKey);
+
+            if (noteOwnerKey && noteOwnerKey === currentOwnerKey) {
+                return true;
+            }
+
+            const sameName = normalizeOwnerValue(note.addedBy || note.ownerName) === normalizeOwnerValue(adminName);
+            const sameRole = normalizeOwnerValue(note.role || note.ownerRole) === normalizeOwnerValue(role);
+            const noteCompanyId = normalizeOwnerValue(note.companyId);
+            const noteBranch = normalizeOwnerValue(note.branch);
+
+            if (!sameName || !sameRole) {
+                return false;
+            }
+
+            if (noteCompanyId && noteCompanyId !== normalizeOwnerValue(companyId)) {
+                return false;
+            }
+
+            if (noteBranch && noteBranch !== normalizeOwnerValue(adminBranch)) {
+                return false;
+            }
+
+            return true;
+        }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
         window.logout = () => { localStorage.clear(); location = "index.html"; }
@@ -617,7 +660,12 @@
                     imageUrl: imageUrl,
                     date: new Date().toISOString(),
                     addedBy: adminName,
-                    role: role
+                    role: role,
+                    ownerName: adminName,
+                    ownerRole: role,
+                    companyId: companyId,
+                    branch: adminBranch,
+                    ownerKey: buildOwnerKey(adminName, role, companyId, adminBranch)
                 });
 
                 alert("Note Added Successfully!");
@@ -648,33 +696,40 @@
                     // Convert to array and sort by date descending
                     const notesArr = [];
                     snapshot.forEach(child => {
-                        notesArr.push({ id: child.key, ...child.val() });
+                        const note = { id: child.key, ...child.val() };
+                        if (noteBelongsToCurrentAdmin(note)) {
+                            notesArr.push(note);
+                        }
                     });
                     
                     notesArr.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                    notesArr.forEach(note => {
-                        const dateObj = new Date(note.date);
-                        const dateStr = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        
-                        const imgTag = note.imageUrl ? `<img src="${note.imageUrl}" class="note-img-preview" alt="Note Image">` : `<span style="color:var(--text-muted)">No Image</span>`;
-                        
-                        // Sanitize content to prevent XSS
-                        const safeTitle = (note.title || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                        const safeContent = (note.content || '').replace(/</g, "&lt;").replace(/>/g, "&gt;").substring(0, 100) + ((note.content && note.content.length > 100) ? '...' : '');
+                    if (notesArr.length === 0) {
+                        list.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No notes found</td></tr>`;
+                    } else {
+                        notesArr.forEach(note => {
+                            const dateObj = new Date(note.date);
+                            const dateStr = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            
+                            const imgTag = note.imageUrl ? `<img src="${note.imageUrl}" class="note-img-preview" alt="Note Image">` : `<span style="color:var(--text-muted)">No Image</span>`;
+                            
+                            // Sanitize content to prevent XSS
+                            const safeTitle = (note.title || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                            const safeContent = (note.content || '').replace(/</g, "&lt;").replace(/>/g, "&gt;").substring(0, 100) + ((note.content && note.content.length > 100) ? '...' : '');
 
-                        list.innerHTML += `
-                            <tr>
-                                <td>${dateStr}</td>
-                                <td><strong>${safeTitle}</strong></td>
-                                <td>${safeContent}</td>
-                                <td>${imgTag}</td>
-                                <td>
-                                    <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" onclick="deleteNote('${note.id}')" data-i18n="delete">Delete</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+                            list.innerHTML += `
+                                <tr>
+                                    <td>${dateStr}</td>
+                                    <td><strong>${safeTitle}</strong></td>
+                                    <td>${safeContent}</td>
+                                    <td>${imgTag}</td>
+                                    <td>
+                                        <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" onclick="deleteNote('${note.id}')" data-i18n="delete">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
                 } else {
                     list.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No notes found</td></tr>`;
                 }
