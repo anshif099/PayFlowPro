@@ -235,18 +235,30 @@
 
                 // Fetch plan features
                 const planSnap = await get(ref(db, `plan_definitions/${planId}`));
+                
+                let allowedFeatures = {};
+                let planName = planId;
 
                 if (planSnap.exists()) {
                     const planData = planSnap.val();
-                    const allowedFeatures = planData.features || {};
-                    applyLocks(allowedFeatures, planData.name || planId);
-                } else {
-                    // No plan definition found — lock everything as safe default
-                    applyLocks({}, planId);
+                    allowedFeatures = planData.features || {};
+                    planName = planData.name || planId;
+                }
+                
+                applyLocks(allowedFeatures, planName);
+                
+                // Page-level eviction
+                const currentFeature = FEATURE_MAPPING[currentPage];
+                if (currentFeature && allowedFeatures[currentFeature] !== true) {
+                    document.body.innerHTML = '<div style="display:flex; height:100vh; width:100%; align-items:center; justify-content:center; background:#0b0f14; color:#fff; flex-direction:column;"><h2>🔒 Premium Feature</h2><p style="color:#8b92a0; margin-top:10px;">This feature is not unlocked in your current plan.</p><button onclick="window.location.href=\\\'dashboard.html\\\'" style="margin-top:20px; padding:10px 20px; background:#00ffc3; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go Back</button></div>';
                 }
             } else {
                 // No subscription found at all — lock everything
                 applyLocks({}, 'No Plan');
+                const currentFeature = FEATURE_MAPPING[currentPage];
+                if (currentFeature) {
+                    window.location.href = 'dashboard.html';
+                }
             }
         } catch (e) { console.error("Access Control Error:", e); }
     }
@@ -267,7 +279,7 @@
                 if (match && FEATURE_MAPPING[match[1]]) featureKey = FEATURE_MAPPING[match[1]];
             }
             
-            if (featureKey && allowedFeatures[featureKey] === false) {
+            if (featureKey && allowedFeatures[featureKey] !== true) {
                 // Lock this item
                 lockItem(item, planName);
             }
