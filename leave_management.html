@@ -788,7 +788,9 @@
         // Config Path Logic
         const configPath = (adminRole === 'branch_admin' && adminBranch)
             ? `settings/branches/${adminBranch}/leaveConfig`
-            : `settings/leaveConfig`;
+            : (adminRole === 'company_admin' && companyId)
+                ? `settings/companies/${companyId}/leaveConfig`
+                : `settings/leaveConfig`;
 
         // Load leave configuration
         onValue(ref(db, configPath), s => {
@@ -797,6 +799,14 @@
                 const config = s.val();
                 el.value = config.paidLeavesPerMonth || 0;
             } else {
+                // Fallback for company/branch admin to global settings if specifically not set for them
+                if (configPath !== 'settings/leaveConfig') {
+                    get(ref(db, 'settings/leaveConfig')).then(gs => {
+                        if (gs.exists() && !document.getElementById('paidLeavesPerMonth').value) {
+                             document.getElementById('paidLeavesPerMonth').value = gs.val().paidLeavesPerMonth || 0;
+                        }
+                    });
+                }
                 el.value = 0;
             }
         });
