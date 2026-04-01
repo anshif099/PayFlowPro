@@ -1100,6 +1100,18 @@
             </div>
 
             <div class="card">
+                <h3 data-i18n="notice_period_settings">Notice Period Settings</h3>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="notice_period_desc">Set the number of days for the required notice period.</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-i18n="notice_period_days">No. of Days</label>
+                        <input type="number" id="noticePeriodInput" min="0" placeholder="e.g., 30">
+                    </div>
+                </div>
+                <button onclick="saveNoticePeriod()" data-i18n="save_notice_period">💾 Save Notice Period</button>
+            </div>
+
+            <div class="card">
                 <h3>Currency Symbol Settings</h3>
                 <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Choose the default currency symbol shown across the admin web, admin app, and user app. This updates display only and does not convert values.</p>
                 <div class="form-grid">
@@ -1672,6 +1684,25 @@
             }
             set(ref(db, `${settingsRoot}/salaryDay`), day).then(() => {
                 alert('Salary Day saved successfully!');
+            });
+        };
+
+        // Notice Period
+        onValue(ref(db, `${settingsRoot}/noticePeriod`), s => {
+            if (s.exists()) {
+                document.getElementById('noticePeriodInput').value = s.val();
+            } else {
+                document.getElementById('noticePeriodInput').value = '';
+            }
+        });
+        window.saveNoticePeriod = () => {
+            const days = parseInt(document.getElementById('noticePeriodInput').value);
+            if (isNaN(days) || days < 0) {
+                alert('Please enter a valid number of days.');
+                return;
+            }
+            set(ref(db, `${settingsRoot}/noticePeriod`), days).then(() => {
+                alert('Notice Period saved successfully!');
             });
         };
 

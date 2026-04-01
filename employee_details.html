@@ -577,12 +577,13 @@
                 </div>
                 
                 <div class="att-summary-grid" id="attSummary">
-                    <div class="summary-card"><div class="value" id="statPresent">-</div><div class="label" data-i18n="present">Present</div></div>
-                    <div class="summary-card"><div class="value" id="statLeaves">-</div><div class="label" data-i18n="leaves">Leaves</div></div>
-                    <div class="summary-card"><div class="value" id="statWeekOff">-</div><div class="label" data-i18n="week_off">Week Off</div></div>
+                    <div class="summary-card" style="background: var(--blue); border-color: rgba(255,255,255,0.2);"><div class="value" id="statPayable" style="color: white;">-</div><div class="label" style="color: rgba(255,255,255,0.8);">Total Payable</div></div>
+                    <div class="summary-card"><div class="value" id="statPresent">-</div><div class="label" data-i18n="present">Attended (Full)</div></div>
+                    <div class="summary-card"><div class="value" id="statLeaves">-</div><div class="label" data-i18n="leaves">Paid Leaves</div></div>
+                    <div class="summary-card"><div class="value" id="statWeekOff">-</div><div class="label" data-i18n="week_off">Week Offs</div></div>
                     <div class="summary-card"><div class="value" id="statHoliday">-</div><div class="label" data-i18n="holiday">Holidays</div></div>
-                    <div class="summary-card"><div class="value" id="statPercent">-</div><div class="label" data-i18n="attendance">Attendance</div></div>
-                    <div class="summary-card"><div class="value" id="statSalary">-</div><div class="label" data-i18n="salary">Salary</div></div>
+                    <div class="summary-card" style="background: var(--primary);"><div class="value" id="statPercent" style="color: var(--bg-dark);">-</div><div class="label" data-i18n="attendance" style="color: rgba(0,0,0,0.6);">Monthly Attendance</div></div>
+                    <div class="summary-card"><div class="value" id="statSalary">-</div><div class="label" data-i18n="salary">Earned Salary</div></div>
                 </div>
 
                 <div class="calendar-container">
@@ -704,16 +705,34 @@
             const today = new Date();
             const isCurrentMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
 
-            get(ref(db, `attendance/${targetEmpId}`)).then(async (snap) => {
-                const empSnap = await get(ref(db, `employees/${targetEmpId}`));
+            const sanitizedId = targetEmpId.replace(/[.#$\[\]]/g, '_');
+
+            onValue(ref(db, `attendance/${sanitizedId}`), async (snap) => {
+                const empSnap = await get(ref(db, `employees/${sanitizedId}`));
                 const employee = empSnap.val() || {};
                 const salary = employee.salary || 0;
                 
+                let onboardingDate = employee.onboardingDate || "";
+                if (!onboardingDate && employee.createdAt) {
+                    onboardingDate = employee.createdAt.split('T')[0];
+                }
+
                 // Fetch Settings for Week-Offs and Holidays
-                const settingsSnap = await get(ref(db, "settings"));
+                let settingsPath = "settings";
+                if (employee.companyId) {
+                    const compSnap = await get(ref(db, `settings/companies/${employee.companyId}`));
+                    if (compSnap.exists()) settingsPath = `settings/companies/${employee.companyId}`;
+                }
+                if (settingsPath === "settings" && employee.branch) {
+                    const branchSnap = await get(ref(db, `settings/branches/${employee.branch}`));
+                    if (branchSnap.exists()) settingsPath = `settings/branches/${employee.branch}`;
+                }
+
+                const settingsSnap = await get(ref(db, settingsPath));
                 const settings = settingsSnap.val() || {};
                 const weekOffNames = Array.isArray(settings.weekOffs) ? settings.weekOffs.map(w => w.toString()) : [];
-                const isSecondSaturdayEnabled = settings.secondSaturday === true;
+                
+                const secondSaturdayData = settings.secondSaturday;
                 const rawHolidays = settings.holidays || {};
                 const holidays = {};
                 Object.values(rawHolidays).forEach(h => {
@@ -735,12 +754,19 @@
                     const date = new Date(year, month - 1, d);
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                    const isFuture = date > today && !isCurrentMonth;
                     
-                    // Don't count future dates in current month stats
-                    if (isCurrentMonth && d > today.getDate()) continue;
-
                     const record = attendance[dateStr] || {};
                     let status = record.status || '';
+
+                    // Don't count "Present" stats for future dates in stats summary if not marked,
+                    // but ALWAYS show labels/badges in calendar.
+                    let skipForStats = false;
+                    if (isCurrentMonth && d > today.getDate() && !status) skipForStats = true;
+                    if (isFuture && !status) skipForStats = true;
+                    
+                    // Skip dates before onboarding ONLY if no manual status is present
+                    if (onboardingDate && dateStr < onboardingDate && !status) continue;
                     
                     // If no status, check settings
                     if (!status) {
@@ -748,19 +774,49 @@
                             status = 'holiday';
                         } else {
                             let isSecSat = false;
-                            if (isSecondSaturdayEnabled && dayName === 'Saturday') {
-                                let satCount = 0;
-                                for (let i = 1; i <= d; i++) {
-                                    if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                            if (secondSaturdayData && dayName === 'Saturday') {
+                                if (secondSaturdayData === true || secondSaturdayData.enabled === true) {
+                                    let satCount = 0;
+                                    for (let i = 1; i <= d; i++) {
+                                        if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                    }
+                                    if (satCount === 2) isSecSat = true;
+                                } else if (secondSaturdayData.disabledAt) {
+                                    try {
+                                        const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                        const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                        const currentDateOnly = new Date(year, month - 1, d);
+                                        if (currentDateOnly < disabledDateOnly) {
+                                            let satCount = 0;
+                                            for (let i = 1; i <= d; i++) {
+                                                if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                            }
+                                            if (satCount === 2) isSecSat = true;
+                                        }
+                                    } catch (e) { }
                                 }
-                                if (satCount === 2) isSecSat = true;
                             }
                             if (isSecSat || weekOffNames.includes(dayName)) {
                                 status = 'week-off';
                             }
                         }
                     }
-
+                    
+                    // Stats Increment Logic:
+                    // 1. If it's a future date in the CURRENT month, we only count it if specifically MARKED.
+                    //    This prevents inflated percentages (like 700% on Day 1).
+                    // 2. If it's a PAST month or FUTURE month (not current), we count everything for the projection.
+                    
+                    if (isCurrentMonth && d > today.getDate() && !record.status) {
+                        // Skip incrementing for display cards for future days in current month
+                        continue;
+                    }
+                    
+                    // For any month (Past/Current/Future), if we reached here, it means:
+                    // - It's past/today in current month OR
+                    // - It's a completely past/future month OR
+                    // - There's a manual record.
+                    
                     if (status === 'in') attendedCount += 1.0;
                     else if (status === 'halfday') attendedCount += 0.5;
                     
@@ -786,22 +842,43 @@
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                     
                     if (isCurrentMonth && d === today.getDate()) cell.classList.add('today');
-
+                    
                     const record = attendance[dateStr] || {};
                     let status = record.status || '';
                     
+                    if (onboardingDate && dateStr < onboardingDate && !status) {
+                        cell.classList.add('calendar-day', 'empty');
+                        grid.appendChild(cell);
+                        continue;
+                    }
+
                     // Same logic for rendering
                     if (!status) {
                         if (holidays[dateStr]) {
                             status = 'holiday';
                         } else {
                             let isSecSat = false;
-                            if (isSecondSaturdayEnabled && dayName === 'Saturday') {
-                                let satCount = 0;
-                                for (let i = 1; i <= d; i++) {
-                                    if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                            if (secondSaturdayData && dayName === 'Saturday') {
+                                if (secondSaturdayData === true || secondSaturdayData.enabled === true) {
+                                    let satCount = 0;
+                                    for (let i = 1; i <= d; i++) {
+                                        if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                    }
+                                    if (satCount === 2) isSecSat = true;
+                                } else if (secondSaturdayData.disabledAt) {
+                                    try {
+                                        const disabledDate = new Date(secondSaturdayData.disabledAt);
+                                        const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
+                                        const currentDateOnly = new Date(year, month - 1, d);
+                                        if (currentDateOnly < disabledDateOnly) {
+                                            let satCount = 0;
+                                            for (let i = 1; i <= d; i++) {
+                                                if (new Date(year, month - 1, i).getDay() === 6) satCount++;
+                                            }
+                                            if (satCount === 2) isSecSat = true;
+                                        }
+                                    } catch (e) {}
                                 }
-                                if (satCount === 2) isSecSat = true;
                             }
                             if (isSecSat || weekOffNames.includes(dayName)) {
                                 status = 'week-off';
@@ -828,16 +905,32 @@
                         cell.innerHTML += `<span class="day-badge" style="background:rgba(0,0,0,0.2)">${badgeTxt}</span>`;
                     }
                     
-                    grid.appendChild(cell);
+                grid.appendChild(cell);
+                }
+
+                // If entire month is before onboarding AND no attendance is found, show message
+                const hasAttendance = Object.keys(attendance).some(k => k.startsWith(monthKey));
+                const lastDayOfMonthStr = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+                if (onboardingDate && lastDayOfMonthStr < onboardingDate && !hasAttendance) {
+                    grid.innerHTML = `
+                        <div style="grid-column: span 7; padding: 40px; text-align: center;">
+                            <div style="font-size: 50px; margin-bottom: 20px;">ℹ️</div>
+                            <h4 style="color: var(--primary); margin-bottom: 10px;">Joined on ${new Date(onboardingDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h4>
+                            <p style="color: var(--text-muted); font-size: 14px;">Attendance data is only available from the join date.</p>
+                        </div>
+                    `;
                 }
 
                 // Update Stats
-                const presentDays = attendedCount + payableLeaveCount + weekOffCount + holidayCount;
-                const attendancePercent = (presentDays / daysInMonth) * 100;
-                const earnedSalary = (salary / daysInMonth) * presentDays;
+                const totalPayable = attendedCount + payableLeaveCount + weekOffCount + holidayCount;
+                const divisor = isCurrentMonth ? today.getDate() : daysInMonth;
+                let attendancePercent = (totalPayable / divisor) * 100;
+                if (attendancePercent > 100) attendancePercent = 100; // Cap at 100%
+                const earnedSalary = (salary / daysInMonth) * totalPayable;
 
-                document.getElementById('statPresent').textContent = attendedCount.toString().replace(/\.0$/, '');
-                document.getElementById('statLeaves').textContent = leaveCount;
+                document.getElementById('statPayable').textContent = totalPayable.toFixed(1).replace(/\.0$/, '');
+                document.getElementById('statPresent').textContent = attendedCount.toFixed(1).replace(/\.0$/, '');
+                document.getElementById('statLeaves').textContent = payableLeaveCount;
                 document.getElementById('statWeekOff').textContent = weekOffCount;
                 document.getElementById('statHoliday').textContent = holidayCount;
                 document.getElementById('statPercent').textContent = `${attendancePercent.toFixed(1)}%`;

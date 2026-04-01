@@ -692,7 +692,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -743,12 +743,13 @@
 
         // Fetch Employees to build whitelist and populate datalist
         const empMap = {}; // Map ID -> Name
+        const empOnboardingMap = {}; // Map ID -> onboardingDate or createdAt
         // Initialize date inputs to max today
         // Initialize date inputs to max today AND set default filter to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('attDate').max = today;
-        document.getElementById('bulkFrom').max = today;
-        document.getElementById('bulkTo').max = today;
+        // document.getElementById('bulkFrom').max = today;
+        // document.getElementById('bulkTo').max = today;
         document.getElementById('filterFromDate').value = today; // Default to today
         document.getElementById('filterToDate').value = today; // Default to today
 
@@ -795,6 +796,13 @@
 
                             empMap[c.key] = e.name;
                             if (e.empId) empMap[e.empId] = e.name;
+
+                            let obDate = e.onboardingDate;
+                            if (!obDate && e.createdAt) {
+                                obDate = e.createdAt.split('T')[0];
+                            }
+                            empOnboardingMap[c.key] = obDate;
+                            if (e.empId) empOnboardingMap[e.empId] = obDate;
 
                             // Populate datalist with Value=ID, Label=Name
                             const option = document.createElement('option');
@@ -960,6 +968,12 @@
 
             const status = document.getElementById('attStatus').value;
             const date = document.getElementById('attDate').value;
+
+            if (empOnboardingMap[empId] && date < empOnboardingMap[empId]) {
+                alert("You cannot join this company before onboarding date: " + empOnboardingMap[empId]);
+                return;
+            }
+
             let punchInTime = document.getElementById('attIn').value;
             let punchOutTime = document.getElementById('attOut').value;
 
@@ -979,7 +993,8 @@
             document.getElementById('filterFromDate').value = date;
             document.getElementById('filterToDate').value = date;
 
-            set(ref(db, `attendance/${empId}/${date}`), {
+            const sanitizedId = empId.replace(/[.#$\[\]]/g, '_');
+            set(ref(db, `attendance/${sanitizedId}/${date}`), {
                 punchIn: punchInTime ? {
                     time: punchInTime,
                     admin: true,
@@ -1033,6 +1048,13 @@
 
             const from = new Date(document.getElementById('bulkFrom').value);
             const to = new Date(document.getElementById('bulkTo').value);
+            
+            const fromDateStr = document.getElementById('bulkFrom').value;
+            if (empOnboardingMap[emp] && fromDateStr < empOnboardingMap[emp]) {
+                alert("You cannot join this company before onboarding date: " + empOnboardingMap[emp]);
+                return;
+            }
+
             const status = document.getElementById('bulkStatus').value;
             let punchInTime = document.getElementById('bulkIn').value;
             let punchOutTime = document.getElementById('bulkOut').value;
@@ -1047,8 +1069,20 @@
                 if (!punchOutTime) punchOutTime = storedOfficeEnd;
             }
 
-            // Fetch settings for WeekOffs and Holidays
-            const globalSettingsSnap = await get(ref(db, "settings"));
+            let settingsRoot = "settings";
+            if (emp) {
+                const empSnap = await get(ref(db, `employees/${emp}`));
+                const employee = empSnap.val() || {};
+                if (employee.companyId) {
+                    const compSnap = await get(ref(db, `settings/companies/${employee.companyId}`));
+                    if (compSnap.exists()) settingsRoot = `settings/companies/${employee.companyId}`;
+                } else if (employee.branch) {
+                    const branchSnap = await get(ref(db, `settings/branches/${employee.branch}`));
+                    if (branchSnap.exists()) settingsRoot = `settings/branches/${employee.branch}`;
+                }
+            }
+
+            const globalSettingsSnap = await get(ref(db, settingsRoot));
             const weekOffNames = globalSettingsSnap.child("weekOffs").val() || [];
             const allHolidaysRaw = globalSettingsSnap.child("holidays").val() || {};
             const secondSaturdayData = globalSettingsSnap.child("secondSaturday").val();
@@ -1058,52 +1092,49 @@
                 if (h && h.date) allHolidays[h.date] = true;
             });
 
-            for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-                const key = d.toISOString().split("T")[0];
+            const sanitizedId = emp.replace(/[.#$\[\]]/g, '_');
+            const updates = {};
+            let count = 0;
+            
+            // Use local dates and a clone to avoid mutation bugs
+            let current = new Date(from);
+            while (current <= to) {
+                const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
                 
-                // Check for Holiday
-                if (allHolidays[key]) continue;
-
-                // Check for WeekOff
-                const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-                let isWO = weekOffNames.includes(dayName);
-                
-                // Check Second Saturday
-                const dateNum = d.getDate();
-                if (!isWO && dayName === 'Saturday' && dateNum >= 8 && dateNum <= 14) {
-                    if (secondSaturdayData === true) {
-                        isWO = true;
-                    } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
-                        if (secondSaturdayData.enabled === true) {
-                            isWO = true;
-                        } else if (secondSaturdayData.disabledAt) {
-                            try {
-                                const disabledDate = new Date(secondSaturdayData.disabledAt);
-                                const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
-                                const currentDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                                if (currentDateOnly <= disabledDateOnly) {
-                                    isWO = true;
-                                }
-                            } catch (e) { }
-                        }
-                    }
-                }
-
-                if (isWO) continue;
-
-                await set(ref(db, `attendance/${emp}/${key}`), {
+                updates[`attendance/${sanitizedId}/${key}`] = {
                     punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
                     punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
-                    status
-                });
+                    status: status
+                };
+                
+                count++;
+                current.setDate(current.getDate() + 1);
             }
 
-            document.getElementById('filterFromDate').value = document.getElementById('bulkFrom').value;
-            document.getElementById('filterToDate').value = document.getElementById('bulkTo').value;
+            if (count === 0) {
+                alert("No dates found in range! Please check from/to dates.");
+                return;
+            }
 
-            alert("Bulk attendance completed successfully!");
-            document.getElementById('bulkEmpId').value = '';
-            document.getElementById('bulkFrom').value = '';
+            if (!confirm(`Mark ${status.toUpperCase()} for ${empMap[emp]} (${sanitizedId}) from ${document.getElementById('bulkFrom').value} to ${document.getElementById('bulkTo').value}? (${count} days)`)) {
+                return;
+            }
+
+            try {
+                await update(ref(db), updates);
+                alert(`Successfully marked bulk attendance for ${count} days!`);
+                
+                // Clear form
+                document.getElementById('bulkEmpId').value = '';
+                document.getElementById('bulkFrom').value = '';
+                document.getElementById('bulkTo').value = '';
+                document.getElementById('bulkIn').value = '';
+                document.getElementById('bulkOut').value = '';
+                toggleBulkTimes();
+            } catch (err) {
+                console.error("Bulk mark failed:", err);
+                alert("Error saving bulk attendance: " + err.message);
+            }
             document.getElementById('bulkTo').value = '';
             document.getElementById('bulkIn').value = '';
             document.getElementById('bulkOut').value = '';
@@ -1163,6 +1194,9 @@
                 
                 if (filterFromDate && row.date < filterFromDate) return;
                 if (filterToDate && row.date > filterToDate) return;
+
+                // Onboarding Check
+                if (empOnboardingMap[row.empId] && row.date < empOnboardingMap[row.empId]) return;
 
                 // Calculate Time Analysis
                 let lateInMins = 0;

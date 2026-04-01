@@ -286,6 +286,50 @@
                 display: block;
             }
         }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .status-pill.present { background: rgba(0, 255, 195, 0.1); color: var(--success); border: 1px solid rgba(0, 255, 195, 0.2); }
+        .status-pill.absent { background: rgba(255, 92, 92, 0.1); color: var(--danger); border: 1px solid rgba(255, 92, 92, 0.2); }
+        .status-pill.leave { background: rgba(255, 167, 38, 0.1); color: #ffa726; border: 1px solid rgba(255, 167, 38, 0.2); }
+
     </style>
 </head>
 
@@ -486,23 +530,45 @@
             </div>
 
         <div class="dashboard-section">
+            
+            <!-- Summary Stats (Today) -->
+            <div class="stats-grid">
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='view_employees.html'">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Employees</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='view_employees.html?filter=present'">
+                    <div class="stat-value" id="stat-present" style="color:var(--success)">0</div>
+                    <div class="stat-label">Present Today</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='view_employees.html?filter=absent'">
+                    <div class="stat-value" id="stat-absent" style="color:var(--danger)">0</div>
+                    <div class="stat-label">Absent Today</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="location.href='view_employees.html?filter=leaves'">
+                    <div class="stat-value" id="stat-leave" style="color:#ffa726">0</div>
+                    <div class="stat-label">On Leave Today</div>
+                </div>
+            </div>
+
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap;">
                     <h3 data-i18n="employee_list" style="margin-bottom: 0;">Employee List</h3>
-                    <input type="text" id="searchInput" placeholder="Search by Name or ID..." onkeyup="renderEmployees()" 
-                        style="padding: 10px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; width: 250px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1; justify-content: flex-end;">
+                        <input type="month" id="monthPicker" style="padding: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px;">
+                        <input type="text" id="searchInput" placeholder="Search by Name or ID..." onkeyup="renderEmployees()" 
+                            style="padding: 10px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; width: 200px;">
+                    </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th data-i18n="profile_pic">Profile</th>
                                 <th data-i18n="name_id">Name / ID</th>
-                                <th data-i18n="mobile_number">Mobile</th>
-                                <th data-i18n="role">Role</th>
-                                <th data-i18n="branch">Branch & Dept</th>
-                                <th data-i18n="status">Status</th>
-                                <th data-i18n="action">Action</th>
+                                <th>Branch</th>
+                                <th style="text-align:center;">Monthly Summary</th>
+                                <th style="text-align:center;">Today</th>
+                                <th data-i18n="action" style="text-align:right;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="data"></tbody>
@@ -578,65 +644,148 @@
         };
 
         
-        window.renderEmployees = function() {
-            const data = document.getElementById('data');
-            data.innerHTML = "";
-            let count = 0;
+        // Initialize Month Picker
+        const todayFull = new Date();
+        const monthInput = document.getElementById('monthPicker');
+        monthInput.value = `${todayFull.getFullYear()}-${String(todayFull.getMonth() + 1).padStart(2, '0')}`;
+        monthInput.onchange = () => renderEmployees();
+
+        window.renderEmployees = async function() {
+            const dataContainer = document.getElementById('data');
+            dataContainer.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px;'>Calculating...</td></tr>";
+            let filteredCount = 0;
             const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            
+            const selectedMonth = monthInput.value; // YYYY-MM
+            const [year, month] = selectedMonth.split('-').map(Number);
+            const monthStr = selectedMonth;
+            const now = new Date();
+            const isCurrentMonth = now.getFullYear() === year && (now.getMonth() + 1) === month;
+            const today = now.toISOString().split('T')[0];
+            
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const daysToCount = isCurrentMonth ? now.getDate() : daysInMonth;
+
+            // Fetch settings for calculation (cached)
+            if (!window.settingsCache) window.settingsCache = {};
+            
+            let totalAcc = 0;
+            let presentAcc = 0;
+            let absentAcc = 0;
+            let leaveAcc = 0;
+
+            let htmlString = "";
 
             if (window.allEmployeesData && window.allEmployeesData.length > 0) {
-                window.allEmployeesData.forEach(e => {
+                for (const e of window.allEmployeesData) {
                     const nameMatch = (e.name || '').toLowerCase().includes(query);
                     const idMatch = (e.empId || '').toLowerCase().includes(query);
                     
-                    if (query && !nameMatch && !idMatch) return;
+                    if (query && !nameMatch && !idMatch) continue;
 
-                    // Presence/Absence Filter logic
-                    const today = new Date().toISOString().split('T')[0];
                     const att = window.attendanceData || {};
-                    const empAtt = att[e.empId] || {};
-                    const record = empAtt[today] || {};
-                    const attStatus = record.status || '';
+                    const empIdSanitized = (e.empId || '').replace(/[.#$\[\]]/g, '_');
+                    const empAtt = att[empIdSanitized] || att[e.empId] || {};
+                    const todayRecord = empAtt[today] || {};
+                    const todayStatus = todayRecord.status || 'absent';
+                    const isPresent = todayStatus === 'in' || todayStatus === 'out';
+                    const isLeave = todayStatus.includes('leave') || todayStatus === 'halfday';
 
-                    if (isPresentFilter) {
-                        if (attStatus !== 'in' && attStatus !== 'out') return;
+                    // Update Top Stats (Aggregate)
+                    totalAcc++;
+                    if (isPresent) presentAcc++;
+                    else if (isLeave) leaveAcc++;
+                    else absentAcc++;
+
+                    // Filter logic for the list
+                    if (isPresentFilter && !isPresent) continue;
+                    if (isAbsentFilter && (isPresent || isLeave)) continue;
+                    if (isLeavesFilter && !isLeave) continue;
+
+                    filteredCount++;
+
+                    // Calculate Accurate Monthly Attendance
+                    let presentInMonth = 0;
+                    let weekOffCount = 0;
+                    let holidayCount = 0;
+
+                    let sPath = "settings";
+                    if (e.companyId) sPath = `settings/companies/${e.companyId}`;
+                    else if (e.branch) sPath = `settings/branches/${e.branch}`;
+
+                    if (!window.settingsCache[sPath]) {
+                        try {
+                            const sSnap = await get(ref(db, sPath));
+                            window.settingsCache[sPath] = sSnap.val() || {};
+                        } catch (err) { window.settingsCache[sPath] = {}; }
                     }
-                    if (isAbsentFilter) {
-                        if (attStatus === 'in' || attStatus === 'out') return;
+                    const settings = window.settingsCache[sPath];
+                    const weekOffNames = Array.isArray(settings.weekOffs) ? settings.weekOffs.map(w => w.toString()) : [];
+                    const holidays = settings.holidays || {};
+                    const secSat = settings.secondSaturday || false;
+
+                    for (let d = 1; d <= daysToCount; d++) {
+                        const dStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const date = new Date(year, month - 1, d);
+                        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                        
+                        const record = empAtt[dStr] || {};
+                        let status = record.status || '';
+
+                        if (status === 'in' || status === 'out') presentInMonth++;
+                        else if (status === 'halfday') presentInMonth += 0.5;
+                        else if (['paid-leave', 'sick-leave'].includes(status)) presentInMonth++;
+                        else {
+                            if (holidays[dStr]) holidayCount++;
+                            else {
+                                let isSs = false;
+                                if (dayName === 'Saturday' && (secSat === true || secSat.enabled === true)) {
+                                    let sc = 0;
+                                    for(let i=1; i<=d; i++) if(new Date(year, month-1, i).getDay() === 6) sc++;
+                                    if(sc === 2) isSs = true;
+                                }
+                                if (isSs || weekOffNames.includes(dayName)) weekOffCount++;
+                            }
+                        }
                     }
-                    if (isLeavesFilter) {
-                        if (!attStatus.includes('leave') && attStatus !== 'halfday') return;
-                    }
 
-                    count++;
-                    const status = e.status || 'active';
-                    const statusBadge = status === 'active'
-                        ? `<span style="background: var(--primary-active-bg); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
-                        : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
+                    const totalPresent = presentInMonth + weekOffCount + holidayCount;
+                    const attPercent = ((totalPresent / daysToCount) * 100).toFixed(0);
 
-                    const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
-                    let initial = e.name && e.name.length > 0 ? e.name[0].toUpperCase() : '?';
-                    let profileWidget = `<div class="profile-picture">${initial}</div>`;
+                    let todayPill = '<span class="status-pill absent">Absent</span>';
+                    if (isPresent) todayPill = '<span class="status-pill present">Present</span>';
+                    else if (isLeave) todayPill = '<span class="status-pill leave">On Leave</span>';
 
-                    data.innerHTML += `<tr>
-                    <td>${profileWidget}</td>
-                    <td><div style="font-weight: 500;">${e.name}</div><div style="font-size: 11px; color: #8b92a0;">ID: ${e.empId}</div></td>
-                    <td>${e.mobile}</td>
-                    <td>${e.role}</td>
-                    <td>${e.branch || '-'}${deptDisplay}</td>
-                    <td>${statusBadge}</td>
-                    <td>
+                    htmlString += `<tr>
+                        <td>
+                            <div style="font-weight: 600; color:var(--text);">${e.name}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">ID: ${e.empId}</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 13px;">${e.branch || '-'}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); opacity:0.8;">${e.department || ''}</div>
+                        </td>
+                        <td style="text-align:center;">
+                            <div style="font-weight:700; color:var(--primary);">${attPercent}%</div>
+                            <div style="font-size:10px; color:var(--text-muted);">${totalPresent.toFixed(1)} / ${daysToCount} days</div>
+                        </td>
+                        <td style="text-align:center;">${todayPill}</td>
+                        <td style="text-align:right;">
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--primary); color: var(--primary);" 
-                            onclick="window.location.href='employee_details.html?id=${e.empId}'">👁️ View Details</button>
-                    </td></tr>`;
-                });
-                
-                if (count === 0) {
-                    data.innerHTML = "<tr><td colspan='7' style='text-align:center'>No matching Employees found</td></tr>";
+                            onclick="window.location.href='employee_details.html?id=${e.empId}&year=${year}&month=${month}'">👁️ View Details</button>
+                        </td>
+                    </tr>`;
                 }
+                dataContainer.innerHTML = htmlString || "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-muted);'>No matching employees found</td></tr>";
             } else {
-                data.innerHTML = "<tr><td colspan='7' style='text-align:center'>No Employees found</td></tr>";
+                dataContainer.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-muted);'>No employees found</td></tr>";
             }
+
+            // Update UI Stats
+            document.getElementById('stat-total').innerText = totalAcc;
+            document.getElementById('stat-present').innerText = presentAcc;
+            document.getElementById('stat-absent').innerText = absentAcc;
+            document.getElementById('stat-leave').innerText = leaveAcc;
         };
 
         let employeeCount = 0;
