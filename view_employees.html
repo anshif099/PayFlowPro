@@ -789,7 +789,7 @@
                                 allow = false;
                             } else if (role === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                                 allow = false;
-                            } else if (role === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+                            } else if (role === 'super_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                                 allow = false;
                             }
                             if (allow) window.allEmployeesData.push(e);

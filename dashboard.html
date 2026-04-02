@@ -863,8 +863,10 @@
           const sessionCompanyId = normalizeBranchValue(companyId);
           if (adminRole === 'branch_admin' && !allowedBranchTokens.has(empBranch)) {
             allow = false;
-          } else if ((adminRole === 'company_admin' || adminRole === 'super_admin') && empCompanyId !== sessionCompanyId) {
-            allow = false;
+          } else if (adminRole === 'company_admin' || adminRole === 'super_admin') {
+            if (empCompanyId !== sessionCompanyId) {
+              allow = false;
+            }
           }
           if (!allow) return;
 

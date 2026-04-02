@@ -789,8 +789,16 @@
                     const emp = employees[empId];
                     const empBranch = normalizeValue(emp.branch);
                     const empCompanyId = normalizeValue(emp.companyId);
+                    const sessionCompanyId = normalizeValue(companyId);
+
                     if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) continue;
-                    if ((role === 'company_admin' || role === 'super_admin') && empCompanyId !== sessionCompanyId) continue;
+                    
+                    // Filter: Only show same company employees
+                    if ((role === 'company_admin' || role === 'super_admin')) {
+                        if (empCompanyId !== sessionCompanyId) {
+                            continue;
+                        }
+                    }
 
                     const activeWorkingDays = getWorkingDays(currentFilter, weekOffs, ssData, holidays, emp.joiningDate);
 

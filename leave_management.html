@@ -618,12 +618,8 @@
 
                 // Admin Filter
                 const sessionCompanyId = (localStorage.getItem("companyId") || "").trim().toLowerCase();
-                if (adminRole !== 'super_admin' && !allowedEmpIds.has(req.employeeId)) {
+                if (!allowedEmpIds.has(req.employeeId)) {
                     return;
-                }
-                // Impersonation filter for Super Admin (if they have a company selected)
-                if (adminRole === 'super_admin' && sessionCompanyId !== "") {
-                    if (!allowedEmpIds.has(req.employeeId)) return;
                 }
 
                 let approvedDays = 0;
