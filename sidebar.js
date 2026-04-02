@@ -33,7 +33,8 @@
         'nav-manage-branches': 'branches',
         'manage_admins.html': 'branches',
         'nav-branch-admins': 'branches',
-        'teamsive_passport.html': 'teamsive_passport'
+        'teamsive_passport.html': 'teamsive_passport',
+        'hire_resign.html': 'hire_resign'
     };
 
     function normalizeBranchLinks() {

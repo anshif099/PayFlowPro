@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teamsive | Hire & Resign Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
+    <script src="lang.js"></script>
+    <script src="sidebar.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --warning: #ffa726;
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); overflow-x: hidden; }
+
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; }
+        .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; }
+        .sidebar-nav { margin-top: 24px; padding: 0 12px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all .2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
+        .nav-item:hover, .nav-item.active { background: rgba(0, 255, 195, 0.1); color: var(--primary); }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar h1 { font-size: 24px; font-weight: 600; }
+
+        .content-section { padding: 40px; display: flex; justify-content: center; align-items: flex-start; min-height: calc(100vh - 80px); }
+        .control-panel { max-width: 900px; width: 100%; }
+
+        .toggle-container { background: var(--bg-card); border: 1px solid var(--border); padding: 6px; border-radius: 16px; display: flex; gap: 4px; margin-bottom: 30px; }
+        .toggle-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.2s ease; }
+        .toggle-btn.active { background: var(--primary); color: #000; box-shadow: 0 4px 12px rgba(0,255,195,0.3); }
+        .toggle-btn.active.res-mode { background: var(--danger); color: #fff; box-shadow: 0 4px 12px rgba(255,92,92,0.3); }
+
+        .search-container { position: relative; margin-bottom: 24px; }
+        .search-input { width: 100%; padding: 16px 20px 16px 48px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; color: var(--text); font-size: 15px; }
+        .search-input:focus { border-color: var(--primary); outline: none; }
+        .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        .candidate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .candidate-card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s ease; }
+        .candidate-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .avatar { width: 44px; height: 44px; border-radius: 10px; background: rgba(0, 255, 195, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .candidate-info { flex: 1; min-width: 0; }
+        .candidate-name { font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .candidate-role { font-size: 12px; color: var(--primary); margin-top: 2px; }
+        .candidate-company { font-size: 11px; color: var(--text-muted); }
+
+        .resign-list { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .resign-item { background: var(--bg-card); border-radius: 20px; padding: 24px; border: 1px solid var(--border); }
+        .resign-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .btn-approve { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--danger); color: white; font-weight: 700; cursor: pointer; }
+
+        .loader { border: 4px solid var(--bg-input); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header"><h2>💼 Teamsive</h2></div>
+        <nav class="sidebar-nav"></nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Hire Flow Control</h1>
+            <button class="btn-logout" onclick="localStorage.clear(); location='index.html'">Logout</button>
+        </div>
+
+        <div class="content-section">
+            <div class="control-panel">
+                <div class="toggle-container">
+                    <button class="toggle-btn active" id="hireBtn" onclick="setMode('hire')">Marketplace</button>
+                    <button class="toggle-btn" id="resignBtn" onclick="setMode('resign')">Resignations</button>
+                </div>
+
+                <div id="hireContent">
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search Role (e.g. Developer, HR, Manager)..." oninput="filterCandidates(this.value)">
+                    </div>
+                    <div class="candidate-grid" id="candidateGrid">
+                         <div class="loader"></div>
+                    </div>
+                </div>
+
+                <div id="resignContent" style="display: none;">
+                    <div class="resign-list" id="resignList">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const companyId = localStorage.getItem("companyId");
+
+        let allCandidates = [];
+
+        window.setMode = (mode) => {
+            const hireBtn = document.getElementById('hireBtn');
+            const resignBtn = document.getElementById('resignBtn');
+            document.getElementById('hireContent').style.display = mode === 'hire' ? 'block' : 'none';
+            document.getElementById('resignContent').style.display = mode === 'resign' ? 'block' : 'none';
+            hireBtn.classList.toggle('active', mode === 'hire');
+            resignBtn.classList.toggle('active', mode === 'resign');
+            resignBtn.classList.toggle('res-mode', mode === 'resign');
+
+            if (mode === 'hire') fetchMarketplace();
+            else fetchResignations();
+        };
+
+        async function fetchMarketplace() {
+            const grid = document.getElementById('candidateGrid');
+            grid.innerHTML = '<div class="loader"></div>';
+
+            onValue(ref(db, "employees"), (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.val();
+                allCandidates = [];
+                for (let key in data) {
+                    const emp = data[key];
+                    if (emp.passportVisibility && emp.passportVisibility.optIntoHireFlow) {
+                        emp.id = key;
+                        allCandidates.push(emp);
+                    }
+                }
+                renderCandidates(allCandidates);
+            });
+        }
+
+        function renderCandidates(list) {
+            const grid = document.getElementById('candidateGrid');
+            if (list.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:40px;">No candidates found.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(c => `
+                <div class="candidate-card" onclick="viewPassport('${c.id}')">
+                    <div class="avatar">👤</div>
+                    <div class="candidate-info">
+                        <div class="candidate-name">${c.name}</div>
+                        <div class="candidate-role">${c.role || 'Professional'}</div>
+                        <div class="candidate-company">${c.companyName || 'Teamsive Network'}</div>
+                    </div>
+                    <span style="color:var(--primary)">🛂</span>
+                </div>
+            `).join('');
+        }
+
+        window.filterCandidates = (query) => {
+            const q = query.toLowerCase();
+            const filtered = allCandidates.filter(c => 
+                (c.name || '').toLowerCase().includes(q) || 
+                (c.role || '').toLowerCase().includes(q)
+            );
+            renderCandidates(filtered);
+        };
+
+        async function fetchResignations() {
+            const listEl = document.getElementById('resignList');
+            listEl.innerHTML = '<div class="loader"></div>';
+
+            onValue(ref(db, "resignationRequests"), (snapshot) => {
+                listEl.innerHTML = '';
+                if (!snapshot.exists()) {
+                    listEl.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">No pending resignations.</div>';
+                    return;
+                }
+                const data = snapshot.val();
+                let found = false;
+                for (let key in data) {
+                    const req = data[key];
+                    // Strictly own employees for resignations
+                    if (req.companyId === companyId && req.status === "pending") {
+                        found = true;
+                        listEl.innerHTML += `
+                            <div class="resign-item">
+                                <div class="resign-header">
+                                    <div class="avatar" style="background:rgba(255,92,92,0.1); color:var(--danger)">👤</div>
+                                    <div>
+                                        <div class="candidate-name">${req.empName}</div>
+                                        <div class="candidate-company">${req.timestamp.split('T')[0]}</div>
+                                    </div>
+                                </div>
+                                <div style="background:var(--bg-input); padding:16px; border-radius:12px; margin-bottom:16px; font-size:14px;">${req.letter}</div>
+                                <button class="btn-approve" onclick="approveResignation('${key}', '${req.empName}')">Confirm & Process Notice Period</button>
+                            </div>
+                        `;
+                    }
+                }
+                if (!found) listEl.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">No pending resignations.</div>';
+            });
+        }
+
+        window.approveResignation = async (key, name) => {
+            const snap = await get(ref(db, `settings/${companyId}/noticePeriod`));
+            const noticeDays = snap.exists() ? snap.val() : 30;
+
+            if (confirm(`Approve resignation for ${name}? User will serve ${noticeDays} days notice.`)) {
+                await update(ref(db, `resignationRequests/${key}`), {
+                    status: 'approved',
+                    approvedAt: new Date().toISOString(),
+                    noticePeriodDays: noticeDays
+                });
+            }
+        };
+
+        window.viewPassport = (id) => {
+            alert("Redirecting to verify Professional Passport for ID: " + id);
+            // In a real app, this would route to a passport viewer page
+            // location.href = `teamsive_passport.html?id=${id}`;
+        };
+
+        fetchMarketplace();
+        if (localStorage.getItem("theme") === "light") document.body.classList.add("light-mode");
+    </script>
+</body>
+</html>

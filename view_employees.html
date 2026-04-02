@@ -376,6 +376,28 @@
             font-size: 16px;
         }
         </style>
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
                 <span class="nav-icon">📊</span>
@@ -383,9 +405,12 @@
             </a>
             <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
                 <span class="nav-icon">🏢</span>
-                <span data-i18n="manage_companies">Manage Companies</span>
+                <span>Manage Companies</span>
             </a>
-            
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
             
             <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
@@ -398,11 +423,11 @@
             <div class="nav-dropdown" id="empDropdown">
                 <a href="view_employees.html" class="nav-item" id="nav-view-employees">
                     <span class="nav-icon">📜</span>
-                    <span data-i18n="list_employees">List Employees</span>
+                    <span>List Employees</span>
                 </a>
                 <a href="employees.html" class="nav-item" id="nav-manage-employees">
                     <span class="nav-icon">✏️</span>
-                    <span data-i18n="manage_employees">Manage Employees</span>
+                    <span>Manage Employees</span>
                 </a>
             </div>
 
@@ -418,49 +443,19 @@
                 <span class="nav-icon">🛡️</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            
-            <!-- Interval Dropdown -->
-            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('intervalDropdown', this)" style="cursor:pointer;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="nav-icon">⏲️</span>
-                    <span data-i18n="interval">Interval</span>
-                </div>
-                <span class="chevron">▼</span>
-            </div>
-            <div class="nav-dropdown" id="intervalDropdown">
-                <a href="intervalmanagement.html" class="nav-item" id="nav-interval-management">
-                    <span class="nav-icon">⏲️</span>
-                    <span data-i18n="interval_management">Interval Management</span>
-                </a>
-                <a href="intervals_history.html" class="nav-item" id="nav-intervals-history">
-                    <span class="nav-icon">⏳</span>
-                    <span data-i18n="intervals_history">Intervals History</span>
-                </a>
-            </div>
-            
-            
-            <!-- Salary Dropdown -->
-            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('salaryDropdown', this)" style="cursor:pointer;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="nav-icon">💰</span>
-                    <span data-i18n="salary_dropdown">Salary</span>
-                </div>
-                <span class="chevron">▼</span>
-            </div>
-            <div class="nav-dropdown" id="salaryDropdown">
-                <a href="salary_settings.html" class="nav-item" id="nav-salary-settings">
-                    <span class="nav-icon">💰</span>
-                    <span data-i18n="salary_settings">Salary Settings</span>
-                </a>
-                <a href="salary_payments.html" class="nav-item" id="nav-salary-payments">
-                    <span class="nav-icon">💳</span>
-                    <span data-i18n="salary_payments">Salary Payments</span>
-                </a>
-            </div>
-            
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
             <a href="salary_report.html" class="nav-item">
                 <span class="nav-icon">📈</span>
-                <span data-i18n="salary_report">Salary Report</span>
+                <span>Salary Report</span>
             </a>
             <a href="monthly_report.html" class="nav-item">
                 <span class="nav-icon">📑</span>
@@ -468,51 +463,25 @@
             </a>
             <a href="documents.html" class="nav-item">
                 <span class="nav-icon">📄</span>
-                <span data-i18n="documents">Documents</span>
+                <span>Documents</span>
             </a>
-                        <a href="teamsive_passport.html" class="nav-item">
-                <span class="nav-icon">🛂</span>
-                <span data-i18n="teamsive_passport">Teamsive Passport</span>
+            <a href="hire_resign.html" class="nav-item">
+                <span class="nav-icon">🔃</span>
+                <span>Hire / Resign</span>
             </a>
-<a href="leaderboard.html" class="nav-item">
+            <a href="leaderboard.html" class="nav-item">
                 <span class="nav-icon">🏆</span>
-                <span data-i18n="leaderboard">Leaderboard</span>
+                <span>Leaderboard</span>
             </a>
             <a href="ai_prediction.html" class="nav-item">
                 <span class="nav-icon">🧠</span>
-                <span data-i18n="ai_prediction">AI Prediction</span>
+                <span>AI Prediction</span>
             </a>
             <a href="subscriptions.html" class="nav-item">
                 <span class="nav-icon">📋</span>
-                <span data-i18n="subscriptions">Subscriptions</span>
+                <span>Subscriptions</span>
             </a>
-            <a href="manage_notes.html" class="nav-item">
-                <span class="nav-icon">📝</span>
-                <span data-i18n="manage_notes">Manage Notes</span>
-            </a>
-            <a href="manage_feedback.html" class="nav-item">
-                <span class="nav-icon">💬</span>
-                <span data-i18n="manage_feedback">Feedback / Support</span>
-            </a>
-            
-            <!-- Setting Dropdown -->
-            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('settingsDropdown', this)" style="cursor:pointer;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="nav-icon">⚙️</span>
-                    <span data-i18n="setting">Setting</span>
-                </div>
-                <span class="chevron">▼</span>
-            </div>
-            <div class="nav-dropdown" id="settingsDropdown">
-                <a href="settings.html" class="nav-item" id="nav-settings">
-                    <span class="nav-icon">🛠️</span>
-                    <span data-i18n="app_settings">App Settings</span>
-                </a>
-                <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                    <span class="nav-icon">🏢</span>
-                    <span data-i18n="manage_branches">Manage Branches</span>
-                </a>
-            </div>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 

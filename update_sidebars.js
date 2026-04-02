@@ -22,7 +22,8 @@ const FILES = [
     "settings.html",
     "subscriptions.html",
     "view_employees.html",
-    "employee_details.html"
+    "employee_details.html",
+    "hire_resign.html"
 ];
 
 const NEW_NAV = `<style>
@@ -113,6 +114,10 @@ const NEW_NAV = `<style>
             <a href="documents.html" class="nav-item">
                 <span class="nav-icon">📄</span>
                 <span>Documents</span>
+            </a>
+            <a href="hire_resign.html" class="nav-item">
+                <span class="nav-icon">🔃</span>
+                <span>Hire / Resign</span>
             </a>
             <a href="leaderboard.html" class="nav-item">
                 <span class="nav-icon">🏆</span>
