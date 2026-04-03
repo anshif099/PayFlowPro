@@ -308,6 +308,7 @@
 
         async function fetchMarketplace() {
             const grid = document.getElementById('candidateGrid');
+            const targetCompanyId = (localStorage.getItem("companyId") || "").toLowerCase();
             grid.innerHTML = '<div class="loader"></div>';
 
             onValue(ref(db, "employees"), (snapshot) => {
@@ -316,7 +317,9 @@
                 allCandidates = [];
                 for (let key in data) {
                     const emp = data[key];
-                    if (emp.passportVisibility && emp.passportVisibility.optIntoHireFlow) {
+                    const empCompanyId = (emp.companyId || "").toLowerCase();
+                    
+                    if (emp.passportVisibility && emp.passportVisibility.optIntoHireFlow && empCompanyId !== targetCompanyId) {
                         emp.id = key;
                         allCandidates.push(emp);
                     }
@@ -339,7 +342,11 @@
                         <div class="candidate-role">${c.role || 'Professional'}</div>
                         <div class="candidate-company">${c.companyName || 'Teamsive Network'}</div>
                     </div>
-                    <span style="color:var(--primary)">🛂</span>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button onclick="event.stopPropagation(); hireEmployee('${c.id}', '${(c.name || "Employee").replace(/'/g, "\\'")}')" 
+                                style="background:var(--primary); color:black; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px;">Hire</button>
+                        <span style="color:var(--primary); font-size:20px;">🛂</span>
+                    </div>
                 </div>
             `).join('');
         }
@@ -441,6 +448,63 @@
                     approvedAt: new Date().toISOString(),
                     noticePeriodDays: noticeDays
                 });
+            }
+        };
+
+        window.hireEmployee = async (id, name) => {
+            const sessionCompanyId = localStorage.getItem("companyId");
+            const sessionCompanyName = localStorage.getItem("companyName") || "New Company";
+
+            if (!sessionCompanyId) {
+                alert("Error: Company ID not found. Please log in again.");
+                return;
+            }
+
+            if (confirm(`Hire ${name}? All employee details will be fetched from passport records. Onboarding date will be set to today.`)) {
+                try {
+                    const empRef = ref(db, `employees/${id}`);
+                    const snapshot = await get(empRef);
+                    if (!snapshot.exists()) {
+                        alert("Employee record not found.");
+                        return;
+                    }
+
+                    const data = snapshot.val();
+                    const onboardingDate = new Date().toISOString().split('T')[0];
+
+                    // Full reset for the new company
+                    const updatedData = {
+                        ...data,
+                        companyId: sessionCompanyId.toLowerCase(),
+                        companyName: sessionCompanyName,
+                        onboardingDate: onboardingDate,
+                        status: 'active',
+                        verificationStatus: 'verified',
+                        branch: '',
+                        department: '',
+                        isResigning: false,
+                        resignationDate: null,
+                        resignationStatus: '',
+                        noticePeriodDays: null,
+                        noticePeriodEnd: null
+                    };
+
+                    // NEW: Full Reset Professional Visibility & Lock Marketplace (Web)
+                    const visibility = data.passportVisibility || {};
+                    visibility.optIntoHireFlow = false;
+                    updatedData.passportVisibility = visibility;
+
+                    await update(empRef, updatedData);
+                    
+                    // NEW: Delete legacy resignation request (Web)
+                    await remove(ref(db, `resignationRequests/${id}`));
+
+                    alert(`${name} has been successfully hired by ${sessionCompanyName}!`);
+                    fetchMarketplace();
+                } catch (e) {
+                    console.error(e);
+                    alert("Hiring failed: " + e.message);
+                }
             }
         };
 
