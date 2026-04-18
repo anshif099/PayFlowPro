@@ -245,7 +245,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, push, set, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -410,6 +410,136 @@
                 status: newStatus
             });
         };
+
+        window.openChat = async (empId, empName) => {
+          const mStr = document.getElementById('filterMonth').value;
+          // We need to know which date the chat corresponds to.
+          // In timetrack.html, each row has a ts.date.
+          // Let's pass dateStr to openChat.
+        };
+
+        // Reranking renderTable for better click handler
+        window.renderTable = function() {
+            const tbody = document.getElementById('timesheetData');
+            tbody.innerHTML = '';
+            
+            const fEmp = document.getElementById('filterEmp').value;
+            const fStatus = document.getElementById('filterStatus').value;
+
+            const filtered = allTimesheets.filter(ts => {
+                if(fEmp && ts.empId !== fEmp) return false;
+                if(fStatus && ts.status !== fStatus) return false;
+                return true;
+            });
+            
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(filtered.length === 0){
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted)">No records found.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(ts => {
+                const badgeClass = 'badge-' + (ts.status || 'pending');
+                const empName = empMap[ts.empId] || ts.empId;
+                
+                let detailsHtml = '';
+                if(ts.entries) {
+                    detailsHtml = '<div class="entry-details">';
+                    Object.values(ts.entries).forEach(en => {
+                        const pName = projectMap[en.projectId] || 'Unknown Project';
+                        detailsHtml += `<div style="margin-bottom:4px">
+                            <b>${pName}</b>: ${en.taskName} - <i>${en.hours}h ${en.isBillable ? '(Billable)' : '(Non-Billable)'}</i>
+                        </div>`;
+                    });
+                    detailsHtml += '</div>';
+                }
+
+                let actions = '';
+                if(ts.status === 'pending_approval') {
+                    actions = `
+                        <button style="padding: 4px 8px; font-size:12px; background:var(--success); color:#000" onclick="updateStatus('${ts.empId}', '${ts.date}', 'approved')">Approve</button>
+                        <button style="padding: 4px 8px; font-size:12px; background:var(--danger); color:#fff; border:none" onclick="updateStatus('${ts.empId}', '${ts.date}', 'rejected')">Reject</button>
+                    `;
+                } else if(ts.status === 'approved') {
+                    actions = `<button style="padding: 4px 8px; font-size:12px; background:transparent; border:1px solid var(--danger); color:var(--text)" onclick="updateStatus('${ts.empId}', '${ts.date}', 'pending')">Un-approve</button>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${ts.date}</strong></td>
+                        <td>${empName}</td>
+                        <td>
+                            ${ts.totalHours || 0}h ${ts.autoPulledFromAttendance ? ' <span style="font-size:10px;color:var(--success);">(Auto)</span>' : ''}
+                            <div onclick="openChat('${ts.empId}', '${empName}', '${ts.date}')" style="font-size:11px; color:var(--primary); font-style:italic; margin-top:4px; cursor:pointer;">Status Chat 💬</div>
+                        </td>
+                        <td>
+                            ${ts.entries ? Object.keys(ts.entries).length + ' logs' : '0 logs'}
+                            ${detailsHtml}
+                        </td>
+                        <td><span class="status-badge ${badgeClass}">${(ts.status || 'pending').replace('_', ' ')}</span></td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.openChat = async (empId, empName, dateStr) => {
+          const chatRef = ref(db, `status_chats/${companyId}/${empId}/${dateStr}`);
+          
+          let chatHtml = `<div id="chatWindow" style="max-height:300px; overflow-y:auto; padding:10px; background:var(--bg-input); border-radius:8px; margin-bottom:10px;"></div>
+                          <div style="display:flex; gap:10px;">
+                             <input type="text" id="chatInput" placeholder="Reply..." style="flex:1; background:var(--bg-input); border:1px solid var(--border); color:white; padding:8px; border-radius:4px;">
+                             <button id="sendBtn" style="background:var(--primary); border:none; padding:8px 16px; border-radius:4px; font-weight:bold; cursor:pointer;">SEND</button>
+                          </div>`;
+          
+          const modal = document.createElement('div');
+          modal.id = 'chatModal';
+          modal.style = "position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:400px; background:var(--bg-card); border:1px solid var(--primary); padding:24px; border-radius:16px; z-index:1000;";
+          modal.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:16px;"><h3>Chat: ${empName} (${dateStr})</h3><button onclick="document.body.removeChild(this.parentNode.parentNode)" style="background:transparent; border:none; color:white; cursor:pointer;">✕</button></div>` + chatHtml;
+          document.body.appendChild(modal);
+
+          onValue(chatRef, (snap) => {
+             const win = document.getElementById('chatWindow');
+             if (!win) return;
+             win.innerHTML = "";
+             if (snap.exists()) {
+                const msgs = [];
+                snap.forEach(c => { msgs.push(c.val()); });
+                msgs.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
+                msgs.forEach(m => {
+                   const isMe = m.sender === 'admin';
+                   win.innerHTML += `<div style="margin-bottom:8px; text-align:${isMe?'right':'left'}">
+                      <div style="font-size:10px; color:var(--text-muted)">${m.senderName}</div>
+                      <div style="display:inline-block; padding:8px 12px; border-radius:12px; background:${isMe?'var(--primary)':'rgba(255,255,255,0.05)'}; color:${isMe?'black':'white'}; font-size:13px;">${m.text}</div>
+                   </div>`;
+                });
+                win.scrollTop = win.scrollHeight;
+             }
+          });
+
+          document.getElementById('sendBtn').onclick = async () => {
+             const input = document.getElementById('chatInput');
+             const text = input.value.trim();
+             if (!text) return;
+             await set(push(chatRef), {
+                text: text,
+                sender: "admin",
+                senderName: "Admin",
+                timestamp: Date.now()
+             });
+
+             // Signal for Employee Notification
+             const notifRef = ref(db, `notifications/${empId}`);
+             await set(push(notifRef), {
+                title: "Admin Replied to your Status",
+                body: text,
+                timestamp: Date.now()
+             });
+
+             input.value = "";
+          };
+       };
 
         window.exportToCSV = function() {
             if(allTimesheets.length === 0) return alert("No data to export");

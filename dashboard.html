@@ -153,6 +153,7 @@
                 <th>Punch Out</th>
                 <th>Work Status</th>
                 <th>Daily Price</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="recentAttendance"></tbody>
@@ -164,7 +165,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    import { getDatabase, ref, get, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -218,6 +219,11 @@
           const punchOut = dayData.punchOut?.time || '-';
           const workStatus = dayData.currentWorkStatus || '-';
           const price = dayData.dailyPrice || 0;
+          
+          let actionBtn = "";
+          if (emp.waitingForAssignment) {
+             actionBtn = `<button onclick="approveAssignment('${emp.empId}')" style="background:var(--primary); border:none; color:black; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">APPROVE NEXT WORK</button>`;
+          }
 
           if (status.toLowerCase() === 'in' || status.toLowerCase() === 'out') present++;
 
@@ -227,10 +233,98 @@
                 <td><span class="badge-${status.toLowerCase()}">${status}</span></td>
                 <td>${punchIn}</td>
                 <td>${punchOut}</td>
-                <td><i style="color:var(--text-muted); font-size:12px;">${workStatus}</i></td>
+                <td onclick="openChat('${emp.empId}', '${emp.name}')" style="cursor:pointer; color:var(--primary);"><i style="font-size:12px;">${workStatus}</i> 💬</td>
                 <td>${currency}${price}</td>
+                <td>${actionBtn}</td>
              </tr>`;
        });
+
+       window.openChat = async (empId, empName) => {
+          const today = new Date().toISOString().split('T')[0];
+          const chatRef = ref(db, `status_chats/${companyId}/${empId}/${today}`);
+          
+          let chatHtml = `<div id="chatWindow" style="max-height:300px; overflow-y:auto; padding:10px; background:var(--bg-input); border-radius:8px; margin-bottom:10px;"></div>
+                          <div style="display:flex; gap:10px;">
+                             <input type="text" id="chatInput" placeholder="Reply..." style="flex:1; background:var(--bg-input); border:1px solid var(--border); color:white; padding:8px; border-radius:4px;">
+                             <button onclick="sendReply('${empId}')" style="background:var(--primary); border:none; padding:8px 16px; border-radius:4px; font-weight:bold; cursor:pointer;">SEND</button>
+                          </div>`;
+          
+          const modal = document.createElement('div');
+          modal.id = 'chatModal';
+          modal.style = "position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:400px; background:var(--bg-card); border:1px solid var(--primary); padding:24px; border-radius:16px; z-index:1000;";
+          modal.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:16px;"><h3>Chat with ${empName}</h3><button onclick="document.body.removeChild(this.parentNode.parentNode)" style="background:transparent; border:none; color:white; cursor:pointer;">✕</button></div>` + chatHtml;
+          document.body.appendChild(modal);
+
+          onValue(chatRef, (snap) => {
+             const win = document.getElementById('chatWindow');
+             if (!win) return;
+             win.innerHTML = "";
+             if (snap.exists()) {
+                const msgs = [];
+                snap.forEach(c => { msgs.push(c.val()); });
+                msgs.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
+                msgs.forEach(m => {
+                   const isMe = m.sender === 'admin';
+                   win.innerHTML += `<div style="margin-bottom:8px; text-align:${isMe?'right':'left'}">
+                      <div style="font-size:10px; color:var(--text-muted)">${m.senderName}</div>
+                      <div style="display:inline-block; padding:8px 12px; border-radius:12px; background:${isMe?'var(--primary)':'rgba(255,255,255,0.05)'}; color:${isMe?'black':'white'}; font-size:13px;">${m.text}</div>
+                   </div>`;
+                });
+                win.scrollTop = win.scrollHeight;
+             }
+          });
+
+          window.sendReply = async (eid) => {
+             const input = document.getElementById('chatInput');
+             const text = input.value.trim();
+             if (!text) return;
+             const pushRef = ref(db, `status_chats/${companyId}/${eid}/${today}`);
+             const newMsgRef = push(pushRef);
+             await set(newMsgRef, {
+                text: text,
+                sender: "admin",
+                senderName: "Admin",
+                timestamp: Date.now()
+             });
+
+             // Signal for Employee Notification
+             const notifRef = ref(db, `notifications/${eid}`);
+             await set(push(notifRef), {
+                title: "Admin Replied to your Status",
+                body: text,
+                timestamp: Date.now()
+             });
+
+             input.value = "";
+          };
+       };
+
+       window.approveAssignment = async (empId) => {
+          if (!confirm("Approve this employee to start next work?")) return;
+          
+          const now = new Date();
+          const dateStr = now.toISOString().split('T')[0];
+          const monthStr = dateStr.substring(0, 7);
+          
+          const tsRef = ref(db, `timesheets/${companyId}/${empId}/${monthStr}/${dateStr}`);
+          const tsSnap = await get(tsRef);
+          
+          const updates = {};
+          updates[`employees/${empId}/waitingForAssignment`] = false;
+          
+          if (tsSnap.exists() && tsSnap.val().entries) {
+             const entries = tsSnap.val().entries;
+             Object.keys(entries).forEach(id => {
+                if (entries[id].status === 'submitted') {
+                   updates[`timesheets/${companyId}/${empId}/${monthStr}/${dateStr}/entries/${id}/status`] = 'approved';
+                }
+             });
+          }
+          
+          await update(ref(db), updates);
+          alert("Approved! Employee can now see the 'Start Work' buttons.");
+          fetchData();
+       };
 
        document.getElementById('totalEmployees').textContent = employees.length;
        document.getElementById('presentToday').textContent = present;
