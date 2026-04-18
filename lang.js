@@ -231,7 +231,19 @@ const translations = {
         ai_prediction: "AI Prediction",
         subscriptions: "Subscriptions",
         filter_from_date: "From Date",
-        filter_to_date: "To Date"
+        filter_to_date: "To Date",
+        projects: "Projects",
+        timetrack: "TimeTrack",
+        add_new_project: "Add New Project",
+        project_name: "Project Name",
+        client_name: "Client Name",
+        save_project: "Save Project",
+        existing_projects: "Existing Projects",
+        filter_timesheets: "Filter Timesheets",
+        month: "Month",
+        timesheet_approvals: "Timesheet Approvals",
+        total_hours: "Total Hours",
+        entries: "Entries"
     },
     ml: {
         dashboard: "ഡാഷ്ബോർഡ്",
@@ -465,7 +477,19 @@ const translations = {
         office_time: "ഓഫീസ് സമയം",
         filter_from_date: "ഈ തിയ്യതി മുതൽ",
         filter_to_date: "ഈ തിയ്യതി വരെ",
-        absent: "അഭാവം"
+        absent: "അഭാവം",
+        projects: "പ്രോജക്റ്റുകൾ",
+        timetrack: "ടൈംട്രാക്ക്",
+        add_new_project: "പുതിയ പ്രോജക്റ്റ് ചേർക്കുക",
+        project_name: "പ്രോജക്റ്റിന്റെ പേര്",
+        client_name: "ക്ലയന്റിന്റെ പേര്",
+        save_project: "സേവ് ചെയ്യുക",
+        existing_projects: "നിലവിലുള്ള പ്രോജക്റ്റുകൾ",
+        filter_timesheets: "ടൈംഷീറ്റുകൾ ഫിൽട്ടർ ചെയ്യുക",
+        month: "മാസം",
+        timesheet_approvals: "അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നവ",
+        total_hours: "ആകെ മണിക്കൂർ",
+        entries: "എൻട്രികൾ"
     },
     hi: {
         dashboard: "डैशबोर्ड",
@@ -699,7 +723,19 @@ const translations = {
         office_time: "कार्यालय समय",
         filter_from_date: "आरंभ तिथि",
         filter_to_date: "अंतिम तिथि",
-        absent: "अनुपस्थित"
+        absent: "अनुपस्थित",
+        projects: "प्रोजेक्ट्स",
+        timetrack: "टाइमट्रैक",
+        add_new_project: "नया प्रोजेक्ट जोड़ें",
+        project_name: "प्रोजेक्ट का नाम",
+        client_name: "क्लाइंट का नाम",
+        save_project: "प्रोजेक्ट सहेजें",
+        existing_projects: "मौजूदा प्रोजेक्ट्स",
+        filter_timesheets: "टाइमशीट्स फ़िल्टर करें",
+        month: "महीना",
+        timesheet_approvals: "टाइमशीट अनुमोदन",
+        total_hours: "कुल घंटे",
+        entries: "प्रविष्टियाँ"
     },
     es: {
         dashboard: "Tablero",

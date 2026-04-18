@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeTrack - Teamsive Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
+    <script src="lang.js"></script>
+    <style>
+        :root { --primary: #00ffc3; --primary-hover: #00e6af; --bg-dark: #0b0f14; --bg-card: #141a22; --bg-input: #0f151d; --text: #ffffff; --text-muted: #8b92a0; --border: #1e2530; --success: #00ffc3; --danger: #ff5c5c; --warning: #ffa726; --sidebar-width: 260px; }
+        body.light-mode { --bg-dark: #f0f2f5; --bg-card: #ffffff; --bg-input: #f8f9fa; --text: #1a1d21; --text-muted: #6c757d; --border: #e9ecef; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); overflow-x: hidden; }
+
+        /* Sidebar & Layout */
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sidebar-nav { margin-top: 24px; padding: 0 12px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
+        .nav-item:hover { background: rgba(0,255,195,0.1); color: var(--primary); }
+        .nav-item.active { background: rgba(0,255,195,0.1); color: var(--primary); font-weight: 600; }
+        .nav-icon { width: 20px; height: 20px; font-size: 18px; }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left 0.3s ease; }
+        .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar h1 { font-size: 24px; font-weight: 600; }
+        .top-bar-actions { display: flex; gap: 12px; align-items: center; }
+
+        .dashboard-section { padding: 32px; }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid var(--border); }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+        input, select { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        button { padding: 12px 24px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+        button:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: rgba(0,255,195,0.1); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-logout:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+        .table-container { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--border); background: rgba(0, 0, 0, 0.2); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        tr:hover { background: rgba(0, 255, 195, 0.03); }
+
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .badge-pending { background: rgba(255,167,38,0.15); color: var(--warning); }
+        .badge-pending_approval { background: rgba(255,167,38,0.3); color: orange; }
+        .badge-approved { background: rgba(0,255,195,0.15); color: var(--success); }
+        .badge-rejected { background: rgba(255,92,92,0.15); color: var(--danger); }
+        
+        .entry-details { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--text-muted); }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <!-- Will be populated by sidebar.js / update_sidebars.js -->
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
+            
+            <!-- Employees Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">👥</span>
+                    <span data-i18n="employees">Employees</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="empDropdown">
+                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+                    <span class="nav-icon">📜</span>
+                    <span>List Employees</span>
+                </a>
+                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                    <span class="nav-icon">✏️</span>
+                    <span>Manage Employees</span>
+                </a>
+            </div>
+
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="timetrack.html" class="nav-item active">
+                <span class="nav-icon">⏱️</span>
+                <span data-i18n="timetrack">TimeTrack</span>
+            </a>
+            <a href="projects.html" class="nav-item">
+                <span class="nav-icon">📂</span>
+                <span data-i18n="projects">Projects</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
+            <a href="salary_report.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>Salary Report</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="hire_resign.html" class="nav-item">
+                <span class="nav-icon">🔃</span>
+                <span>Hire / Resign</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1 data-i18n="timetrack">TimeTrack (Timesheets)</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-outline" onclick="exportToCSV()">📤 Export CSV</button>
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3 data-i18n="filter_timesheets">Filter Timesheets</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-i18n="month">Month</label>
+                        <input type="month" id="filterMonth" onchange="loadTimesheets()">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="employee_id">Employee</label>
+                        <select id="filterEmp" onchange="renderTable()">
+                            <option value="">All Employees</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="status">Status</label>
+                        <select id="filterStatus" onchange="renderTable()">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="pending_approval">Pending Approval</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="timesheet_approvals">Timesheet Approvals</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="date">Date</th>
+                                <th data-i18n="employee_name">Employee</th>
+                                <th data-i18n="total_hours">Total Hours</th>
+                                <th data-i18n="entries">Entries</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timesheetData"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
+        const companyId = localStorage.getItem("companyId");
+
+        // Defaults
+        const now = new Date();
+        const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        document.getElementById('filterMonth').value = monthStr;
+
+        window.logout = () => { localStorage.clear(); location = "index.html"; };
+
+        let empMap = {};
+        let projectMap = {};
+        let allTimesheets = [];
+
+        async function init() {
+            if(!companyId) return;
+
+            // Load Projects
+            onValue(ref(db, `projects/${companyId}`), projSnap => {
+                projectMap = {};
+                if (projSnap.exists()) {
+                    projSnap.forEach(p => {
+                        projectMap[p.key] = p.val().name || p.key;
+                    });
+                }
+            });
+
+            // Load Employees
+            onValue(ref(db, "employees"), s => {
+                empMap = {};
+                const sel = document.getElementById('filterEmp');
+                sel.innerHTML = '<option value="">All Employees</option>';
+                if(s.exists()){
+                    s.forEach(c => {
+                        const e = c.val();
+                        if(e.companyId === companyId) {
+                            const empId = e.empId || c.key;
+                            empMap[empId] = e.name;
+                            const opt = document.createElement('option');
+                            opt.value = empId;
+                            opt.text = e.name;
+                            sel.appendChild(opt);
+                        }
+                    });
+                }
+                loadTimesheets();
+            });
+        }
+
+        window.loadTimesheets = function() {
+            const mStr = document.getElementById('filterMonth').value;
+            if(!mStr || !companyId) return;
+            
+            allTimesheets = [];
+            
+            // Because data is timesheets/company/empId/yyyy-MM/date we fetch whole company node and filter manually 
+            // Better to iterate employee map if database is huge, but fetching timesheets/company is fine for SMBs
+            onValue(ref(db, `timesheets/${companyId}`), tsSnap => {
+                allTimesheets = [];
+                if (tsSnap.exists()) {
+                    tsSnap.forEach(empSnap => {
+                        const empId = empSnap.key;
+                        const monthSnap = empSnap.child(mStr);
+                        if (monthSnap.exists()) {
+                            monthSnap.forEach(daySnap => {
+                                const dayData = daySnap.val();
+                                allTimesheets.push({
+                                    empId: empId,
+                                    date: daySnap.key,
+                                    ...dayData
+                                });
+                            });
+                        }
+                    });
+                }
+                renderTable();
+            });
+        };
+
+        window.renderTable = function() {
+            const tbody = document.getElementById('timesheetData');
+            tbody.innerHTML = '';
+            
+            const fEmp = document.getElementById('filterEmp').value;
+            const fStatus = document.getElementById('filterStatus').value;
+
+            const filtered = allTimesheets.filter(ts => {
+                if(fEmp && ts.empId !== fEmp) return false;
+                if(fStatus && ts.status !== fStatus) return false;
+                return true;
+            });
+            
+            // Sort by Date Descending
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(filtered.length === 0){
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted)">No records found.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(ts => {
+                const badgeClass = 'badge-' + (ts.status || 'pending');
+                const empName = empMap[ts.empId] || ts.empId;
+                
+                let detailsHtml = '';
+                if(ts.entries) {
+                    detailsHtml = '<div class="entry-details">';
+                    Object.values(ts.entries).forEach(en => {
+                        const pName = projectMap[en.projectId] || 'Unknown Project';
+                        detailsHtml += `<div style="margin-bottom:4px">
+                            <b>${pName}</b>: ${en.taskName} - <i>${en.hours}h ${en.isBillable ? '(Billable)' : '(Non-Billable)'}</i>
+                        </div>`;
+                    });
+                    detailsHtml += '</div>';
+                }
+
+                let actions = '';
+                if(ts.status === 'pending_approval') {
+                    actions = `
+                        <button style="padding: 4px 8px; font-size:12px; background:var(--success); color:#000" onclick="updateStatus('${ts.empId}', '${ts.date}', 'approved')">Approve</button>
+                        <button style="padding: 4px 8px; font-size:12px; background:var(--danger); color:#fff; border:none" onclick="updateStatus('${ts.empId}', '${ts.date}', 'rejected')">Reject</button>
+                    `;
+                } else if(ts.status === 'approved') {
+                    actions = `<button style="padding: 4px 8px; font-size:12px; background:transparent; border:1px solid var(--danger); color:var(--text)" onclick="updateStatus('${ts.empId}', '${ts.date}', 'pending')">Un-approve</button>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${ts.date}</strong></td>
+                        <td>${empName}</td>
+                        <td>${ts.totalHours || 0}h ${ts.autoPulledFromAttendance ? ' <span style="font-size:10px;color:var(--success);">(Auto-pulled)</span>' : ''}</td>
+                        <td>
+                            ${ts.entries ? Object.keys(ts.entries).length + ' logs' : '0 logs'}
+                            ${detailsHtml}
+                        </td>
+                        <td><span class="status-badge ${badgeClass}">${(ts.status || 'pending').replace('_', ' ')}</span></td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.updateStatus = function(empId, dateStr, newStatus) {
+            const monthStr = dateStr.substring(0, 7);
+            update(ref(db, `timesheets/${companyId}/${empId}/${monthStr}/${dateStr}`), {
+                status: newStatus
+            });
+        };
+
+        window.exportToCSV = function() {
+            if(allTimesheets.length === 0) return alert("No data to export");
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Employee,Project,Task,Hours,Billable,Status\n";
+
+            const fEmp = document.getElementById('filterEmp').value;
+            const filtered = allTimesheets.filter(ts => fEmp ? ts.empId === fEmp : true);
+
+            filtered.forEach(ts => {
+                const empName = (empMap[ts.empId] || ts.empId).replace(/,/g, '');
+                
+                if (ts.entries) {
+                    Object.values(ts.entries).forEach(en => {
+                        const pName = (projectMap[en.projectId] || 'Unknown').replace(/,/g, '');
+                        const task = (en.taskName || '').replace(/,/g, '');
+                        csvContent += `${ts.date},${empName},${pName},${task},${en.hours},${en.isBillable ? 'Yes' : 'No'},${ts.status}\n`;
+                    });
+                } else {
+                    csvContent += `${ts.date},${empName},,,${ts.totalHours || 0},,${ts.status}\n`;
+                }
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Timesheets_${document.getElementById('filterMonth').value}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        init();
+    </script>
+    <script src="update_sidebars.js"></script>
+</body>
+</html>

@@ -34,7 +34,9 @@
         'manage_admins.html': 'branches',
         'nav-branch-admins': 'branches',
         'teamsive_passport.html': 'teamsive_passport',
-        'hire_resign.html': 'hire_resign'
+        'hire_resign.html': 'hire_resign',
+        'timetrack.html': 'timetrack',
+        'projects.html': 'projects'
     };
 
     function normalizeBranchLinks() {

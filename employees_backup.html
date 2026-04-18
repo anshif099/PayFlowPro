@@ -719,29 +719,206 @@
         }
 
         // Company selector for Super Admin
-        const companyGroup = document.getElementById('companyGroup');
-        const companyDisplay = document.getElementById('companyDisplay');
-        const companySelect = document.getElementById('companySelect');
-
         if (role === 'super_admin') {
+            const companyGroup = document.getElementById('companyGroup');
+            if (companyGroup) companyGroup.style.display = 'block';
+            
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1 data-i18n="employees">Employees</h1>
+            </div>
+            <div class="top-bar-actions">
+                
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="card">
+                <h3 data-i18n="register_update_employee">Register / Update Employee</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-i18n="employee_name">Employee Name</label>
+                        <input id="name" placeholder="Enter employee name" data-i18n="employee_name">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="employee_id">Employee ID</label>
+                        <input id="empid" placeholder="Enter employee ID" data-i18n="employee_id">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="mobile_number">Mobile Number</label>
+                        <input id="mobile" placeholder="Enter mobile number" data-i18n="mobile_number">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="role">Role</label>
+                        <input id="role" placeholder="Enter role" data-i18n="role">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="salary">Salary</label>
+                        <input id="salary" placeholder="Enter salary" data-i18n="salary">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="branch">Branch</label>
+                        <select id="branch">
+                            <option value="">Select Branch</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="companyGroup" style="display: none;">
+                        <label data-i18n="company">Company</label>
+                        <div id="companyDisplay" style="padding: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text); opacity: 0.8; font-size: 14px; display: none;"></div>
+                        <select id="companySelect">
+                            <option value="">Select Company</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="department">Department</label>
+                        <select id="department">
+                            <option value="">Select Department (Optional)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="punch_mode">Punch Mode</label>
+                        <select id="punchMode">
+                            <option value="anywhere" data-i18n="anywhere">Anywhere (No GPS Check)</option>
+                            <option value="office" data-i18n="office_only">Office Only (GPS Required)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="verification_status">Verification Status</label>
+                        <select id="verificationStatus">
+                            <option value="pending" data-i18n="pending">Pending</option>
+                            <option value="verified" data-i18n="verified">Verified</option>
+                            <option value="rejected" data-i18n="rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="onboarding_date">Onboarding Date</label>
+                        <input type="date" id="onboardingDate">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="shift_type">Shift Type</label>
+                        <select id="shiftType" onchange="toggleShiftTimes()">
+                            <option value="fixed" data-i18n="fixed_shift">Fixed Shift (Office Time)</option>
+                            <option value="flexible" data-i18n="flexible_shift">Flexible Shift (No Time Restriction)
+                            </option>
+                            <option value="rotating" data-i18n="rotating_shift">Rotating Shift (Custom Time)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="shiftStartGroup" style="display: none;">
+                        <label data-i18n="shift_start">Shift Start Time</label>
+                        <input type="time" id="shiftStart" placeholder="e.g., 09:00">
+                    </div>
+                    <div class="form-group" id="shiftEndGroup" style="display: none;">
+                        <label data-i18n="shift_end">Shift End Time</label>
+                        <input type="time" id="shiftEnd" placeholder="e.g., 18:00">
+                    </div>
+                </div>
+                <button onclick="addEmployee()" data-i18n="save_employee">💾 Save Employee</button>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="employee_list">Employee List</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="sl_no">Sl No</th>
+                                <th data-i18n="name_id">Name/ID</th>
+                                <th data-i18n="mobile_number">Mobile</th>
+                                <th data-i18n="role">Role</th>
+                                <th data-i18n="branch">Branch & Dept</th>
+                                <th data-i18n="salary">Salary</th>
+                                <th data-i18n="punch_mode">Punch Mode</th>
+                                <th data-i18n="shift"><span data-i18n="shift_type">Shift Type</span></th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
+        const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
+
+        if (localStorage.getItem("admin") !== "true") {
+            location = "index.html";
+        }
+
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        const role = localStorage.getItem("role");
+        get(ref(db, "settings/currencySymbol")).then((snap) => {
+            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            localStorage.setItem("currencySymbol", currencySymbol);
+        });
+        const adminBranch = localStorage.getItem("branch");
+        const companyId = localStorage.getItem("companyId");
+
+        // Sidebar logic
+        if (role === 'super_admin') {
+            if (document.getElementById('nav-manage-companies')) {
+                document.getElementById('nav-manage-companies').style.display = 'flex';
+            }
+            if (document.getElementById('nav-manage-branches')) {
+                document.getElementById('nav-manage-branches').style.display = 'flex';
+            }
+            if (document.getElementById('nav-branch-admins')) {
+                document.getElementById('nav-branch-admins').style.display = 'flex';
+            }
+        } else if (role === 'company_admin') {
+            if (document.getElementById('nav-manage-branches')) {
+                document.getElementById('nav-manage-branches').style.display = 'flex';
+            }
+            if (document.getElementById('nav-branch-admins')) {
+                document.getElementById('nav-branch-admins').style.display = 'flex';
+            }
+        }
+
+        // Company selector for Super Admin
+        if (role === 'super_admin') {
+            const companyGroup = document.getElementById('companyGroup');
             if (companyGroup) companyGroup.style.display = 'block';
             
             get(ref(db, 'companies')).then(snap => {
+                const companySelect = document.getElementById('companySelect');
                 if (companySelect) {
                     companySelect.innerHTML += '<option value="teamsive">Teamsive HQ (Internal)</option>';
-                    if (snap.exists()) {
-                        snap.forEach(child => {
-                            const c = child.val();
-                            const cId = child.key;
-                            if (cId !== 'teamsive') {
-                                const cName = c.companyName || cId;
-                                companySelect.innerHTML += `<option value="${cId}">${cName} (${cId})</option>`;
-                            }
-                        });
-                    }
-                }
-            });
-        } else {
+            const companyGroup = document.getElementById('companyGroup');
+            const companyDisplay = document.getElementById('companyDisplay');
+            const companySelect = document.getElementById('companySelect');
             if (companyGroup) companyGroup.style.display = 'block';
             if (companyDisplay) {
                 companyDisplay.innerText = localStorage.getItem('companyName') || 'Assigned Company';

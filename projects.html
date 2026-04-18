@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Projects - Teamsive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="theme.js"></script>
+    <script src="lang.js"></script>
+    <style>
+        :root {
+            --primary: #00ffc3;
+            --primary-hover: #00e6af;
+            --bg-dark: #0b0f14;
+            --bg-card: #141a22;
+            --bg-input: #0f151d;
+            --text: #ffffff;
+            --text-muted: #8b92a0;
+            --border: #1e2530;
+            --success: #00ffc3;
+            --danger: #ff5c5c;
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f8f9fa;
+            --text: #1a1d21;
+            --text-muted: #6c757d;
+            --border: #e9ecef;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); overflow-x: hidden; }
+
+        /* ============ SIDEBAR COPIED FROM OTHER FILES ============ */
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+        .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sidebar-nav { margin-top: 24px; padding: 0 12px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
+        .nav-item:hover { background: var(--primary-hover-bg); color: var(--primary); }
+        .nav-item.active { background: var(--primary-active-bg); color: var(--primary); font-weight: 600; }
+        .nav-icon { width: 20px; height: 20px; font-size: 18px; }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left 0.3s ease; }
+        .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar h1 { font-size: 24px; font-weight: 600; }
+        .top-bar-actions { display: flex; gap: 12px; align-items: center; }
+        
+        .dashboard-section { padding: 32px; }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid var(--border); }
+        .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+        input, select { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        button { padding: 12px 24px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+        button:hover { background: var(--primary-hover); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #ff4444; }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-logout:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+        .table-container { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--border); background: rgba(0, 0, 0, 0.2); }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        tr:hover { background: rgba(0, 255, 195, 0.03); }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-active { background: rgba(0, 255, 195, 0.2); color: var(--success); }
+        .status-archived { background: rgba(139, 146, 160, 0.2); color: var(--text-muted); }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <!-- Sidebar injected via sidebar.js -->
+        <style>
+        .nav-dropdown {
+            display: none;
+            flex-direction: column;
+            padding-left: 32px;
+            margin-bottom: 4px;
+        }
+        .nav-dropdown.show {
+            display: flex;
+        }
+        .dropdown-toggle {
+            justify-content: space-between;
+        }
+        .nav-dropdown .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .nav-dropdown .nav-icon {
+            font-size: 16px;
+        }
+        </style>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
+            
+            <!-- Employees Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">👥</span>
+                    <span data-i18n="employees">Employees</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="empDropdown">
+                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+                    <span class="nav-icon">📜</span>
+                    <span>List Employees</span>
+                </a>
+                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                    <span class="nav-icon">✏️</span>
+                    <span>Manage Employees</span>
+                </a>
+            </div>
+
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="timetrack.html" class="nav-item">
+                <span class="nav-icon">⏱️</span>
+                <span data-i18n="timetrack">TimeTrack</span>
+            </a>
+            <a href="projects.html" class="nav-item active">
+                <span class="nav-icon">📂</span>
+                <span data-i18n="projects">Projects</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
+            <a href="salary_report.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>Salary Report</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="hire_resign.html" class="nav-item">
+                <span class="nav-icon">🔃</span>
+                <span>Hire / Resign</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1 data-i18n="projects">Manage Projects</h1>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+
+            <div class="card">
+                <h3 data-i18n="add_new_project">Add New Project</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-i18n="project_name">Project Name</label>
+                        <input id="projectName" placeholder="e.g. Website Overhaul">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="client_name">Client Name (Optional)</label>
+                        <input id="clientName" placeholder="e.g. Acme Corp">
+                    </div>
+                </div>
+                <button id="saveBtn" onclick="addProject()" data-i18n="save_project">💾 Save Project</button>
+            </div>
+
+            <div class="card">
+                <h3 data-i18n="existing_projects">Existing Projects</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="project_name">Project Name</th>
+                                <th data-i18n="client_name">Client Name</th>
+                                <th data-i18n="status">Status</th>
+                                <th data-i18n="action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove, push, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
+            authDomain: "payflowpro-6e62d.firebaseapp.com",
+            databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com",
+            projectId: "payflowpro-6e62d",
+            storageBucket: "payflowpro-6e62d.firebasestorage.app",
+            messagingSenderId: "69298740438",
+            appId: "1:69298740438:web:18fd85e982e083e1543d77"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
+
+        const companyId = localStorage.getItem("companyId") || "";
+
+        window.logout = () => { localStorage.clear(); location = "index.html"; }
+
+        window.addProject = async () => {
+            if (!companyId) return alert("Company ID not found");
+            const nameEl = document.getElementById('projectName');
+            const clientEl = document.getElementById('clientName');
+
+            const name = nameEl.value.trim();
+            const client = clientEl.value.trim();
+
+            if (!name) return alert("Project name is required.");
+
+            try {
+                const newRef = push(ref(db, `projects/${companyId}`));
+                await set(newRef, {
+                    name: name,
+                    client: client,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+                alert("Project Added Successfully!");
+                nameEl.value = '';
+                clientEl.value = '';
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        window.toggleStatus = (id, currentStatus) => {
+            const newStatus = currentStatus === 'active' ? 'archived' : 'active';
+            update(ref(db, `projects/${companyId}/${id}`), { status: newStatus });
+        };
+
+        window.deleteProject = (id) => {
+            if (confirm("Are you sure you want to delete this project?")) {
+                remove(ref(db, `projects/${companyId}/${id}`));
+            }
+        };
+
+        function loadProjects() {
+            if(!companyId) return;
+            onValue(ref(db, `projects/${companyId}`), snapshot => {
+                const list = document.getElementById('projectsList');
+                list.innerHTML = "";
+
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const proj = { id: child.key, ...child.val() };
+                        const statusClass = proj.status === 'active' ? 'status-active' : 'status-archived';
+                        
+                        list.innerHTML += `
+                            <tr>
+                                <td><strong>${proj.name}</strong></td>
+                                <td>${proj.client || '-'}</td>
+                                <td><span class="status-badge ${statusClass}">${proj.status.toUpperCase()}</span></td>
+                                <td>
+                                    <button style="padding: 6px 12px; font-size: 12px; border-radius: 6px; margin-right: 8px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="toggleStatus('${proj.id}', '${proj.status}')">Toggle Status</button>
+                                    <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" onclick="deleteProject('${proj.id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    list.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No projects found</td></tr>`;
+                }
+            });
+        }
+
+        loadProjects();
+    </script>
+    <script src="update_sidebars.js"></script>
+</body>
+</html>
