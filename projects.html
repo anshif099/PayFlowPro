@@ -223,6 +223,14 @@
                         <input id="clientName" placeholder="e.g. Acme Corp">
                     </div>
                 </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Assign Employees (Only selected ones will see this project)</label>
+                    <div id="employeeSelectionContainer" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; min-height: 50px;">
+                        <div style="color: var(--text-muted); font-size: 13px;">Loading employees...</div>
+                    </div>
+                </div>
+
                 <button id="saveBtn" onclick="addProject()" data-i18n="save_project">💾 Save Project</button>
             </div>
 
@@ -245,10 +253,35 @@
         </div>
     </div>
 
+    <!-- EDIT MODAL -->
+    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center;">
+        <div class="card" style="width:100%; max-width:500px; margin:20px;">
+            <h3>Edit Project</h3>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label>Project Name</label>
+                <input id="editProjectName">
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label>Client Name</label>
+                <input id="editClientName">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Assign Employees</label>
+                <div id="editEmployeeSelectionContainer" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; min-height: 50px; max-height:200px; overflow-y:auto;">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button style="background:transparent; border:1px solid var(--border); color:var(--text);" onclick="closeEditModal()">Cancel</button>
+                <button onclick="updateProject()">Update Project</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
+        // ... config ...
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
             authDomain: "payflowpro-6e62d.firebaseapp.com",
@@ -264,8 +297,89 @@
         if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
 
         const companyId = localStorage.getItem("companyId") || "";
+        let allEmployees = [];
+        let selectedEmployees = new Set();
+        let currentEditId = null;
+        let editSelectedEmployees = new Set();
 
         window.logout = () => { localStorage.clear(); location = "index.html"; }
+
+        async function loadEmployees(containerId, selectionSet) {
+            if (!companyId) return;
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            
+            // Note: We'll use a one-time get or a persistent listener. 
+            // Since onValue is used for projects, let's keep it simple.
+            const empRef = ref(db, "employees");
+            onValue(empRef, snapshot => {
+                container.innerHTML = "";
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const emp = { id: child.key, ...child.val() };
+                        if (emp.companyId === companyId && emp.status !== 'inactive') {
+                            const badge = document.createElement('div');
+                            const isSelected = selectionSet.has(emp.id);
+                            badge.innerText = emp.name;
+                            badge.style.cssText = `
+                                padding: 6px 12px;
+                                border-radius: 20px;
+                                border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'};
+                                font-size: 13px;
+                                cursor: pointer;
+                                transition: 0.2s;
+                                background: ${isSelected ? 'var(--primary)' : 'var(--bg-dark)'};
+                                color: ${isSelected ? '#000' : 'var(--text-muted)'};
+                            `;
+                            badge.onclick = () => {
+                                if (selectionSet.has(emp.id)) {
+                                    selectionSet.delete(emp.id);
+                                    badge.style.background = 'var(--bg-dark)';
+                                    badge.style.color = 'var(--text-muted)';
+                                    badge.style.borderColor = 'var(--border)';
+                                } else {
+                                    selectionSet.add(emp.id);
+                                    badge.style.background = 'var(--primary)';
+                                    badge.style.color = '#000';
+                                    badge.style.borderColor = 'var(--primary)';
+                                }
+                            };
+                            container.appendChild(badge);
+                        }
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        window.openEditModal = (id, name, client, assigned) => {
+            currentEditId = id;
+            document.getElementById('editProjectName').value = name;
+            document.getElementById('editClientName').value = client;
+            editSelectedEmployees = new Set(assigned);
+            document.getElementById('editModal').style.display = 'flex';
+            loadEmployees('editEmployeeSelectionContainer', editSelectedEmployees);
+        };
+
+        window.closeEditModal = () => {
+            document.getElementById('editModal').style.display = 'none';
+        };
+
+        window.updateProject = async () => {
+            if (!currentEditId) return;
+            const name = document.getElementById('editProjectName').value.trim();
+            const client = document.getElementById('editClientName').value.trim();
+            if (!name) return alert("Name is required");
+
+            try {
+                await update(ref(db, `projects/${companyId}/${currentEditId}`), {
+                    name: name,
+                    client: client,
+                    assignedEmployees: Array.from(editSelectedEmployees)
+                });
+                alert("Project Updated!");
+                closeEditModal();
+            } catch (e) { alert(e.message); }
+        };
 
         window.addProject = async () => {
             if (!companyId) return alert("Company ID not found");
@@ -283,11 +397,14 @@
                     name: name,
                     client: client,
                     status: 'active',
+                    assignedEmployees: Array.from(selectedEmployees),
                     createdAt: new Date().toISOString()
                 });
                 alert("Project Added Successfully!");
                 nameEl.value = '';
                 clientEl.value = '';
+                selectedEmployees.clear();
+                loadEmployees(); // Reset badges
             } catch (e) { alert("Error: " + e.message); }
         };
 
@@ -312,13 +429,19 @@
                     snapshot.forEach(child => {
                         const proj = { id: child.key, ...child.val() };
                         const statusClass = proj.status === 'active' ? 'status-active' : 'status-archived';
+                        const assignedCount = proj.assignedEmployees ? proj.assignedEmployees.length : 0;
+                        const assignedText = assignedCount > 0 ? `${assignedCount} Assigned` : 'All' ;
                         
                         list.innerHTML += `
                             <tr>
-                                <td><strong>${proj.name}</strong></td>
+                                <td>
+                                    <strong>${proj.name}</strong>
+                                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👥 ${assignedText}</div>
+                                </td>
                                 <td>${proj.client || '-'}</td>
                                 <td><span class="status-badge ${statusClass}">${proj.status.toUpperCase()}</span></td>
                                 <td>
+                                    <button style="padding: 6px 12px; font-size: 12px; border-radius: 6px; margin-right: 8px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="openEditModal('${proj.id}', '${proj.name.replace(/'/g, "\\'")}', '${(proj.client || "").replace(/'/g, "\\'")}', ${JSON.stringify(proj.assignedEmployees || [])})">Edit</button>
                                     <button style="padding: 6px 12px; font-size: 12px; border-radius: 6px; margin-right: 8px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="toggleStatus('${proj.id}', '${proj.status}')">Toggle Status</button>
                                     <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" onclick="deleteProject('${proj.id}')">Delete</button>
                                 </td>
@@ -331,6 +454,7 @@
             });
         }
 
+        loadEmployees('employeeSelectionContainer', selectedEmployees);
         loadProjects();
     </script>
     <script src="update_sidebars.js"></script>
