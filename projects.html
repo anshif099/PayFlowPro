@@ -301,16 +301,15 @@
         let selectedEmployees = new Set();
         let currentEditId = null;
         let editSelectedEmployees = new Set();
+        let addAssignmentData = {};
 
         window.logout = () => { localStorage.clear(); location = "index.html"; }
 
-        async function loadEmployees(containerId, selectionSet) {
+        async function loadEmployees(containerId, selectionSet, assignmentData = {}) {
             if (!companyId) return;
             const container = document.getElementById(containerId);
             container.innerHTML = "";
             
-            // Note: We'll use a one-time get or a persistent listener. 
-            // Since onValue is used for projects, let's keep it simple.
             const empRef = ref(db, "employees");
             onValue(empRef, snapshot => {
                 container.innerHTML = "";
@@ -318,33 +317,93 @@
                     snapshot.forEach(child => {
                         const emp = { id: child.key, ...child.val() };
                         if (emp.companyId === companyId && emp.status !== 'inactive') {
-                            const badge = document.createElement('div');
+                            const wrapper = document.createElement('div');
+                            wrapper.style.cssText = `
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                margin-bottom: 8px;
+                                padding: 8px;
+                                background: var(--bg-dark);
+                                border-radius: 8px;
+                                width: 100%;
+                            `;
+
                             const isSelected = selectionSet.has(emp.id);
+                            const badge = document.createElement('div');
                             badge.innerText = emp.name;
                             badge.style.cssText = `
+                                flex: 1;
                                 padding: 6px 12px;
-                                border-radius: 20px;
+                                border-radius: 6px;
                                 border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'};
                                 font-size: 13px;
                                 cursor: pointer;
-                                transition: 0.2s;
-                                background: ${isSelected ? 'var(--primary)' : 'var(--bg-dark)'};
+                                background: ${isSelected ? 'var(--primary)' : 'transparent'};
                                 color: ${isSelected ? '#000' : 'var(--text-muted)'};
                             `;
+
+                            const hoursInput = document.createElement('input');
+                            hoursInput.type = 'number';
+                            hoursInput.placeholder = 'Hrs';
+                            hoursInput.value = assignmentData[emp.id]?.targetHours || '';
+                            hoursInput.style.cssText = `
+                                width: 50px;
+                                padding: 6px;
+                                font-size: 11px;
+                                background: var(--bg-input);
+                                color: white;
+                                border: 1px solid var(--border);
+                                border-radius: 4px;
+                                display: ${isSelected ? 'block' : 'none'};
+                            `;
+
+                            const daysInput = document.createElement('input');
+                            daysInput.type = 'number';
+                            daysInput.placeholder = 'Days';
+                            daysInput.value = assignmentData[emp.id]?.targetDays || '';
+                            daysInput.style.cssText = `
+                                width: 50px;
+                                padding: 6px;
+                                font-size: 11px;
+                                background: var(--bg-input);
+                                color: white;
+                                border: 1px solid var(--border);
+                                border-radius: 4px;
+                                display: ${isSelected ? 'block' : 'none'};
+                            `;
+
                             badge.onclick = () => {
                                 if (selectionSet.has(emp.id)) {
                                     selectionSet.delete(emp.id);
-                                    badge.style.background = 'var(--bg-dark)';
+                                    badge.style.background = 'transparent';
                                     badge.style.color = 'var(--text-muted)';
                                     badge.style.borderColor = 'var(--border)';
+                                    hoursInput.style.display = 'none';
+                                    daysInput.style.display = 'none';
                                 } else {
                                     selectionSet.add(emp.id);
                                     badge.style.background = 'var(--primary)';
                                     badge.style.color = '#000';
                                     badge.style.borderColor = 'var(--primary)';
+                                    hoursInput.style.display = 'block';
+                                    daysInput.style.display = 'block';
                                 }
                             };
-                            container.appendChild(badge);
+
+                            hoursInput.onchange = (e) => {
+                                if (!assignmentData[emp.id]) assignmentData[emp.id] = {};
+                                assignmentData[emp.id].targetHours = e.target.value;
+                            };
+                            daysInput.onchange = (e) => {
+                                if (!assignmentData[emp.id]) assignmentData[emp.id] = {};
+                                assignmentData[emp.id].targetDays = e.target.value;
+                            };
+
+                            wrapper.appendChild(badge);
+                            wrapper.appendChild(hoursInput);
+                            wrapper.appendChild(daysInput);
+                            container.appendChild(wrapper);
                         }
                     });
                 }
@@ -355,9 +414,20 @@
             currentEditId = id;
             document.getElementById('editProjectName').value = name;
             document.getElementById('editClientName').value = client;
-            editSelectedEmployees = new Set(assigned);
+            
+            let assignmentData = {};
+            editSelectedEmployees = new Set();
+            
+            if (typeof assigned === 'object' && assigned !== null) {
+                Object.keys(assigned).forEach(id => {
+                    editSelectedEmployees.add(id);
+                    assignmentData[id] = assigned[id];
+                });
+            }
+
             document.getElementById('editModal').style.display = 'flex';
-            loadEmployees('editEmployeeSelectionContainer', editSelectedEmployees);
+            window._editAssignmentData = assignmentData;
+            loadEmployees('editEmployeeSelectionContainer', editSelectedEmployees, assignmentData);
         };
 
         window.closeEditModal = () => {
@@ -370,11 +440,16 @@
             const client = document.getElementById('editClientName').value.trim();
             if (!name) return alert("Name is required");
 
+            let finalAssignments = {};
+            editSelectedEmployees.forEach(id => {
+                finalAssignments[id] = window._editAssignmentData[id] || { targetHours: "" };
+            });
+
             try {
                 await update(ref(db, `projects/${companyId}/${currentEditId}`), {
                     name: name,
                     client: client,
-                    assignedEmployees: Array.from(editSelectedEmployees)
+                    assignedEmployees: finalAssignments
                 });
                 alert("Project Updated!");
                 closeEditModal();
@@ -391,20 +466,26 @@
 
             if (!name) return alert("Project name is required.");
 
+            let finalAssignments = {};
+            selectedEmployees.forEach(id => {
+                finalAssignments[id] = addAssignmentData[id] || { targetHours: "" };
+            });
+
             try {
                 const newRef = push(ref(db, `projects/${companyId}`));
                 await set(newRef, {
                     name: name,
                     client: client,
                     status: 'active',
-                    assignedEmployees: Array.from(selectedEmployees),
+                    assignedEmployees: finalAssignments,
                     createdAt: new Date().toISOString()
                 });
                 alert("Project Added Successfully!");
                 nameEl.value = '';
                 clientEl.value = '';
                 selectedEmployees.clear();
-                loadEmployees(); // Reset badges
+                addAssignmentData = {};
+                loadEmployees('employeeSelectionContainer', selectedEmployees, addAssignmentData);
             } catch (e) { alert("Error: " + e.message); }
         };
 
@@ -429,8 +510,16 @@
                     snapshot.forEach(child => {
                         const proj = { id: child.key, ...child.val() };
                         const statusClass = proj.status === 'active' ? 'status-active' : 'status-archived';
-                        const assignedCount = proj.assignedEmployees ? proj.assignedEmployees.length : 0;
-                        const assignedText = assignedCount > 0 ? `${assignedCount} Assigned` : 'All' ;
+                        const assignedCount = proj.assignedEmployees ? Object.keys(proj.assignedEmployees).length : 0;
+                        let targetDaysSummary = "";
+                        if (proj.assignedEmployees) {
+                            let totalD = 0;
+                            Object.values(proj.assignedEmployees).forEach(a => {
+                                if (a.targetDays) totalD += parseFloat(a.targetDays) || 0;
+                            });
+                            if (totalD > 0) targetDaysSummary = ` | 📅 ${totalD} Target Days`;
+                        }
+                        const assignedText = assignedCount > 0 ? `${assignedCount} Assigned${targetDaysSummary}` : 'All' ;
                         
                         list.innerHTML += `
                             <tr>
@@ -454,7 +543,7 @@
             });
         }
 
-        loadEmployees('employeeSelectionContainer', selectedEmployees);
+        loadEmployees('employeeSelectionContainer', selectedEmployees, addAssignmentData);
         loadProjects();
     </script>
     <script src="update_sidebars.js"></script>
