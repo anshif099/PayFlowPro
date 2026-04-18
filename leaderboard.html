@@ -344,33 +344,11 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-      </select>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
-            <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
         <style>
         .nav-dropdown {
             display: none;
@@ -549,49 +527,34 @@
         function buildAllowedBranchTokens(branchesSnap, sessionBranchValue) {
             const allowedTokens = new Set();
             const normalizedSessionBranch = normalizeValue(sessionBranchValue);
-
-            if (!normalizedSessionBranch) {
-                return allowedTokens;
-            }
-
+            if (!normalizedSessionBranch) return allowedTokens;
             allowedTokens.add(normalizedSessionBranch);
-
             if (branchesSnap.exists()) {
                 branchesSnap.forEach(child => {
                     const branch = child.val() || {};
-                    const tokens = [
-                        child.key,
-                        branch.branchId,
-                        branch.name,
-                        branch.branchName
-                    ].map(normalizeValue).filter(Boolean);
-
+                    const tokens = [child.key, branch.branchId, branch.name, branch.branchName].map(normalizeValue).filter(Boolean);
                     if (tokens.includes(normalizedSessionBranch)) {
                         tokens.forEach(token => allowedTokens.add(token));
                     }
                 });
             }
-
             return allowedTokens;
         }
 
         async function resolveSettingsRoot(companyId, branch) {
             let settingsRoot = "settings";
-
             if (companyId) {
                 const companySettingsSnap = await get(ref(db, `settings/companies/${companyId}`));
                 if (companySettingsSnap.exists()) {
                     settingsRoot = `settings/companies/${companyId}`;
                 }
             }
-
             if (settingsRoot === "settings" && branch) {
                 const branchSettingsSnap = await get(ref(db, `settings/branches/${branch}`));
                 if (branchSettingsSnap.exists()) {
                     settingsRoot = `settings/branches/${branch}`;
                 }
             }
-
             return settingsRoot;
         }
 
@@ -602,13 +565,14 @@
             return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
 
-        function calculateDayNetMinutes(record, startMinutes, endMinutes, netOfficeMinutes) {
+        function calculateDayNetMinutes(record, startMinutes, endMinutes, netOfficeMinutes, breakMinutes, dateStr) {
             const status = record.status || 'absent';
             if (status === 'absent' || status === 'unpaid-leave') {
                 return -netOfficeMinutes;
             }
 
-            let lateIn = 0, earlyIn = 0, lateOut = 0, earlyOut = 0;
+            let punchInMins = startMinutes;
+            let punchOutMins = -1;
 
             const punchIn = record.punchIn?.time;
             if (punchIn) {
@@ -619,16 +583,9 @@
                         let h = parseInt(hm[0] || '0');
                         let m = parseInt(hm[1] || '0');
                         const ampm = timeParts[1].toUpperCase();
-
                         if (ampm === "PM" && h < 12) h += 12;
                         if (ampm === "AM" && h === 12) h = 0;
-
-                        let totalMins = h * 60 + m;
-                        if (totalMins > startMinutes) {
-                            lateIn = totalMins - startMinutes;
-                        } else {
-                            earlyIn = startMinutes - totalMins;
-                        }
+                        punchInMins = h * 60 + m;
                     }
                 } catch (e) { }
             }
@@ -642,21 +599,40 @@
                         let h = parseInt(hm[0] || '0');
                         let m = parseInt(hm[1] || '0');
                         const ampm = timeParts[1].toUpperCase();
-
                         if (ampm === "PM" && h < 12) h += 12;
                         if (ampm === "AM" && h === 12) h = 0;
-
-                        let totalMins = h * 60 + m;
-                        if (totalMins < endMinutes) {
-                            earlyOut = endMinutes - totalMins;
-                        } else {
-                            lateOut = totalMins - endMinutes;
-                        }
+                        punchOutMins = h * 60 + m;
                     }
                 } catch (e) { }
             }
 
-            return (earlyIn + lateOut) - (lateIn + earlyOut);
+            // If no punch out yet
+            if (punchOutMins < 0) {
+                const now = new Date();
+                const todayY = now.getFullYear();
+                const todayM = String(now.getMonth() + 1).padStart(2, '0');
+                const todayD = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${todayY}-${todayM}-${todayD}`;
+
+                if (dateStr === todayStr && now.getHours() < 23) {
+                    // Still working today, use current time as running score
+                    punchOutMins = now.getHours() * 60 + now.getMinutes();
+                } else {
+                    // Past date or after 11 PM - treat as half-day leave
+                    return -Math.round(netOfficeMinutes / 2);
+                }
+            }
+
+            // Total presence = punchOut - punchIn
+            let totalPresence = punchOutMins - punchInMins;
+            if (totalPresence < 0) totalPresence = 0;
+
+            // Actual worked time = total presence - break time
+            let actualWorked = totalPresence - breakMinutes;
+            if (actualWorked < 0) actualWorked = 0;
+
+            // Net = actual worked - expected net office time
+            return actualWorked - netOfficeMinutes;
         }
 
         function getWorkingDays(filter, weekOffs, secondSaturday, holidays, joiningDate) {
@@ -679,7 +655,7 @@
                 start = new Date(now.getFullYear(), 0, 1);
                 end = new Date(now.getFullYear(), 11, 31);
             } else if (filter === 'Overall') {
-                start = new Date(now.getFullYear(), now.getMonth(), 1); // fallback to month
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
                 end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             }
 
@@ -688,27 +664,18 @@
 
             let join = null;
             if (joiningDate) {
-                try {
-                    join = new Date(joiningDate);
-                } catch (e) { }
+                try { join = new Date(joiningDate); } catch (e) { }
             }
 
             for (let d = new Date(start); d <= end && d <= now; d.setDate(d.getDate() + 1)) {
-
-                // Skip if this date is before the joining date
                 if (join && d < new Date(join.getFullYear(), join.getMonth(), join.getDate())) {
                     continue;
                 }
 
-                // Manually format to YYYY-MM-DD instead of toISOString to avoid timezone bugs
                 const y = d.getFullYear();
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
                 const dateStr = `${y}-${m}-${dd}`;
-
-                // dayNames array matches the native JS getDay() (0=Sunday)
-                // However, Dart `DateTime.weekday` is 1=Monday...7=Sunday.
-                // Our dayNames list above is ["Sunday", "Monday", ...], so `d.getDay()` correctly fetches Monday using index 1.
                 const dayName = dayNames[d.getDay()];
 
                 if (weekOffs.includes(dayName)) continue;
@@ -754,20 +721,31 @@
                     document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No employees found.</div>';
                     return;
                 }
+
                 const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
-                const sessionCompanyId = normalizeValue(companyId);
 
                 let officeStart = 9 * 60, officeEnd = 18 * 60, intervals = 0;
                 if (officeSnap.exists()) {
                     officeStart = parseTime(officeSnap.val().start);
                     officeEnd = parseTime(officeSnap.val().end);
                 }
-                if (intSnap.exists()) {
-                    Object.values(intSnap.val()).forEach(v => {
-                        const s = parseTime(v.start), e = parseTime(v.end);
-                        if (e > s) intervals += (e - s);
+
+                // Intervals/breaks: try resolved settings path first,
+                // fallback to root settings/intervals (where Interval Management saves them)
+                let actualIntSnap = intSnap;
+                if (!intSnap.exists() && settingsRoot !== 'settings') {
+                    actualIntSnap = await get(ref(db, 'settings/intervals'));
+                }
+                if (actualIntSnap.exists()) {
+                    Object.values(actualIntSnap.val()).forEach(v => {
+                        if (v && typeof v === 'object') {
+                            const s = parseTime(v.start), e = parseTime(v.end);
+                            if (e > s) intervals += (e - s);
+                        }
                     });
                 }
+
+                // Net office = gross office time - break time
                 let netOffice = (officeEnd - officeStart) - intervals;
                 if (netOffice < 0) netOffice = 0;
 
@@ -792,8 +770,7 @@
                     const sessionCompanyId = normalizeValue(companyId);
 
                     if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) continue;
-                    
-                    // Filter: Only show same company employees
+
                     if ((role === 'company_admin' || role === 'super_admin')) {
                         if (empCompanyId !== sessionCompanyId) {
                             continue;
@@ -807,7 +784,7 @@
 
                     activeWorkingDays.forEach(date => {
                         if (empAtt[date]) {
-                            netMins += calculateDayNetMinutes(empAtt[date], officeStart, officeEnd, netOffice);
+                            netMins += calculateDayNetMinutes(empAtt[date], officeStart, officeEnd, netOffice, intervals, date);
                         } else {
                             netMins -= netOffice;
                         }

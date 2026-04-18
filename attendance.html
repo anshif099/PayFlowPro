@@ -1120,12 +1120,23 @@
 
                     emp.forEach(day => {
                         const r = day.val();
+                        let status = r.status || '';
+                        if (status === 'in' && !r.punchOut) {
+                            const now = new Date();
+                            const todayY = now.getFullYear();
+                            const todayM = String(now.getMonth() + 1).padStart(2, '0');
+                            const todayD = String(now.getDate()).padStart(2, '0');
+                            const todayStr = `${todayY}-${todayM}-${todayD}`;
+                            if (day.key < todayStr || (day.key === todayStr && now.getHours() >= 23)) {
+                                status = 'halfday';
+                            }
+                        }
                         allAttendanceData.push({
                             empId: emp.key,
                             date: day.key,
                             punchIn: r.punchIn?.time || "-",
                             punchOut: r.punchOut?.time || "-",
-                            status: r.status,
+                            status: status,
                             punchInRaw: r.punchIn?.time || '',
                             punchOutRaw: r.punchOut?.time || '',
                             punchInImg: r.punchIn?.imageBase64 || null,

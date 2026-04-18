@@ -728,6 +728,19 @@
                     const record = attendance[dateStr] || {};
                     let status = record.status || '';
 
+                    // Apply Half-Day logic for Missing Punch Out
+                    if (status === 'in' && !record.punchOut) {
+                        const todayY = today.getFullYear();
+                        const todayM = String(today.getMonth() + 1).padStart(2, '0');
+                        const todayD = String(today.getDate()).padStart(2, '0');
+                        const todayStr = `${todayY}-${todayM}-${todayD}`;
+                        
+                        // If it's a past date OR it's today after 11 PM
+                        if (dateStr < todayStr || (dateStr === todayStr && today.getHours() >= 23)) {
+                            status = 'halfday';
+                        }
+                    }
+
                     // Don't count "Present" stats for future dates in stats summary if not marked,
                     // but ALWAYS show labels/badges in calendar.
                     let skipForStats = false;
@@ -814,6 +827,19 @@
                     
                     const record = attendance[dateStr] || {};
                     let status = record.status || '';
+                    
+                    // Apply Half-Day logic for Missing Punch Out
+                    if (status === 'in' && !record.punchOut) {
+                        const todayY = today.getFullYear();
+                        const todayM = String(today.getMonth() + 1).padStart(2, '0');
+                        const todayD = String(today.getDate()).padStart(2, '0');
+                        const todayStr = `${todayY}-${todayM}-${todayD}`;
+                        
+                        // If it's a past date OR it's today after 11 PM
+                        if (dateStr < todayStr || (dateStr === todayStr && today.getHours() >= 23)) {
+                            status = 'halfday';
+                        }
+                    }
                     
                     if (onboardingDate && dateStr < onboardingDate && !status) {
                         cell.classList.add('calendar-day', 'empty');
