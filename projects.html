@@ -74,6 +74,7 @@
         tr:hover { background: rgba(0, 255, 195, 0.03); }
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-active { background: rgba(0, 255, 195, 0.2); color: var(--success); }
+        .status-finished { background: rgba(255, 167, 38, 0.2); color: var(--warning); }
         .status-archived { background: rgba(139, 146, 160, 0.2); color: var(--text-muted); }
     </style>
 </head>
@@ -490,7 +491,10 @@
         };
 
         window.toggleStatus = (id, currentStatus) => {
-            const newStatus = currentStatus === 'active' ? 'archived' : 'active';
+            let newStatus = 'active';
+            if (currentStatus === 'active') newStatus = 'finished';
+            else if (currentStatus === 'finished') newStatus = 'archived';
+            else if (currentStatus === 'archived') newStatus = 'active';
             update(ref(db, `projects/${companyId}/${id}`), { status: newStatus });
         };
 
@@ -509,7 +513,10 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const proj = { id: child.key, ...child.val() };
-                        const statusClass = proj.status === 'active' ? 'status-active' : 'status-archived';
+                        let statusClass = 'status-active';
+                        if (proj.status === 'finished') statusClass = 'status-finished';
+                        else if (proj.status === 'archived') statusClass = 'status-archived';
+                        
                         const assignedCount = proj.assignedEmployees ? Object.keys(proj.assignedEmployees).length : 0;
                         let targetDaysSummary = "";
                         if (proj.assignedEmployees) {
