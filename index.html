@@ -273,6 +273,8 @@
                     localStorage.setItem("admin", "true");
                     localStorage.setItem("role", "super_admin");
                     localStorage.setItem("name", "Teamsive");
+                    localStorage.setItem("companyId", "teamsive");
+                    localStorage.setItem("companyName", "Teamsive HQ");
                     await prefetchTheme();
                     location.href = "dashboard.html";
                 }
@@ -407,9 +409,7 @@
                 errorEl.innerText = "Error: " + err.message;
             }
         }
-
+        loadProjects();
     </script>
-    <script src="sidebar.js"></script>
 </body>
-
 </html>
