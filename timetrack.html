@@ -389,7 +389,10 @@
                     <tr>
                         <td><strong>${ts.date}</strong></td>
                         <td>${empName}</td>
-                        <td>${ts.totalHours || 0}h ${ts.autoPulledFromAttendance ? ' <span style="font-size:10px;color:var(--success);">(Auto-pulled)</span>' : ''}</td>
+                        <td>
+                            ${ts.totalHours || 0}h ${ts.autoPulledFromAttendance ? ' <span style="font-size:10px;color:var(--success);">(Auto)</span>' : ''}
+                            ${ts.dailyStatusUpdate ? `<div style="font-size:11px; color:var(--text-muted); font-style:italic; margin-top:4px;">Status: ${ts.dailyStatusUpdate}</div>` : ''}
+                        </td>
                         <td>
                             ${ts.entries ? Object.keys(ts.entries).length + ' logs' : '0 logs'}
                             ${detailsHtml}
