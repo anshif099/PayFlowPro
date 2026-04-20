@@ -88,6 +88,7 @@
         .badge-archived { background: rgba(139, 146, 160, 0.15); color: var(--text-muted); }
         .badge-pending { background: rgba(66, 165, 245, 0.15); color: var(--info); }
         .badge-in_progress { background: rgba(255, 167, 38, 0.15); color: var(--warning); }
+        .badge-rejected { background: rgba(255, 92, 92, 0.15); color: var(--danger); }
         .badge-early { background: rgba(0, 255, 195, 0.15); color: var(--success); }
         .badge-on_time { background: rgba(66, 165, 245, 0.15); color: var(--info); }
         .badge-late { background: rgba(255, 92, 92, 0.15); color: var(--danger); }
@@ -895,6 +896,8 @@
                     if (a.timeDifference) statusBadge += `<span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${a.timeDifference}</span>`;
                 } else if (a.status === 'in_progress') {
                     statusBadge = `<span class="status-badge badge-in_progress">IN PROGRESS</span>`;
+                } else if (a.status === 'rejected') {
+                    statusBadge = `<span class="status-badge badge-rejected">REJECTED</span>`;
                 } else {
                     statusBadge = `<span class="status-badge badge-pending">PENDING</span>`;
                 }
