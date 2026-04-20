@@ -390,6 +390,11 @@
 
             <!-- Communication Tab -->
             <div class="tab-content" id="tabFiles">
+                <!-- Text message input -->
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                    <input type="text" id="chatMsgInput" placeholder="Type a message..." style="flex:1;padding:10px 16px;border-radius:24px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')sendChatMessage()">
+                    <button onclick="sendChatMessage()" style="border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--primary);border:none;cursor:pointer;font-size:16px;">📨</button>
+                </div>
                 <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
                     <div style="font-size:32px;margin-bottom:8px;">📎</div>
                     <div style="font-size:14px;color:var(--text-muted);">Click to upload files (Images, Documents, Voice Notes)</div>
@@ -954,17 +959,41 @@
         // --------- File Communication ---------
         function loadProjectFiles(projectId) {
             const container = document.getElementById('filesList');
-            container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading files...</div>';
+            container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading messages...</div>';
 
             onValue(ref(db, `project_files/${companyId}/${projectId}`), snap => {
                 container.innerHTML = '';
                 if (!snap.exists()) {
-                    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No files shared yet</div>';
+                    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No messages yet. Start the conversation!</div>';
                     return;
                 }
 
+                const items = [];
                 snap.forEach(child => {
-                    const file = { id: child.key, ...child.val() };
+                    items.push({ id: child.key, ...child.val() });
+                });
+                items.sort((a, b) => (a.uploadedAt || '').localeCompare(b.uploadedAt || ''));
+
+                items.forEach(file => {
+                    const isAdmin = file.uploadedBy === 'admin';
+                    const senderName = file.uploadedByName || (isAdmin ? 'Admin' : 'Employee');
+                    const timeStr = file.uploadedAt ? formatDateTime(file.uploadedAt) : '';
+
+                    // TEXT MESSAGE - chat bubble
+                    if (file.fileType === 'text') {
+                        container.innerHTML += `
+                            <div style="display:flex;justify-content:${isAdmin ? 'flex-end' : 'flex-start'};margin-bottom:8px;">
+                                <div style="max-width:70%;padding:10px 14px;border-radius:14px ${isAdmin ? '14px 4px 14px' : '4px 14px 14px'};background:${isAdmin ? 'rgba(0,255,195,0.12)' : 'rgba(139,146,160,0.12)'};border:1px solid ${isAdmin ? 'rgba(0,255,195,0.2)' : 'rgba(139,146,160,0.15)'}">
+                                    <div style="font-size:10px;font-weight:600;color:${isAdmin ? 'var(--primary)' : 'var(--text-muted)'};margin-bottom:3px;">${escHtml(senderName)}</div>
+                                    <div style="font-size:14px;color:var(--text);">${escHtml(file.fileName)}</div>
+                                    <div style="font-size:9px;color:var(--text-muted);margin-top:4px;text-align:${isAdmin ? 'right' : 'left'};">${timeStr}</div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // FILE / IMAGE / AUDIO - card style
                     const icon = file.fileType === 'image' ? '🖼️' : file.fileType === 'audio' ? '🎵' : '📄';
                     const sizeStr = file.sizeBytes ? formatFileSize(file.sizeBytes) : '';
 
@@ -977,20 +1006,46 @@
                         actionHtml = `<button class="btn-outline btn-small" onclick="downloadFile('${file.id}')" style="padding:4px 8px;font-size:11px;">⬇</button>`;
                     }
 
+                    const alignStyle = isAdmin ? 'flex-end' : 'flex-start';
                     container.innerHTML += `
-                        <div class="file-card" data-file-id="${file.id}">
-                            <div class="file-icon">${icon}</div>
-                            <div class="file-info">
-                                <div class="file-name">${escHtml(file.fileName)}</div>
-                                <div class="file-meta">${sizeStr} • ${formatDateTime(file.uploadedAt)}</div>
+                        <div style="display:flex;justify-content:${alignStyle};margin-bottom:8px;">
+                            <div class="file-card" data-file-id="${file.id}" style="max-width:75%;">
+                                <div style="font-size:10px;font-weight:600;color:${isAdmin ? 'var(--primary)' : 'var(--text-muted)'};margin-bottom:4px;">${escHtml(senderName)}</div>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div class="file-icon">${icon}</div>
+                                    <div class="file-info">
+                                        <div class="file-name">${escHtml(file.fileName)}</div>
+                                        <div class="file-meta">${sizeStr} • ${timeStr}</div>
+                                    </div>
+                                    ${actionHtml}
+                                    <button class="btn-danger btn-small" onclick="deleteFile('${file.id}')" style="padding:4px 8px;font-size:11px;">✕</button>
+                                </div>
                             </div>
-                            ${actionHtml}
-                            <button class="btn-danger btn-small" onclick="deleteFile('${file.id}')" style="padding:4px 8px;font-size:11px;">✕</button>
                         </div>
                     `;
                 });
             });
         }
+
+        // --------- Send Chat Message ---------
+        window.sendChatMessage = async function() {
+            const input = document.getElementById('chatMsgInput');
+            const text = input.value.trim();
+            if (!text || !currentDetailId) return;
+            input.value = '';
+            try {
+                const msgRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
+                await set(msgRef, {
+                    fileName: text,
+                    fileType: 'text',
+                    uploadedBy: 'admin',
+                    uploadedByName: localStorage.getItem('name') || 'Admin',
+                    uploadedAt: new Date().toISOString(),
+                });
+            } catch (e) {
+                alert('Failed to send: ' + e.message);
+            }
+        };
 
         window.handleFileUpload = async function(event) {
             const file = event.target.files[0];
