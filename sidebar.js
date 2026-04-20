@@ -361,20 +361,33 @@
         modal.style.display = 'flex';
     }
 
-    // Role-based visibility
-    if (role === "super_admin") {
-        const el1 = document.getElementById("nav-manage-companies");
-        if (el1) el1.style.display = "flex";
-        const el3 = document.getElementById("nav-manage-branches");
-        if (el3) el3.style.display = "flex";
-        const elSub = document.getElementById("nav-subscriptions");
-        if (elSub) elSub.style.display = "flex";
+    // Role-based visibility — robust initialization with retries
+    function applyRoleVisibility() {
+        if (role === "super_admin") {
+            const el1 = document.getElementById("nav-manage-companies");
+            if (el1) el1.style.display = "flex";
+            const el3 = document.getElementById("nav-manage-branches");
+            if (el3) el3.style.display = "flex";
+            const elSub = document.getElementById("nav-subscriptions");
+            if (elSub) elSub.style.display = "flex";
+        }
+        else if (role === "company_admin") {
+            const el3 = document.getElementById("nav-manage-branches");
+            if (el3) el3.style.display = "flex";
+            initAccessControl();
+        }
     }
-    else if (role === "company_admin") {
-        const el3 = document.getElementById("nav-manage-branches");
-        if (el3) el3.style.display = "flex";
-        initAccessControl();
+
+    // Schedule role visibility to run at multiple points to handle any load timing
+    applyRoleVisibility();
+    setTimeout(applyRoleVisibility, 0);
+    setTimeout(applyRoleVisibility, 100);
+    setTimeout(applyRoleVisibility, 500);
+    setTimeout(applyRoleVisibility, 1500);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyRoleVisibility);
     }
+    window.addEventListener('load', applyRoleVisibility);
 
     scheduleBranchLinkNormalization();
     scheduleSubscriptionLinkNormalization();

@@ -59,6 +59,11 @@
         .badge-rejected { background: rgba(255,92,92,0.15); color: var(--danger); }
         
         .entry-details { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--text-muted); }
+        .assign-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:600; margin-right:4px; margin-top:4px; }
+        .assign-early { background:rgba(0,255,195,0.15); color:var(--success); }
+        .assign-late { background:rgba(255,92,92,0.15); color:var(--danger); }
+        .assign-active { background:rgba(255,167,38,0.15); color:var(--warning); }
+        .assign-done { background:rgba(66,165,245,0.15); color:#42a5f5; }
 
     </style>
 </head>
@@ -271,17 +276,34 @@
 
         let empMap = {};
         let projectMap = {};
+        let empAssignments = {};  // empId -> [{projectName, workTitle, status, completionStatus}]
         let allTimesheets = [];
 
         async function init() {
             if(!companyId) return;
 
-            // Load Projects
+            // Load Projects + employee assignments
             onValue(ref(db, `projects/${companyId}`), projSnap => {
                 projectMap = {};
+                empAssignments = {};
                 if (projSnap.exists()) {
                     projSnap.forEach(p => {
-                        projectMap[p.key] = p.val().name || p.key;
+                        const pData = p.val();
+                        projectMap[p.key] = pData.name || p.key;
+                        // Collect per-employee assignments
+                        const assigned = pData.assignedEmployees;
+                        if (assigned && typeof assigned === 'object') {
+                            Object.entries(assigned).forEach(([empId, aData]) => {
+                                if (!empAssignments[empId]) empAssignments[empId] = [];
+                                empAssignments[empId].push({
+                                    projectName: pData.name || p.key,
+                                    workTitle: aData.workTitle || '',
+                                    status: aData.status || 'pending',
+                                    completionStatus: aData.completionStatus || '',
+                                    timeDifference: aData.timeDifference || '',
+                                });
+                            });
+                        }
                     });
                 }
             });
@@ -468,7 +490,15 @@
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${ts.date}</strong></td>
-                        <td>${empName}</td>
+                        <td>
+                            ${empName}
+                            ${(empAssignments[ts.empId] || []).map(a => {
+                                const cls = a.status === 'finished' ? (a.completionStatus === 'early' ? 'assign-early' : a.completionStatus === 'late' ? 'assign-late' : 'assign-done') : 'assign-active';
+                                const label = a.workTitle || a.projectName;
+                                const suffix = a.status === 'finished' ? ' ✅' : '';
+                                return `<span class="assign-badge ${cls}">${label}${suffix}</span>`;
+                            }).join('')}
+                        </td>
                         <td>
                             ${ts.totalHours || 0}h ${ts.autoPulledFromAttendance ? ' <span style="font-size:10px;color:var(--success);">(Auto)</span>' : ''}
                             <div onclick="openChat('${ts.empId}', '${empName}', '${ts.date}')" style="font-size:11px; color:var(--primary); font-style:italic; margin-top:4px; cursor:pointer;">Status Chat 💬</div>

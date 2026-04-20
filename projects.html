@@ -20,6 +20,8 @@
             --border: #1e2530;
             --success: #00ffc3;
             --danger: #ff5c5c;
+            --warning: #ffa726;
+            --info: #42a5f5;
             --sidebar-width: 260px;
         }
 
@@ -35,76 +37,132 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); overflow-x: hidden; }
 
-        /* ============ SIDEBAR COPIED FROM OTHER FILES ============ */
         .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
         .sidebar-header { padding: 0 24px 24px; border-bottom: 1px solid var(--border); }
         .sidebar-header h2 { color: var(--primary); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .sidebar-nav { margin-top: 24px; padding: 0 12px; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; font-weight: 500; font-size: 14px; text-decoration: none; }
-        .nav-item:hover { background: var(--primary-hover-bg); color: var(--primary); }
-        .nav-item.active { background: var(--primary-active-bg); color: var(--primary); font-weight: 600; }
+        .nav-item:hover { background: rgba(0, 255, 195, 0.1); color: var(--primary); }
+        .nav-item.active { background: rgba(0, 255, 195, 0.1); color: var(--primary); font-weight: 600; }
         .nav-icon { width: 20px; height: 20px; font-size: 18px; }
+        .nav-dropdown { display: none; flex-direction: column; padding-left: 32px; margin-bottom: 4px; }
+        .nav-dropdown.show { display: flex; }
+        .dropdown-toggle { justify-content: space-between; }
+        .nav-dropdown .nav-item { padding: 10px 16px; font-size: 13px; margin-bottom: 2px; }
 
         .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left 0.3s ease; }
         .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
         .top-bar h1 { font-size: 24px; font-weight: 600; }
         .top-bar-actions { display: flex; gap: 12px; align-items: center; }
-        
+        .menu-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 8px; }
+
         .dashboard-section { padding: 32px; }
         .card { background: var(--bg-card); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid var(--border); }
         .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text); }
-        
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
-        input, select { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); }
-        
+        input, select, textarea { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
         button { padding: 12px 24px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
-        button:hover { background: var(--primary-hover); }
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #ff4444; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: rgba(0,255,195,0.05); }
+        .btn-small { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
         .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-logout:hover { background: var(--danger); border-color: var(--danger); color: white; }
 
         .table-container { overflow-x: auto; margin-top: 16px; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--border); background: rgba(0, 0, 0, 0.2); }
-        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
         tr:hover { background: rgba(0, 255, 195, 0.03); }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .status-active { background: rgba(0, 255, 195, 0.2); color: var(--success); }
-        .status-finished { background: rgba(255, 167, 38, 0.2); color: var(--warning); }
-        .status-archived { background: rgba(139, 146, 160, 0.2); color: var(--text-muted); }
+
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-active { background: rgba(0, 255, 195, 0.15); color: var(--success); }
+        .badge-finished { background: rgba(255, 167, 38, 0.15); color: var(--warning); }
+        .badge-archived { background: rgba(139, 146, 160, 0.15); color: var(--text-muted); }
+        .badge-pending { background: rgba(66, 165, 245, 0.15); color: var(--info); }
+        .badge-in_progress { background: rgba(255, 167, 38, 0.15); color: var(--warning); }
+        .badge-early { background: rgba(0, 255, 195, 0.15); color: var(--success); }
+        .badge-on_time { background: rgba(66, 165, 245, 0.15); color: var(--info); }
+        .badge-late { background: rgba(255, 92, 92, 0.15); color: var(--danger); }
+
+        /* Employee Allocation Panel */
+        .emp-alloc-panel { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 8px; transition: all 0.3s ease; }
+        .emp-alloc-header { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .emp-alloc-header .emp-check { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+        .emp-alloc-header .emp-name { font-weight: 600; font-size: 14px; flex: 1; }
+        .emp-alloc-body { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .emp-alloc-body.show { display: block; }
+        .emp-alloc-body .form-grid { grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 0; }
+
+        /* Project Detail Expand */
+        .project-detail { display: none; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; margin-top: 12px; padding: 20px; }
+        .project-detail.show { display: block; }
+
+        /* Timeline Bar */
+        .timeline-bar { height: 8px; border-radius: 4px; background: var(--border); position: relative; margin: 8px 0; }
+        .timeline-fill { height: 100%; border-radius: 4px; position: absolute; left: 0; top: 0; }
+
+        /* File Upload Area */
+        .file-upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s ease; margin-top: 12px; }
+        .file-upload-area:hover { border-color: var(--primary); background: rgba(0,255,195,0.03); }
+        .file-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+        .file-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+        .file-icon { font-size: 24px; }
+        .file-info { flex: 1; overflow: hidden; }
+        .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 11px; color: var(--text-muted); }
+
+        /* Stats Row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-mini { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-mini .num { font-size: 28px; font-weight: 700; }
+        .stat-mini .lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .tab { padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--bg-card); border-radius: 20px; padding: 32px; border: 1px solid var(--border); width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .modal h3 { margin-bottom: 24px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+        /* Progress Ring */
+        .progress-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        .progress-ring svg { transform: rotate(-90deg); }
+        .progress-ring .pct { position: absolute; font-size: 11px; font-weight: 700; }
+
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .form-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .emp-alloc-body .form-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 
 <body>
 
     <div class="sidebar" id="sidebar">
-        <!-- Sidebar injected via sidebar.js -->
-        <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
+        <div class="sidebar-header">
+            <h2>💼 Teamsive</h2>
+        </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
                 <span class="nav-icon">📊</span>
@@ -118,8 +176,6 @@
                 <span class="nav-icon">🏢</span>
                 <span>Manage Branches</span>
             </a>
-            
-            <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <span class="nav-icon">👥</span>
@@ -137,7 +193,6 @@
                     <span>Manage Employees</span>
                 </a>
             </div>
-
             <a href="attendance.html" class="nav-item">
                 <span class="nav-icon">✅</span>
                 <span data-i18n="attendance">Attendance</span>
@@ -192,7 +247,7 @@
                 <span class="nav-icon">🧠</span>
                 <span>AI Prediction</span>
             </a>
-            <a href="subscriptions.html" class="nav-item">
+            <a href="subscriptions.html" class="nav-item" id="nav-subscriptions">
                 <span class="nav-icon">📋</span>
                 <span>Subscriptions</span>
             </a>
@@ -202,49 +257,60 @@
 
     <div class="main-content">
         <div class="top-bar">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <h1 data-i18n="projects">Manage Projects</h1>
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1 data-i18n="projects">Project Management</h1>
             </div>
             <div class="top-bar-actions">
+                <button class="btn-outline btn-small" onclick="openCreateModal()">＋ New Project</button>
                 <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
 
         <div class="dashboard-section">
-
-            <div class="card">
-                <h3 data-i18n="add_new_project">Add New Project</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label data-i18n="project_name">Project Name</label>
-                        <input id="projectName" placeholder="e.g. Website Overhaul">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="client_name">Client Name (Optional)</label>
-                        <input id="clientName" placeholder="e.g. Acme Corp">
-                    </div>
+            <!-- Stats Row -->
+            <div class="stats-row" id="statsRow">
+                <div class="stat-mini">
+                    <div class="num" id="statTotal">0</div>
+                    <div class="lbl">Total Projects</div>
                 </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label>Assign Employees (Only selected ones will see this project)</label>
-                    <div id="employeeSelectionContainer" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; min-height: 50px;">
-                        <div style="color: var(--text-muted); font-size: 13px;">Loading employees...</div>
-                    </div>
+                <div class="stat-mini">
+                    <div class="num" id="statActive" style="color:var(--success)">0</div>
+                    <div class="lbl">Active</div>
                 </div>
-
-                <button id="saveBtn" onclick="addProject()" data-i18n="save_project">💾 Save Project</button>
+                <div class="stat-mini">
+                    <div class="num" id="statFinished" style="color:var(--warning)">0</div>
+                    <div class="lbl">Finished</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="num" id="statOverdue" style="color:var(--danger)">0</div>
+                    <div class="lbl">Overdue</div>
+                </div>
             </div>
 
+            <!-- Projects List -->
             <div class="card">
-                <h3 data-i18n="existing_projects">Existing Projects</h3>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h3 style="margin-bottom:0;">All Projects</h3>
+                    <div style="display:flex;gap:8px;">
+                        <select id="filterStatus" onchange="renderProjects()" style="padding:8px 12px;font-size:13px;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="finished">Finished</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th data-i18n="project_name">Project Name</th>
-                                <th data-i18n="client_name">Client Name</th>
-                                <th data-i18n="status">Status</th>
-                                <th data-i18n="action">Action</th>
+                                <th>Project</th>
+                                <th>Timeline</th>
+                                <th>Team</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="projectsList"></tbody>
@@ -254,35 +320,94 @@
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
-    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center;">
-        <div class="card" style="width:100%; max-width:500px; margin:20px;">
-            <h3>Edit Project</h3>
-            <div class="form-group" style="margin-bottom:15px;">
-                <label>Project Name</label>
-                <input id="editProjectName">
-            </div>
-            <div class="form-group" style="margin-bottom:15px;">
-                <label>Client Name</label>
-                <input id="editClientName">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Assign Employees</label>
-                <div id="editEmployeeSelectionContainer" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; min-height: 50px; max-height:200px; overflow-y:auto;">
+    <!-- CREATE / EDIT MODAL -->
+    <div class="modal-overlay" id="projectModal">
+        <div class="modal">
+            <h3 id="modalTitle">New Project</h3>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Project Name *</label>
+                    <input id="mProjectName" placeholder="e.g. Website Redesign">
+                </div>
+                <div class="form-group">
+                    <label>Client Name</label>
+                    <input id="mClientName" placeholder="e.g. Acme Corp">
+                </div>
+                <div class="form-group">
+                    <label>Start Date *</label>
+                    <input type="date" id="mStartDate">
+                </div>
+                <div class="form-group">
+                    <label>End Date *</label>
+                    <input type="date" id="mEndDate">
                 </div>
             </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button style="background:transparent; border:1px solid var(--border); color:var(--text);" onclick="closeEditModal()">Cancel</button>
-                <button onclick="updateProject()">Update Project</button>
+
+            <div class="form-group" style="margin-bottom:20px;">
+                <label>Status</label>
+                <select id="mStatus">
+                    <option value="active">Active</option>
+                    <option value="finished">Finished</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+
+            <h4 style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">👥 Assign Employees & Allocate Tasks</h4>
+            <div id="mEmployeeList" style="max-height:400px;overflow-y:auto;"></div>
+
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeModal()">Cancel</button>
+                <button onclick="saveProject()">💾 Save Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECT DETAIL MODAL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width:900px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <h3 id="detailTitle" style="margin-bottom:0;">Project Details</h3>
+                <button class="btn-outline btn-small" onclick="closeDetailModal()">✕ Close</button>
+            </div>
+
+            <div class="tabs" id="detailTabs">
+                <div class="tab active" onclick="switchTab('tabOverview', this)">Overview</div>
+                <div class="tab" onclick="switchTab('tabTeam', this)">Team & Tasks</div>
+                <div class="tab" onclick="switchTab('tabFiles', this)">Communication</div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="tabOverview">
+                <div id="detailOverview"></div>
+            </div>
+
+            <!-- Team Tab -->
+            <div class="tab-content" id="tabTeam">
+                <div id="detailTeam"></div>
+            </div>
+
+            <!-- Communication Tab -->
+            <div class="tab-content" id="tabFiles">
+                <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div style="font-size:32px;margin-bottom:8px;">📎</div>
+                    <div style="font-size:14px;color:var(--text-muted);">Click to upload files (Images, Documents, Voice Notes)</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Max 5MB per file</div>
+                    <input type="file" id="fileInput" style="display:none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp3,.wav,.ogg,.m4a" onchange="handleFileUpload(event)">
+                </div>
+                <div style="margin-top:8px;text-align:center;">
+                    <button class="btn-outline btn-small" onclick="startVoiceRecording()" id="voiceRecordBtn">🎤 Record Voice Note</button>
+                    <span id="voiceRecordStatus" style="font-size:12px;color:var(--danger);margin-left:8px;display:none;">● Recording...</span>
+                </div>
+                <div class="file-list" id="filesList"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, push, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, push, update, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-        // ... config ...
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
             authDomain: "payflowpro-6e62d.firebaseapp.com",
@@ -292,6 +417,7 @@
             messagingSenderId: "69298740438",
             appId: "1:69298740438:web:18fd85e982e083e1543d77"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -299,260 +425,745 @@
 
         const companyId = localStorage.getItem("companyId") || "";
         let allEmployees = [];
-        let selectedEmployees = new Set();
+        let allProjects = [];
         let currentEditId = null;
-        let editSelectedEmployees = new Set();
-        let addAssignmentData = {};
+        let currentDetailId = null;
+        let currentDetailProject = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
 
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { localStorage.clear(); location = "index.html"; };
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
 
-        async function loadEmployees(containerId, selectionSet, assignmentData = {}) {
+        // --------- Load Employees ---------
+        function loadEmployees() {
             if (!companyId) return;
-            const container = document.getElementById(containerId);
-            container.innerHTML = "";
-            
-            const empRef = ref(db, "employees");
-            onValue(empRef, snapshot => {
-                container.innerHTML = "";
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
+            onValue(ref(db, "employees"), snap => {
+                allEmployees = [];
+                if (snap.exists()) {
+                    snap.forEach(child => {
                         const emp = { id: child.key, ...child.val() };
                         if (emp.companyId === companyId && emp.status !== 'inactive') {
-                            const wrapper = document.createElement('div');
-                            wrapper.style.cssText = `
-                                display: flex;
-                                align-items: center;
-                                gap: 10px;
-                                margin-bottom: 8px;
-                                padding: 8px;
-                                background: var(--bg-dark);
-                                border-radius: 8px;
-                                width: 100%;
-                            `;
-
-                            const isSelected = selectionSet.has(emp.id);
-                            const badge = document.createElement('div');
-                            badge.innerText = emp.name;
-                            badge.style.cssText = `
-                                flex: 1;
-                                padding: 6px 12px;
-                                border-radius: 6px;
-                                border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'};
-                                font-size: 13px;
-                                cursor: pointer;
-                                background: ${isSelected ? 'var(--primary)' : 'transparent'};
-                                color: ${isSelected ? '#000' : 'var(--text-muted)'};
-                            `;
-
-                            const hoursInput = document.createElement('input');
-                            hoursInput.type = 'number';
-                            hoursInput.placeholder = 'Hrs';
-                            hoursInput.value = assignmentData[emp.id]?.targetHours || '';
-                            hoursInput.style.cssText = `
-                                width: 50px;
-                                padding: 6px;
-                                font-size: 11px;
-                                background: var(--bg-input);
-                                color: white;
-                                border: 1px solid var(--border);
-                                border-radius: 4px;
-                                display: ${isSelected ? 'block' : 'none'};
-                            `;
-
-                            const daysInput = document.createElement('input');
-                            daysInput.type = 'number';
-                            daysInput.placeholder = 'Days';
-                            daysInput.value = assignmentData[emp.id]?.targetDays || '';
-                            daysInput.style.cssText = `
-                                width: 50px;
-                                padding: 6px;
-                                font-size: 11px;
-                                background: var(--bg-input);
-                                color: white;
-                                border: 1px solid var(--border);
-                                border-radius: 4px;
-                                display: ${isSelected ? 'block' : 'none'};
-                            `;
-
-                            badge.onclick = () => {
-                                if (selectionSet.has(emp.id)) {
-                                    selectionSet.delete(emp.id);
-                                    badge.style.background = 'transparent';
-                                    badge.style.color = 'var(--text-muted)';
-                                    badge.style.borderColor = 'var(--border)';
-                                    hoursInput.style.display = 'none';
-                                    daysInput.style.display = 'none';
-                                } else {
-                                    selectionSet.add(emp.id);
-                                    badge.style.background = 'var(--primary)';
-                                    badge.style.color = '#000';
-                                    badge.style.borderColor = 'var(--primary)';
-                                    hoursInput.style.display = 'block';
-                                    daysInput.style.display = 'block';
-                                }
-                            };
-
-                            hoursInput.onchange = (e) => {
-                                if (!assignmentData[emp.id]) assignmentData[emp.id] = {};
-                                assignmentData[emp.id].targetHours = e.target.value;
-                            };
-                            daysInput.onchange = (e) => {
-                                if (!assignmentData[emp.id]) assignmentData[emp.id] = {};
-                                assignmentData[emp.id].targetDays = e.target.value;
-                            };
-
-                            wrapper.appendChild(badge);
-                            wrapper.appendChild(hoursInput);
-                            wrapper.appendChild(daysInput);
-                            container.appendChild(wrapper);
+                            allEmployees.push(emp);
                         }
                     });
                 }
             }, { onlyOnce: true });
         }
 
-        window.openEditModal = (id, name, client, assigned) => {
-            currentEditId = id;
-            document.getElementById('editProjectName').value = name;
-            document.getElementById('editClientName').value = client;
-            
-            let assignmentData = {};
-            editSelectedEmployees = new Set();
-            
-            if (typeof assigned === 'object' && assigned !== null) {
-                Object.keys(assigned).forEach(id => {
-                    editSelectedEmployees.add(id);
-                    assignmentData[id] = assigned[id];
-                });
-            }
-
-            document.getElementById('editModal').style.display = 'flex';
-            window._editAssignmentData = assignmentData;
-            loadEmployees('editEmployeeSelectionContainer', editSelectedEmployees, assignmentData);
-        };
-
-        window.closeEditModal = () => {
-            document.getElementById('editModal').style.display = 'none';
-        };
-
-        window.updateProject = async () => {
-            if (!currentEditId) return;
-            const name = document.getElementById('editProjectName').value.trim();
-            const client = document.getElementById('editClientName').value.trim();
-            if (!name) return alert("Name is required");
-
-            let finalAssignments = {};
-            editSelectedEmployees.forEach(id => {
-                finalAssignments[id] = window._editAssignmentData[id] || { targetHours: "" };
-            });
-
-            try {
-                await update(ref(db, `projects/${companyId}/${currentEditId}`), {
-                    name: name,
-                    client: client,
-                    assignedEmployees: finalAssignments
-                });
-                alert("Project Updated!");
-                closeEditModal();
-            } catch (e) { alert(e.message); }
-        };
-
-        window.addProject = async () => {
-            if (!companyId) return alert("Company ID not found");
-            const nameEl = document.getElementById('projectName');
-            const clientEl = document.getElementById('clientName');
-
-            const name = nameEl.value.trim();
-            const client = clientEl.value.trim();
-
-            if (!name) return alert("Project name is required.");
-
-            let finalAssignments = {};
-            selectedEmployees.forEach(id => {
-                finalAssignments[id] = addAssignmentData[id] || { targetHours: "" };
-            });
-
-            try {
-                const newRef = push(ref(db, `projects/${companyId}`));
-                await set(newRef, {
-                    name: name,
-                    client: client,
-                    status: 'active',
-                    assignedEmployees: finalAssignments,
-                    createdAt: new Date().toISOString()
-                });
-                alert("Project Added Successfully!");
-                nameEl.value = '';
-                clientEl.value = '';
-                selectedEmployees.clear();
-                addAssignmentData = {};
-                loadEmployees('employeeSelectionContainer', selectedEmployees, addAssignmentData);
-            } catch (e) { alert("Error: " + e.message); }
-        };
-
-        window.toggleStatus = (id, currentStatus) => {
-            let newStatus = 'active';
-            if (currentStatus === 'active') newStatus = 'finished';
-            else if (currentStatus === 'finished') newStatus = 'archived';
-            else if (currentStatus === 'archived') newStatus = 'active';
-            update(ref(db, `projects/${companyId}/${id}`), { status: newStatus });
-        };
-
-        window.deleteProject = (id) => {
-            if (confirm("Are you sure you want to delete this project?")) {
-                remove(ref(db, `projects/${companyId}/${id}`));
-            }
-        };
-
+        // --------- Load Projects ---------
         function loadProjects() {
-            if(!companyId) return;
-            onValue(ref(db, `projects/${companyId}`), snapshot => {
-                const list = document.getElementById('projectsList');
-                list.innerHTML = "";
-
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        const proj = { id: child.key, ...child.val() };
-                        let statusClass = 'status-active';
-                        if (proj.status === 'finished') statusClass = 'status-finished';
-                        else if (proj.status === 'archived') statusClass = 'status-archived';
-                        
-                        const assignedCount = proj.assignedEmployees ? Object.keys(proj.assignedEmployees).length : 0;
-                        let targetDaysSummary = "";
-                        if (proj.assignedEmployees) {
-                            let totalD = 0;
-                            Object.values(proj.assignedEmployees).forEach(a => {
-                                if (a.targetDays) totalD += parseFloat(a.targetDays) || 0;
-                            });
-                            if (totalD > 0) targetDaysSummary = ` | 📅 ${totalD} Target Days`;
-                        }
-                        const assignedText = assignedCount > 0 ? `${assignedCount} Assigned${targetDaysSummary}` : 'All' ;
-                        
-                        list.innerHTML += `
-                            <tr>
-                                <td>
-                                    <strong>${proj.name}</strong>
-                                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👥 ${assignedText}</div>
-                                </td>
-                                <td>${proj.client || '-'}</td>
-                                <td><span class="status-badge ${statusClass}">${proj.status.toUpperCase()}</span></td>
-                                <td>
-                                    <button style="padding: 6px 12px; font-size: 12px; border-radius: 6px; margin-right: 8px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="openEditModal('${proj.id}', '${proj.name.replace(/'/g, "\\'")}', '${(proj.client || "").replace(/'/g, "\\'")}', ${JSON.stringify(proj.assignedEmployees || [])})">Edit</button>
-                                    <button style="padding: 6px 12px; font-size: 12px; border-radius: 6px; margin-right: 8px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="toggleStatus('${proj.id}', '${proj.status}')">Toggle Status</button>
-                                    <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;" onclick="deleteProject('${proj.id}')">Delete</button>
-                                </td>
-                            </tr>
-                        `;
+            if (!companyId) return;
+            onValue(ref(db, `projects/${companyId}`), snap => {
+                allProjects = [];
+                if (snap.exists()) {
+                    snap.forEach(child => {
+                        allProjects.push({ id: child.key, ...child.val() });
                     });
-                } else {
-                    list.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No projects found</td></tr>`;
                 }
+                allProjects.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                updateStats();
+                renderProjects();
             });
         }
 
-        loadEmployees('employeeSelectionContainer', selectedEmployees, addAssignmentData);
+        // --------- Stats ---------
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            let total = allProjects.length;
+            let active = 0, finished = 0, overdue = 0;
+
+            allProjects.forEach(p => {
+                if (p.status === 'active') {
+                    active++;
+                    if (p.endDate && p.endDate < today) overdue++;
+                }
+                if (p.status === 'finished') finished++;
+            });
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statFinished').textContent = finished;
+            document.getElementById('statOverdue').textContent = overdue;
+        }
+
+        // --------- Render Projects Table ---------
+        window.renderProjects = function() {
+            const tbody = document.getElementById('projectsList');
+            const fStatus = document.getElementById('filterStatus').value;
+            tbody.innerHTML = '';
+
+            const filtered = allProjects.filter(p => !fStatus || p.status === fStatus);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px;">No projects found. Click "＋ New Project" to create one.</td></tr>`;
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+
+            filtered.forEach(proj => {
+                const assigned = proj.assignedEmployees || {};
+                const empCount = Object.keys(assigned).length;
+
+                // Calculate progress
+                let totalTasks = empCount;
+                let finishedTasks = 0;
+                let earlyCount = 0, onTimeCount = 0, lateCount = 0;
+                Object.values(assigned).forEach(a => {
+                    if (a.status === 'finished') {
+                        finishedTasks++;
+                        if (a.completionStatus === 'early') earlyCount++;
+                        else if (a.completionStatus === 'on_time') onTimeCount++;
+                        else if (a.completionStatus === 'late') lateCount++;
+                    }
+                });
+                const pct = totalTasks > 0 ? Math.round((finishedTasks / totalTasks) * 100) : 0;
+
+                // Timeline
+                const startStr = proj.startDate ? formatDate(proj.startDate) : '-';
+                const endStr = proj.endDate ? formatDate(proj.endDate) : '-';
+                const isOverdue = proj.status === 'active' && proj.endDate && proj.endDate < today;
+
+                // Days info
+                let daysInfo = '';
+                if (proj.startDate && proj.endDate) {
+                    const totalDays = daysBetween(proj.startDate, proj.endDate);
+                    if (proj.status === 'active') {
+                        const daysLeft = daysBetween(today, proj.endDate);
+                        daysInfo = daysLeft >= 0 ? `${daysLeft}d left` : `${Math.abs(daysLeft)}d overdue`;
+                    } else {
+                        daysInfo = `${totalDays}d total`;
+                    }
+                }
+
+                const statusClass = isOverdue ? 'badge-late' : `badge-${proj.status}`;
+                const statusText = isOverdue ? 'OVERDUE' : proj.status.toUpperCase();
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;font-size:15px;">${escHtml(proj.name)}</div>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${proj.client ? escHtml(proj.client) : 'No client'}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:13px;">${startStr} → ${endStr}</div>
+                            <div style="font-size:11px;color:${isOverdue ? 'var(--danger)' : 'var(--text-muted)'};margin-top:2px;">${daysInfo}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:14px;font-weight:600;">${empCount}</div>
+                            <div style="font-size:11px;color:var(--text-muted);">assigned</div>
+                        </td>
+                        <td>
+                            ${renderProgressRing(pct, 36)}
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                                ${finishedTasks}/${totalTasks} done
+                                ${earlyCount > 0 ? `<span style="color:var(--success);">🟢${earlyCount}</span>` : ''}
+                                ${lateCount > 0 ? `<span style="color:var(--danger);">🔴${lateCount}</span>` : ''}
+                            </div>
+                        </td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                <button class="btn-outline btn-small" onclick="openDetailModal('${proj.id}')">👁 View</button>
+                                <button class="btn-outline btn-small" onclick="openEditModal('${proj.id}')">✏️ Edit</button>
+                                <button class="btn-danger btn-small" onclick="deleteProject('${proj.id}')">🗑</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        // --------- Progress Ring SVG ---------
+        function renderProgressRing(pct, size) {
+            const r = (size - 4) / 2;
+            const circ = 2 * Math.PI * r;
+            const offset = circ - (pct / 100) * circ;
+            const color = pct >= 100 ? 'var(--success)' : pct > 50 ? 'var(--warning)' : 'var(--info)';
+            return `<div class="progress-ring" style="width:${size}px;height:${size}px;">
+                <svg width="${size}" height="${size}">
+                    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="3"/>
+                    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="3" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+                </svg>
+                <span class="pct" style="color:${color};">${pct}%</span>
+            </div>`;
+        }
+
+        // --------- Create / Edit Modal ---------
+        window.openCreateModal = function() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'New Project';
+            document.getElementById('mProjectName').value = '';
+            document.getElementById('mClientName').value = '';
+            document.getElementById('mStartDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('mEndDate').value = '';
+            document.getElementById('mStatus').value = 'active';
+            renderEmployeeAllocation({});
+            document.getElementById('projectModal').classList.add('show');
+        };
+
+        window.openEditModal = function(id) {
+            const proj = allProjects.find(p => p.id === id);
+            if (!proj) return;
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Project';
+            document.getElementById('mProjectName').value = proj.name || '';
+            document.getElementById('mClientName').value = proj.client || '';
+            document.getElementById('mStartDate').value = proj.startDate || '';
+            document.getElementById('mEndDate').value = proj.endDate || '';
+            document.getElementById('mStatus').value = proj.status || 'active';
+            renderEmployeeAllocation(proj.assignedEmployees || {});
+            document.getElementById('projectModal').classList.add('show');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('projectModal').classList.remove('show');
+        };
+
+        function renderEmployeeAllocation(existingAssignments) {
+            const container = document.getElementById('mEmployeeList');
+            container.innerHTML = '';
+
+            const pStart = document.getElementById('mStartDate').value;
+            const pEnd = document.getElementById('mEndDate').value;
+
+            allEmployees.forEach(emp => {
+                const isAssigned = existingAssignments.hasOwnProperty(emp.id);
+                const assignment = existingAssignments[emp.id] || {};
+
+                const panel = document.createElement('div');
+                panel.className = 'emp-alloc-panel';
+                panel.dataset.empId = emp.id;
+                panel.innerHTML = `
+                    <div class="emp-alloc-header" onclick="toggleEmpAlloc(this, '${emp.id}')">
+                        <input type="checkbox" class="emp-check" data-emp-id="${emp.id}" ${isAssigned ? 'checked' : ''} onclick="event.stopPropagation();" onchange="toggleEmpAlloc(this.parentNode, '${emp.id}')">
+                        <span class="emp-name">${escHtml(emp.name)}</span>
+                        ${assignment.status === 'finished' ? `<span class="status-badge badge-${assignment.completionStatus || 'finished'}" style="font-size:10px;">${(assignment.completionStatus || 'finished').toUpperCase()}</span>` : ''}
+                    </div>
+                    <div class="emp-alloc-body ${isAssigned ? 'show' : ''}">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Work Title / Role *</label>
+                                <input data-field="workTitle" value="${escHtml(assignment.workTitle || '')}" placeholder="e.g. UI Design">
+                            </div>
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" data-field="startDate" value="${assignment.startDate || pStart}" min="${pStart}" max="${pEnd}">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" data-field="endDate" value="${assignment.endDate || pEnd}" min="${pStart}" max="${pEnd}">
+                            </div>
+                        </div>
+                        <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-top:12px;">
+                            <div class="form-group">
+                                <label>Target Hours</label>
+                                <input type="number" data-field="targetHours" value="${assignment.targetHours || ''}" placeholder="e.g. 24">
+                            </div>
+                            <div class="form-group">
+                                <label>Target Days</label>
+                                <input type="number" data-field="targetDays" value="${assignment.targetDays || ''}" placeholder="e.g. 3">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(panel);
+            });
+
+            // Update date constraints when project dates change
+            document.getElementById('mStartDate').onchange = () => updateDateConstraints();
+            document.getElementById('mEndDate').onchange = () => updateDateConstraints();
+        }
+
+        function updateDateConstraints() {
+            const pStart = document.getElementById('mStartDate').value;
+            const pEnd = document.getElementById('mEndDate').value;
+            document.querySelectorAll('#mEmployeeList [data-field="startDate"]').forEach(el => {
+                el.min = pStart; el.max = pEnd;
+                if (el.value && el.value < pStart) el.value = pStart;
+                if (el.value && el.value > pEnd) el.value = pEnd;
+            });
+            document.querySelectorAll('#mEmployeeList [data-field="endDate"]').forEach(el => {
+                el.min = pStart; el.max = pEnd;
+                if (el.value && el.value < pStart) el.value = pStart;
+                if (el.value && el.value > pEnd) el.value = pEnd;
+            });
+        }
+
+        window.toggleEmpAlloc = function(headerEl, empId) {
+            const panel = headerEl.closest('.emp-alloc-panel');
+            const body = panel.querySelector('.emp-alloc-body');
+            const check = panel.querySelector('.emp-check');
+            check.checked = !body.classList.contains('show') || check.checked;
+            body.classList.toggle('show', check.checked);
+        };
+
+        // --------- Save Project ---------
+        window.saveProject = async function() {
+            const name = document.getElementById('mProjectName').value.trim();
+            const client = document.getElementById('mClientName').value.trim();
+            const startDate = document.getElementById('mStartDate').value;
+            const endDate = document.getElementById('mEndDate').value;
+            const status = document.getElementById('mStatus').value;
+
+            // Validation
+            if (!name) return alert("Project name is required.");
+            if (!startDate) return alert("Start date is required.");
+            if (!endDate) return alert("End date is required.");
+            if (endDate < startDate) return alert("End date must be after start date.");
+
+            // Collect employee assignments
+            const assignments = {};
+            let hasAssigned = false;
+            const panels = document.querySelectorAll('#mEmployeeList .emp-alloc-panel');
+
+            for (const panel of panels) {
+                const empId = panel.dataset.empId;
+                const check = panel.querySelector('.emp-check');
+                if (!check.checked) continue;
+
+                hasAssigned = true;
+                const workTitle = panel.querySelector('[data-field="workTitle"]').value.trim();
+                const eStart = panel.querySelector('[data-field="startDate"]').value;
+                const eEnd = panel.querySelector('[data-field="endDate"]').value;
+                const targetHours = panel.querySelector('[data-field="targetHours"]').value;
+                const targetDays = panel.querySelector('[data-field="targetDays"]').value;
+
+                if (!workTitle) return alert(`Work title is required for each assigned employee.`);
+
+                // Validate employee dates are within project range
+                if (eStart && eStart < startDate) return alert(`Employee start date cannot be before project start.`);
+                if (eEnd && eEnd > endDate) return alert(`Employee end date cannot exceed project end.`);
+                if (eStart && eEnd && eEnd < eStart) return alert(`Employee end date must be after start date.`);
+
+                // Preserve existing completion data if editing
+                const existing = currentEditId ? (allProjects.find(p => p.id === currentEditId)?.assignedEmployees?.[empId]) : null;
+
+                assignments[empId] = {
+                    workTitle,
+                    startDate: eStart || startDate,
+                    endDate: eEnd || endDate,
+                    targetHours: targetHours || '',
+                    targetDays: targetDays || '',
+                    status: existing?.status || 'pending',
+                    completionTime: existing?.completionTime || null,
+                    completionStatus: existing?.completionStatus || null,
+                    timeDifference: existing?.timeDifference || null,
+                };
+            }
+
+            if (!hasAssigned) return alert("At least one employee must be assigned.");
+
+            try {
+                const projectData = {
+                    name, client, startDate, endDate, status,
+                    assignedEmployees: assignments,
+                };
+
+                if (currentEditId) {
+                    await update(ref(db, `projects/${companyId}/${currentEditId}`), projectData);
+                    alert("Project updated!");
+                } else {
+                    projectData.createdAt = new Date().toISOString();
+                    const newRef = push(ref(db, `projects/${companyId}`));
+                    await set(newRef, projectData);
+                    alert("Project created!");
+                }
+                closeModal();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        // --------- Delete ---------
+        window.deleteProject = async function(id) {
+            if (!confirm("Delete this project? This cannot be undone.")) return;
+            try {
+                await remove(ref(db, `projects/${companyId}/${id}`));
+                await remove(ref(db, `project_files/${companyId}/${id}`));
+            } catch (e) { alert(e.message); }
+        };
+
+        // --------- Detail Modal ---------
+        window.openDetailModal = function(id) {
+            const proj = allProjects.find(p => p.id === id);
+            if (!proj) return;
+            currentDetailId = id;
+            currentDetailProject = proj;
+            document.getElementById('detailTitle').textContent = proj.name;
+            renderDetailOverview(proj);
+            renderDetailTeam(proj);
+            loadProjectFiles(id);
+            switchTab('tabOverview', document.querySelector('#detailTabs .tab'));
+            document.getElementById('detailModal').classList.add('show');
+        };
+
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').classList.remove('show');
+            currentDetailId = null;
+            currentDetailProject = null;
+        };
+
+        window.switchTab = function(tabId, el) {
+            document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        };
+
+        function renderDetailOverview(proj) {
+            const today = new Date().toISOString().split('T')[0];
+            const totalDays = proj.startDate && proj.endDate ? daysBetween(proj.startDate, proj.endDate) : 0;
+            const elapsed = proj.startDate ? Math.max(0, daysBetween(proj.startDate, today)) : 0;
+            const timelinePct = totalDays > 0 ? Math.min(100, Math.round((elapsed / totalDays) * 100)) : 0;
+
+            const assigned = proj.assignedEmployees || {};
+            const empCount = Object.keys(assigned).length;
+            let finishedCount = 0;
+            Object.values(assigned).forEach(a => { if (a.status === 'finished') finishedCount++; });
+
+            document.getElementById('detailOverview').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">Client</div>
+                        <div style="font-size:16px;font-weight:600;margin-top:4px;">${proj.client || 'N/A'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">Status</div>
+                        <div style="margin-top:4px;"><span class="status-badge badge-${proj.status}">${proj.status.toUpperCase()}</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">Start Date</div>
+                        <div style="font-size:16px;font-weight:600;margin-top:4px;">${formatDate(proj.startDate)}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">End Date</div>
+                        <div style="font-size:16px;font-weight:600;margin-top:4px;">${formatDate(proj.endDate)}</div>
+                    </div>
+                </div>
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px;">
+                        <span>Timeline Progress</span>
+                        <span>${timelinePct}% elapsed (${elapsed}/${totalDays} days)</span>
+                    </div>
+                    <div class="timeline-bar">
+                        <div class="timeline-fill" style="width:${timelinePct}%;background:${timelinePct > 90 ? 'var(--danger)' : 'var(--primary)'};"></div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div class="stat-mini">
+                        <div class="num">${empCount}</div>
+                        <div class="lbl">Team Members</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="num" style="color:var(--success)">${finishedCount}</div>
+                        <div class="lbl">Tasks Done</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="num" style="color:var(--warning)">${empCount - finishedCount}</div>
+                        <div class="lbl">In Progress</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDetailTeam(proj) {
+            const assigned = proj.assignedEmployees || {};
+            const container = document.getElementById('detailTeam');
+
+            if (Object.keys(assigned).length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:32px;">No employees assigned</p>';
+                return;
+            }
+
+            let html = '';
+            const today = new Date().toISOString().split('T')[0];
+
+            Object.entries(assigned).forEach(([empId, a]) => {
+                const emp = allEmployees.find(e => e.id === empId);
+                const empName = emp ? emp.name : empId;
+
+                const totalDays = a.startDate && a.endDate ? daysBetween(a.startDate, a.endDate) : 0;
+                const elapsed = a.startDate ? Math.max(0, daysBetween(a.startDate, today)) : 0;
+                const pct = totalDays > 0 ? Math.min(100, Math.round((elapsed / totalDays) * 100)) : 0;
+
+                let statusBadge = '';
+                if (a.status === 'finished') {
+                    const cs = a.completionStatus || 'on_time';
+                    statusBadge = `<span class="status-badge badge-${cs}">${cs.replace('_', ' ').toUpperCase()}</span>`;
+                    if (a.timeDifference) statusBadge += `<span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${a.timeDifference}</span>`;
+                } else if (a.status === 'in_progress') {
+                    statusBadge = `<span class="status-badge badge-in_progress">IN PROGRESS</span>`;
+                } else {
+                    statusBadge = `<span class="status-badge badge-pending">PENDING</span>`;
+                }
+
+                const isOverdue = a.status !== 'finished' && a.endDate && a.endDate < today;
+
+                html += `
+                    <div style="background:var(--bg-dark);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;${isOverdue ? 'border-color:var(--danger);' : ''}">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div>
+                                <div style="font-weight:600;font-size:15px;">${escHtml(empName)}</div>
+                                <div style="font-size:13px;color:var(--primary);margin-top:2px;">📋 ${escHtml(a.workTitle || 'No role assigned')}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                ${statusBadge}
+                                ${isOverdue ? '<div style="font-size:11px;color:var(--danger);margin-top:4px;">⚠ OVERDUE</div>' : ''}
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px;">
+                            <div>
+                                <div style="color:var(--text-muted);">Start</div>
+                                <div style="font-weight:500;margin-top:2px;">${formatDate(a.startDate)}</div>
+                            </div>
+                            <div>
+                                <div style="color:var(--text-muted);">End</div>
+                                <div style="font-weight:500;margin-top:2px;">${formatDate(a.endDate)}</div>
+                            </div>
+                            <div>
+                                <div style="color:var(--text-muted);">Target</div>
+                                <div style="font-weight:500;margin-top:2px;">${a.targetHours ? a.targetHours + 'h' : '-'} / ${a.targetDays ? a.targetDays + 'd' : '-'}</div>
+                            </div>
+                            <div>
+                                <div style="color:var(--text-muted);">Duration</div>
+                                <div style="font-weight:500;margin-top:2px;">${totalDays} days</div>
+                            </div>
+                        </div>
+                        ${a.status !== 'finished' ? `
+                        <div style="margin-top:12px;">
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+                                <span>Progress</span><span>${pct}%</span>
+                            </div>
+                            <div class="timeline-bar">
+                                <div class="timeline-fill" style="width:${pct}%;background:${isOverdue ? 'var(--danger)' : 'var(--primary)'};"></div>
+                            </div>
+                        </div>` : ''}
+                        ${a.completionTime ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">✅ Completed: ${formatDateTime(a.completionTime)}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // --------- File Communication ---------
+        function loadProjectFiles(projectId) {
+            const container = document.getElementById('filesList');
+            container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading files...</div>';
+
+            onValue(ref(db, `project_files/${companyId}/${projectId}`), snap => {
+                container.innerHTML = '';
+                if (!snap.exists()) {
+                    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No files shared yet</div>';
+                    return;
+                }
+
+                snap.forEach(child => {
+                    const file = { id: child.key, ...child.val() };
+                    const icon = file.fileType === 'image' ? '🖼️' : file.fileType === 'audio' ? '🎵' : '📄';
+                    const sizeStr = file.sizeBytes ? formatFileSize(file.sizeBytes) : '';
+
+                    let actionHtml = '';
+                    if (file.fileType === 'image' && file.fileData) {
+                        actionHtml = `<button class="btn-outline btn-small" onclick="previewImage('${file.id}')" style="padding:4px 8px;font-size:11px;">👁</button>`;
+                    } else if (file.fileType === 'audio' && file.fileData) {
+                        actionHtml = `<button class="btn-outline btn-small" onclick="playAudio('${file.id}')" style="padding:4px 8px;font-size:11px;">▶️</button>`;
+                    } else if (file.fileData) {
+                        actionHtml = `<button class="btn-outline btn-small" onclick="downloadFile('${file.id}')" style="padding:4px 8px;font-size:11px;">⬇</button>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="file-card" data-file-id="${file.id}">
+                            <div class="file-icon">${icon}</div>
+                            <div class="file-info">
+                                <div class="file-name">${escHtml(file.fileName)}</div>
+                                <div class="file-meta">${sizeStr} • ${formatDateTime(file.uploadedAt)}</div>
+                            </div>
+                            ${actionHtml}
+                            <button class="btn-danger btn-small" onclick="deleteFile('${file.id}')" style="padding:4px 8px;font-size:11px;">✕</button>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        window.handleFileUpload = async function(event) {
+            const file = event.target.files[0];
+            if (!file || !currentDetailId) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File too large. Maximum 5MB allowed.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+
+                let fileType = 'document';
+                if (file.type.startsWith('image/')) fileType = 'image';
+                else if (file.type.startsWith('audio/')) fileType = 'audio';
+
+                try {
+                    const fileRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
+                    await set(fileRef, {
+                        fileName: file.name,
+                        fileType,
+                        fileData: base64,
+                        mimeType: file.type,
+                        uploadedBy: 'admin',
+                        uploadedByName: localStorage.getItem('name') || 'Admin',
+                        uploadedAt: new Date().toISOString(),
+                        sizeBytes: file.size,
+                    });
+                } catch (err) {
+                    alert("Upload failed: " + err.message);
+                }
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        };
+
+        window.startVoiceRecording = async function() {
+            const btn = document.getElementById('voiceRecordBtn');
+            const status = document.getElementById('voiceRecordStatus');
+
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                btn.textContent = '🎤 Record Voice Note';
+                status.style.display = 'none';
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    stream.getTracks().forEach(t => t.stop());
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                    if (blob.size > 5 * 1024 * 1024) {
+                        alert("Recording too large. Keep it under 5MB.");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        if (!currentDetailId) return;
+                        try {
+                            const fileRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
+                            await set(fileRef, {
+                                fileName: `voice_note_${Date.now()}.webm`,
+                                fileType: 'audio',
+                                fileData: e.target.result,
+                                mimeType: 'audio/webm',
+                                uploadedBy: 'admin',
+                                uploadedByName: localStorage.getItem('name') || 'Admin',
+                                uploadedAt: new Date().toISOString(),
+                                sizeBytes: blob.size,
+                            });
+                        } catch (err) {
+                            alert("Upload failed: " + err.message);
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                };
+
+                mediaRecorder.start();
+                btn.textContent = '⏹ Stop Recording';
+                status.style.display = 'inline';
+            } catch (err) {
+                alert("Microphone access denied.");
+            }
+        };
+
+        window.previewImage = async function(fileId) {
+            if (!currentDetailId) return;
+            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
+            if (!snap.exists()) return;
+            const file = snap.val();
+            const win = window.open('', '_blank');
+            win.document.write(`<html><body style="margin:0;background:#0b0f14;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${file.fileData}" style="max-width:100%;max-height:100vh;object-fit:contain;">` + '</bo' + 'dy></ht' + 'ml>');
+        };
+
+        window.playAudio = async function(fileId) {
+            if (!currentDetailId) return;
+            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
+            if (!snap.exists()) return;
+            const file = snap.val();
+            const audio = new Audio(file.fileData);
+            audio.play();
+        };
+
+        window.downloadFile = async function(fileId) {
+            if (!currentDetailId) return;
+            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
+            if (!snap.exists()) return;
+            const file = snap.val();
+            const a = document.createElement('a');
+            a.href = file.fileData;
+            a.download = file.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+        window.deleteFile = async function(fileId) {
+            if (!currentDetailId) return;
+            if (!confirm("Delete this file?")) return;
+            await remove(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
+        };
+
+        // ------------------------- Helpers -------------------------
+        function _safeDateParse(dateStr) {
+            // Helper to prevent execution errors
+            if (!dateStr) return null;
+            const t = new Date(dateStr + 'T00:00:00');
+            return t;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = _safeDateParse(dateStr);
+            if (!d || isNaN(d)) return dateStr;
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function formatDateTime(isoStr) {
+            if (!isoStr) return '-';
+            const d = new Date(isoStr);
+            if (isNaN(d)) return isoStr;
+            return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function daysBetween(d1, d2) {
+            if (!d1 || !d2) return 0;
+            const a = new Date(d1);
+            const b = new Date(d2);
+            return Math.round((b - a) / (1000 * 60 * 60 * 24));
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // --------- Init ---------
+        loadEmployees();
         loadProjects();
     </script>
-    <script src="update_sidebars.js"></script>
+    <script src="sidebar.js"></script>
 </body>
 </html>
