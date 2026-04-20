@@ -201,6 +201,26 @@
         </div>
 
         <div class="dashboard-section">
+            <!-- Work Breakdown Summary Table -->
+            <div class="card" id="summaryCard" style="margin-bottom: 24px;">
+                <h3 data-i18n="work_breakdown_summary">🏗️ Work Breakdown Summary</h3>
+                <div class="table-container">
+                    <table style="min-width: 600px;">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Status</th>
+                                <th>Assigned</th>
+                                <th>Started / Active</th>
+                                <th>Finished (Old Works)</th>
+                                <th>Completion %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryData"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="card">
                 <h3 data-i18n="filter_timesheets">Filter Timesheets</h3>
                 <div class="form-grid">
@@ -286,24 +306,59 @@
             onValue(ref(db, `projects/${companyId}`), projSnap => {
                 projectMap = {};
                 empAssignments = {};
+                const summaryBody = document.getElementById('summaryData');
+                summaryBody.innerHTML = '';
+
                 if (projSnap.exists()) {
                     projSnap.forEach(p => {
                         const pData = p.val();
-                        projectMap[p.key] = pData.name || p.key;
+                        const pId = p.key;
+                        projectMap[pId] = pData.name || pId;
+                        
                         // Collect per-employee assignments
                         const assigned = pData.assignedEmployees;
+                        let activeCount = 0;
+                        let finishedCount = 0;
+                        let totalAssigned = 0;
+
                         if (assigned && typeof assigned === 'object') {
                             Object.entries(assigned).forEach(([empId, aData]) => {
+                                totalAssigned++;
                                 if (!empAssignments[empId]) empAssignments[empId] = [];
                                 empAssignments[empId].push({
-                                    projectName: pData.name || p.key,
+                                    projectName: pData.name || pId,
                                     workTitle: aData.workTitle || '',
                                     status: aData.status || 'pending',
                                     completionStatus: aData.completionStatus || '',
                                     timeDifference: aData.timeDifference || '',
                                 });
+
+                                if (aData.status === 'finished') finishedCount++;
+                                else if (aData.status === 'in_progress') activeCount++;
                             });
                         }
+
+                        const pct = totalAssigned > 0 ? Math.round((finishedCount / totalAssigned) * 100) : 0;
+                        const pStatus = pData.status || 'active';
+                        const badgeClass = pStatus === 'finished' ? 'badge-approved' : (pStatus === 'archived' ? 'badge-rejected' : 'badge-pending');
+
+                        summaryBody.innerHTML += `
+                            <tr>
+                                <td><strong>${pData.name || pId}</strong></td>
+                                <td><span class="status-badge ${badgeClass}">${pStatus.toUpperCase()}</span></td>
+                                <td>${totalAssigned}</td>
+                                <td style="color:var(--warning)">${activeCount}</td>
+                                <td style="color:var(--success)">${finishedCount}</td>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <div style="flex:1; height:6px; background:var(--border); border-radius:3px; position:relative;">
+                                            <div style="position:absolute; left:0; top:0; height:100%; width:${pct}%; background:var(--primary); border-radius:3px;"></div>
+                                        </div>
+                                        <span style="font-size:11px; font-weight:bold;">${pct}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
                     });
                 }
             });
