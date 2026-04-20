@@ -45,10 +45,19 @@
     .nav-item:hover { background: rgba(0, 255, 195, 0.1); color: var(--primary) }
     .nav-item.active { background: rgba(0, 255, 195, 0.1); color: var(--primary); font-weight: 600 }
     .nav-icon { width: 20px; height: 20px; font-size: 18px }
+    
+    .dropdown-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .dropdown-toggle .chevron { transition: transform 0.3s ease; font-size: 12px; }
+    .dropdown-toggle.open .chevron { transform: rotate(180deg); }
+    
+    .nav-dropdown { display: none; flex-direction: column; gap: 8px; padding-left: 24px; }
+    .nav-dropdown.show { display: flex; }
+    .nav-dropdown .nav-item { padding: 10px 12px; font-size: 13px; margin-bottom: 2px; }
 
     .main-content { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left .3s ease }
     .top-bar { background: var(--bg-card); padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50 }
     .top-bar h1 { font-size: 24px; font-weight: 600 }
+    .top-bar-actions { display: flex; align-items: center; gap: 16px; }
     .menu-toggle { display: none; background: transparent; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 8px }
 
     .dashboard-section { padding: 32px }
@@ -85,6 +94,7 @@
       .sidebar.open { transform: translateX(0) }
       .main-content { margin-left: 0 }
       .menu-toggle { display: block }
+      .nav-dropdown { padding-left: 12px; }
     }
   </style>
 </head>
@@ -95,8 +105,98 @@
       <h2>💼 Teamsive</h2>
     </div>
     <nav class="sidebar-nav" id="nav-content">
-        <!-- Sidebar links will be here -->
-    </nav>
+            <a href="dashboard.html" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Companies</span>
+            </a>
+            <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
+                <span class="nav-icon">🏢</span>
+                <span>Manage Branches</span>
+            </a>
+            
+            <!-- Employees Dropdown -->
+            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="nav-icon">👥</span>
+                    <span data-i18n="employees">Employees</span>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="nav-dropdown" id="empDropdown">
+                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+                    <span class="nav-icon">📜</span>
+                    <span>List Employees</span>
+                </a>
+                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                    <span class="nav-icon">✏️</span>
+                    <span>Manage Employees</span>
+                </a>
+            </div>
+
+            <a href="attendance.html" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span data-i18n="attendance">Attendance</span>
+            </a>
+            <a href="timetrack.html" class="nav-item">
+                <span class="nav-icon">⏱️</span>
+                <span data-i18n="timetrack">TimeTrack</span>
+            </a>
+            <a href="projects.html" class="nav-item">
+                <span class="nav-icon">📂</span>
+                <span data-i18n="projects">Projects</span>
+            </a>
+            <a href="leave_management.html" class="nav-item">
+                <span class="nav-icon">🏖️</span>
+                <span data-i18n="leave_management">Leave Management</span>
+            </a>
+            <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
+                <span class="nav-icon">🛡️</span>
+                <span data-i18n="branch_admins">Branch Admins</span>
+            </a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="salary_settings.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span data-i18n="salary_settings">Salary Settings</span>
+            </a>
+            <a href="salary_payments.html" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>Salary Payments</span>
+            </a>
+            <a href="salary_report.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>Salary Report</span>
+            </a>
+            <a href="monthly_report.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span data-i18n="monthly_report">Monthly Report</span>
+            </a>
+            <a href="documents.html" class="nav-item">
+                <span class="nav-icon">📄</span>
+                <span>Documents</span>
+            </a>
+            <a href="hire_resign.html" class="nav-item">
+                <span class="nav-icon">🔃</span>
+                <span>Hire / Resign</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item">
+                <span class="nav-icon">🏆</span>
+                <span>Leaderboard</span>
+            </a>
+            <a href="ai_prediction.html" class="nav-item">
+                <span class="nav-icon">🧠</span>
+                <span>AI Prediction</span>
+            </a>
+            <a href="subscriptions.html" class="nav-item" id="nav-subscriptions">
+                <span class="nav-icon">📋</span>
+                <span>Subscriptions</span>
+            </a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+        </nav>
   </div>
 
   <div class="main-content">
