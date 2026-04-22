@@ -296,6 +296,33 @@
           get(ref(db, "settings/currencySymbol"))
        ]);
 
+       const isSuperAdmin = localStorage.getItem("role") === "super_admin" || localStorage.getItem("impersonator_role") === "super_admin";
+       if (isSuperAdmin) {
+           document.getElementById('subscriptionWidgetContainer').style.display = 'none';
+       } else {
+           try {
+               const subSnap = await get(ref(db, `subscriptions/${companyId}`));
+               if (subSnap.exists()) {
+                   const subData = subSnap.val();
+                   const planId = subData.plan || 'free_trial';
+                   
+                   const planSnap = await get(ref(db, `plan_definitions/${planId}`));
+                   const planName = planSnap.exists() ? planSnap.val().name : planId.toUpperCase().replace('_', ' ');
+                   
+                   document.getElementById('subWidgetPlan').textContent = planName;
+                   
+                   const endDate = subData.endDate;
+                   if (endDate) {
+                       const daysDiff = Math.ceil((new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24));
+                       const daysStr = daysDiff > 0 ? `${daysDiff} Days` : (daysDiff === 0 ? "Expires Today" : "Expired");
+                       document.getElementById('subWidgetDays').textContent = daysStr;
+                   } else {
+                       document.getElementById('subWidgetDays').textContent = "Lifetime";
+                   }
+               }
+           } catch(e) { console.error("Error fetching subscription:", e); }
+       }
+
        const currency = currencySnap.val() || "₹";
        const allAtt = attSnap.val() || {};
        const employees = [];
