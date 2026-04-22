@@ -354,7 +354,7 @@
                 </select>
             </div>
 
-            <h4 style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">👥 Assign Employees & Allocate Tasks</h4>
+            <h4 style="font-size:14px;color:var(--text-muted);margin-bottom:12px;">👥 Assign Employees</h4>
             <div id="mEmployeeList" style="max-height:400px;overflow-y:auto;"></div>
 
             <div class="modal-actions">
@@ -643,35 +643,9 @@
                 panel.dataset.empId = emp.id;
                 panel.innerHTML = `
                     <div class="emp-alloc-header" onclick="toggleEmpAlloc(this, '${emp.id}')">
-                        <input type="checkbox" class="emp-check" data-emp-id="${emp.id}" ${isAssigned ? 'checked' : ''} onclick="event.stopPropagation();" onchange="toggleEmpAlloc(this.parentNode, '${emp.id}')">
+                        <input type="checkbox" class="emp-check" data-emp-id="${emp.id}" ${isAssigned ? 'checked' : ''} onclick="event.stopPropagation();">
                         <span class="emp-name">${escHtml(emp.name)}</span>
                         ${assignment.status === 'finished' ? `<span class="status-badge badge-${assignment.completionStatus || 'finished'}" style="font-size:10px;">${(assignment.completionStatus || 'finished').toUpperCase()}</span>` : ''}
-                    </div>
-                    <div class="emp-alloc-body ${isAssigned ? 'show' : ''}">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Work Title / Role *</label>
-                                <input data-field="workTitle" value="${escHtml(assignment.workTitle || '')}" placeholder="e.g. UI Design">
-                            </div>
-                            <div class="form-group">
-                                <label>Start Date</label>
-                                <input type="date" data-field="startDate" value="${assignment.startDate || pStart}" min="${pStart}" max="${pEnd}">
-                            </div>
-                            <div class="form-group">
-                                <label>End Date</label>
-                                <input type="date" data-field="endDate" value="${assignment.endDate || pEnd}" min="${pStart}" max="${pEnd}">
-                            </div>
-                        </div>
-                        <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-top:12px;">
-                            <div class="form-group">
-                                <label>Target Hours</label>
-                                <input type="number" data-field="targetHours" value="${assignment.targetHours || ''}" placeholder="e.g. 24">
-                            </div>
-                            <div class="form-group">
-                                <label>Target Days</label>
-                                <input type="number" data-field="targetDays" value="${assignment.targetDays || ''}" placeholder="e.g. 3">
-                            </div>
-                        </div>
                     </div>
                 `;
                 container.appendChild(panel);
@@ -683,26 +657,13 @@
         }
 
         function updateDateConstraints() {
-            const pStart = document.getElementById('mStartDate').value;
-            const pEnd = document.getElementById('mEndDate').value;
-            document.querySelectorAll('#mEmployeeList [data-field="startDate"]').forEach(el => {
-                el.min = pStart; el.max = pEnd;
-                if (el.value && el.value < pStart) el.value = pStart;
-                if (el.value && el.value > pEnd) el.value = pEnd;
-            });
-            document.querySelectorAll('#mEmployeeList [data-field="endDate"]').forEach(el => {
-                el.min = pStart; el.max = pEnd;
-                if (el.value && el.value < pStart) el.value = pStart;
-                if (el.value && el.value > pEnd) el.value = pEnd;
-            });
+            // No longer needed since date fields are removed
         }
 
         window.toggleEmpAlloc = function(headerEl, empId) {
             const panel = headerEl.closest('.emp-alloc-panel');
-            const body = panel.querySelector('.emp-alloc-body');
             const check = panel.querySelector('.emp-check');
-            check.checked = !body.classList.contains('show') || check.checked;
-            body.classList.toggle('show', check.checked);
+            check.checked = !check.checked;
         };
 
         // --------- Save Project ---------
@@ -730,28 +691,16 @@
                 if (!check.checked) continue;
 
                 hasAssigned = true;
-                const workTitle = panel.querySelector('[data-field="workTitle"]').value.trim();
-                const eStart = panel.querySelector('[data-field="startDate"]').value;
-                const eEnd = panel.querySelector('[data-field="endDate"]').value;
-                const targetHours = panel.querySelector('[data-field="targetHours"]').value;
-                const targetDays = panel.querySelector('[data-field="targetDays"]').value;
-
-                if (!workTitle) return alert(`Work title is required for each assigned employee.`);
-
-                // Validate employee dates are within project range
-                if (eStart && eStart < startDate) return alert(`Employee start date cannot be before project start.`);
-                if (eEnd && eEnd > endDate) return alert(`Employee end date cannot exceed project end.`);
-                if (eStart && eEnd && eEnd < eStart) return alert(`Employee end date must be after start date.`);
 
                 // Preserve existing completion data if editing
                 const existing = currentEditId ? (allProjects.find(p => p.id === currentEditId)?.assignedEmployees?.[empId]) : null;
 
                 assignments[empId] = {
-                    workTitle,
-                    startDate: eStart || startDate,
-                    endDate: eEnd || endDate,
-                    targetHours: targetHours || '',
-                    targetDays: targetDays || '',
+                    workTitle: existing?.workTitle || 'Team Member',
+                    startDate: existing?.startDate || startDate,
+                    endDate: existing?.endDate || endDate,
+                    targetHours: existing?.targetHours || '',
+                    targetDays: existing?.targetDays || '',
                     status: existing?.status || 'pending',
                     completionTime: existing?.completionTime || null,
                     completionStatus: existing?.completionStatus || null,
