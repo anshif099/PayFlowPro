@@ -384,28 +384,63 @@
 
     <!-- DIRECT CHAT MODAL -->
     <div class="modal-overlay" id="directChatModal">
-        <div class="modal" style="max-width:600px; display:flex; flex-direction:column; height:80vh;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <h3 id="directChatTitle" style="margin-bottom:0;">Chat</h3>
-                <button class="btn-outline btn-small" onclick="closeDirectChatModal()">✕ Close</button>
+        <div class="modal" style="max-width:600px; display:flex; flex-direction:column; height:80vh; padding:0; overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border);background:var(--card-bg);">
+                <div>
+                    <h3 id="directChatTitle" style="margin-bottom:2px;font-size:16px;">Chat</h3>
+                    <div style="font-size:10px;color:var(--text-muted);">Direct Message</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button onclick="startWebCall(false)" style="border:none;background:transparent;font-size:20px;color:var(--primary);padding:4px;cursor:pointer;">📞</button>
+                    <button onclick="startWebCall(true)" style="border:none;background:transparent;font-size:22px;color:var(--primary);padding:4px;cursor:pointer;">📹</button>
+                    <button class="btn-outline btn-small" onclick="closeDirectChatModal()" style="border:none;background:transparent;font-size:20px;color:var(--text);padding:4px;cursor:pointer;">✕</button>
+                </div>
             </div>
             
-            <div id="filesList" style="flex:1; overflow-y:auto; margin-bottom:16px; padding:10px; background:var(--bg); border-radius:8px; display:flex; flex-direction:column; gap:12px;"></div>
-                <!-- Text message input -->
-                <div style="display:flex;gap:8px;margin-bottom:12px;">
-                    <input type="text" id="chatMsgInput" placeholder="Type a message..." style="flex:1;padding:10px 16px;border-radius:24px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')sendChatMessage()">
-                    <button onclick="sendChatMessage()" style="border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--primary);border:none;cursor:pointer;font-size:16px;">📨</button>
+            <!-- Chat List Container -->
+            <div id="filesList" style="flex:1; overflow-y:auto; padding:16px; background:var(--bg); display:flex; flex-direction:column; gap:12px;"></div>
+            
+            <!-- Input Area -->
+            <div style="padding:12px; border-top:1px solid var(--border); background:var(--card-bg); display:flex; align-items:center; gap:8px;">
+                <!-- Image Upload -->
+                <button onclick="document.getElementById('fileInput').click()" style="background:transparent;border:none;color:var(--primary);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;">🖼️</button>
+                <!-- Document Upload -->
+                <button onclick="document.getElementById('fileInput').click()" style="background:transparent;border:none;color:var(--primary);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;">📎</button>
+                
+                <input type="file" id="fileInput" style="display:none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp3,.wav,.ogg,.m4a" onchange="handleFileUpload(event)">
+                
+                <div style="flex:1; background:rgba(0,0,0,0.05); border-radius:24px; padding:0 16px; display:flex; align-items:center;">
+                    <input type="text" id="chatMsgInput" placeholder="Type a message..." style="flex:1;border:none;background:transparent;color:var(--text);font-size:14px;padding:10px 0;outline:none;" onkeydown="if(event.key==='Enter')sendChatMessage()">
                 </div>
-                <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
-                    <div style="font-size:32px;margin-bottom:8px;">📎</div>
-                    <div style="font-size:14px;color:var(--text-muted);">Click to upload files (Images, Documents, Voice Notes)</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Max 5MB per file</div>
-                    <input type="file" id="fileInput" style="display:none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp3,.wav,.ogg,.m4a" onchange="handleFileUpload(event)">
-                </div>
-                <div style="margin-top:8px;text-align:center;">
-                    <button class="btn-outline btn-small" onclick="startVoiceRecording()" id="voiceRecordBtn">🎤 Record Voice Note</button>
-                    <span id="voiceRecordStatus" style="font-size:12px;color:var(--danger);margin-left:8px;display:none;">● Recording...</span>
-                </div>
+                
+                <button onclick="toggleVoiceRecord()" id="voiceRecordBtn" style="background:transparent;border:none;color:var(--primary);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;">🎤</button>
+                
+                <button onclick="sendChatMessage()" style="border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--primary);border:none;cursor:pointer;font-size:16px;color:#fff;">➤</button>
+            </div>
+            <div id="voiceRecordStatus" style="font-size:12px;color:var(--danger);text-align:center;padding-bottom:8px;display:none;background:var(--card-bg);">● Recording Voice...</div>
+        </div>
+    </div>
+
+    <!-- WEB CALL MODAL -->
+    <div class="modal-overlay" id="webCallModal" style="background:#000; z-index:9999;">
+        <div style="display:flex; flex-direction:column; width:100%; height:100%;">
+            <!-- Header -->
+            <div style="padding:16px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="webCallTitle" style="margin:0; font-size:18px;">Calling...</h3>
+                <span id="webCallStatus" style="font-size:12px; opacity:0.8;">Connecting</span>
+            </div>
+            <!-- Video Area -->
+            <div style="flex:1; position:relative; background:#111; display:flex; justify-content:center; align-items:center; overflow:hidden;">
+                <video id="remoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                <div id="audioPlaceholder" style="color:#fff; font-size:64px;">📞</div>
+                <video id="localVideo" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:120px; height:160px; object-fit:cover; border-radius:12px; border:2px solid #333; background:#000; display:none;"></video>
+            </div>
+            <!-- Controls -->
+            <div style="padding:24px; display:flex; justify-content:center; gap:24px; background:#000;">
+                <button onclick="toggleCallMute()" id="btnCallMute" style="width:60px; height:60px; border-radius:50%; border:none; background:#333; color:#fff; font-size:24px; cursor:pointer;">🎤</button>
+                <button onclick="toggleCallVideo()" id="btnCallVideo" style="width:60px; height:60px; border-radius:50%; border:none; background:#333; color:#fff; font-size:24px; cursor:pointer;">📹</button>
+                <button onclick="endWebCall()" style="width:60px; height:60px; border-radius:50%; border:none; background:#FF3B30; color:#fff; font-size:24px; cursor:pointer;">⛔</button>
+            </div>
         </div>
     </div>
 
@@ -445,7 +480,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, push, update, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, push, update, get, serverTimestamp, onChildAdded } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -876,6 +911,211 @@
             document.getElementById('directChatModal').classList.remove('show');
             currentDirectChatEmpId = null;
         };
+        // ======================= WEBRTC LOGIC =======================
+        let webCallPc = null;
+        let webCallLocalStream = null;
+        let webCallId = null;
+        let webCallUnsubSession = null;
+        let webCallUnsubCandidates = null;
+        let isVideoCall = false;
+
+        window.startWebCall = async function(isVideo) {
+            if (!currentDirectChatEmpId) return;
+            isVideoCall = isVideo;
+
+            const modal = document.getElementById('webCallModal');
+            const statusText = document.getElementById('webCallStatus');
+            const localVideo = document.getElementById('localVideo');
+            const remoteVideo = document.getElementById('remoteVideo');
+            const audioPlaceholder = document.getElementById('audioPlaceholder');
+            const title = document.getElementById('webCallTitle');
+
+            modal.classList.add('show');
+            statusText.textContent = "Requesting permissions...";
+            title.textContent = `Calling...`;
+
+            if (isVideo) {
+                localVideo.style.display = 'block';
+                remoteVideo.style.display = 'block';
+                audioPlaceholder.style.display = 'none';
+            } else {
+                localVideo.style.display = 'none';
+                remoteVideo.style.display = 'none';
+                audioPlaceholder.style.display = 'block';
+            }
+
+            try {
+                // 1. Get User Media
+                webCallLocalStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: isVideo ? { facingMode: 'user' } : false
+                });
+
+                if (isVideo) {
+                    localVideo.srcObject = webCallLocalStream;
+                }
+
+                // 2. Setup RTCPeerConnection
+                statusText.textContent = "Connecting...";
+                const configuration = {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                };
+
+                webCallPc = new RTCPeerConnection(configuration);
+
+                webCallLocalStream.getTracks().forEach(track => {
+                    webCallPc.addTrack(track, webCallLocalStream);
+                });
+
+                webCallPc.ontrack = (event) => {
+                    if (event.streams && event.streams[0]) {
+                        if (isVideo) remoteVideo.srcObject = event.streams[0];
+                        else {
+                            const audio = new Audio();
+                            audio.srcObject = event.streams[0];
+                            audio.play();
+                        }
+                    }
+                };
+
+                // 3. Create Session in DB
+                const ids = [companyId, currentDirectChatEmpId].sort();
+                const chatId = ids.join('_');
+                const adminName = localStorage.getItem('name') || 'Admin';
+
+                const callsRef = push(ref(db, 'direct_call_sessions'));
+                webCallId = callsRef.key;
+
+                webCallPc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        push(ref(db, `direct_call_sessions/${webCallId}/callerCandidates`), {
+                            candidate: event.candidate.candidate,
+                            sdpMid: event.candidate.sdpMid,
+                            sdpMLineIndex: event.candidate.sdpMLineIndex
+                        });
+                    }
+                };
+
+                // 4. Create Offer
+                const offer = await webCallPc.createOffer();
+                await webCallPc.setLocalDescription(offer);
+
+                await set(callsRef, {
+                    chatId: chatId,
+                    callerId: companyId,
+                    callerName: adminName,
+                    calleeId: currentDirectChatEmpId,
+                    calleeName: document.getElementById('directChatTitle').textContent.replace('Chat with ', ''),
+                    isVideo: isVideo,
+                    status: 'ringing',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    offer: {
+                        type: offer.type,
+                        sdp: offer.sdp
+                    }
+                });
+
+                // 5. Send Notification
+                await push(ref(db, `notifications/${currentDirectChatEmpId}`), {
+                    title: `Incoming ${isVideo ? 'Video' : 'Audio'} Call`,
+                    body: `${adminName} is calling you...`,
+                    type: 'call',
+                    callId: webCallId,
+                    chatId: chatId,
+                    senderId: companyId,
+                    senderName: adminName,
+                    timestamp: serverTimestamp(),
+                    isVideo: isVideo
+                });
+
+                statusText.textContent = "Ringing...";
+
+                // 6. Listen for answer
+                const sessionRef = ref(db, `direct_call_sessions/${webCallId}`);
+                webCallUnsubSession = onValue(sessionRef, async (snap) => {
+                    const data = snap.val();
+                    if (!data) {
+                        endWebCall(true);
+                        return;
+                    }
+
+                    if (data.status === 'declined' || data.status === 'missed' || data.status === 'ended') {
+                        statusText.textContent = `Call ${data.status}`;
+                        setTimeout(() => endWebCall(true), 2000);
+                        return;
+                    }
+
+                    if (data.status === 'accepted' && data.answer && webCallPc.signalingState !== 'stable') {
+                        statusText.textContent = "Connected";
+                        await webCallPc.setRemoteDescription(new RTCSessionDescription(data.answer));
+
+                        // Start listening for remote candidates
+                        webCallUnsubCandidates = onChildAdded(ref(db, `direct_call_sessions/${webCallId}/calleeCandidates`), (candSnap) => {
+                            const candData = candSnap.val();
+                            if (candData && candData.candidate) {
+                                webCallPc.addIceCandidate(new RTCIceCandidate(candData));
+                            }
+                        });
+                    }
+                });
+
+            } catch (err) {
+                alert("Failed to start call: " + err.message);
+                endWebCall(true);
+            }
+        };
+
+        window.toggleCallMute = function() {
+            if (!webCallLocalStream) return;
+            const audioTrack = webCallLocalStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                document.getElementById('btnCallMute').style.background = audioTrack.enabled ? '#333' : '#FF3B30';
+            }
+        };
+
+        window.toggleCallVideo = function() {
+            if (!webCallLocalStream || !isVideoCall) return;
+            const videoTrack = webCallLocalStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                document.getElementById('btnCallVideo').style.background = videoTrack.enabled ? '#333' : '#FF3B30';
+            }
+        };
+
+        window.endWebCall = async function(isLocalCleanupOnly = false) {
+            document.getElementById('webCallModal').classList.remove('show');
+            document.getElementById('remoteVideo').srcObject = null;
+            document.getElementById('localVideo').srcObject = null;
+
+            if (webCallLocalStream) {
+                webCallLocalStream.getTracks().forEach(t => t.stop());
+                webCallLocalStream = null;
+            }
+
+            if (webCallPc) {
+                webCallPc.close();
+                webCallPc = null;
+            }
+
+            if (webCallUnsubSession) webCallUnsubSession();
+            if (webCallUnsubCandidates) webCallUnsubCandidates();
+
+            if (!isLocalCleanupOnly && webCallId) {
+                try {
+                    await update(ref(db, `direct_call_sessions/${webCallId}`), {
+                        status: 'ended',
+                        updatedAt: serverTimestamp(),
+                        endedAt: serverTimestamp()
+                    });
+                } catch(e){}
+            }
+            webCallId = null;
+        };
 
 
 
@@ -1069,9 +1309,11 @@
                         contentHtml += `<div style="font-size:14px;">${escHtml(msg.text)}</div>`;
                     }
 
+                    const borderRadius = isAdmin ? '16px 16px 0 16px' : '16px 16px 16px 0';
+
                     container.innerHTML += `
                         <div style="display:flex;justify-content:${alignStyle};margin-bottom:8px;">
-                            <div style="max-width:75%;padding:10px 14px;border-radius:14px;background:${bgStyle};color:${colorStyle};">
+                            <div style="max-width:75%;padding:10px 14px;border-radius:${borderRadius};background:${bgStyle};color:${colorStyle};">
                                 <div style="font-size:10px;font-weight:600;opacity:0.7;margin-bottom:4px;">${escHtml(senderName)}</div>
                                 ${contentHtml}
                                 <div style="font-size:9px;opacity:0.6;margin-top:6px;text-align:right;">${timeStr}</div>
@@ -1134,7 +1376,7 @@
 
         window.handleFileUpload = async function(event) {
             const file = event.target.files[0];
-            if (!file || !currentDetailId) return;
+            if (!file || !currentDirectChatEmpId) return;
 
             if (file.size > 5 * 1024 * 1024) {
                 alert("File too large. Maximum 5MB allowed.");
@@ -1146,22 +1388,43 @@
             reader.onload = async (e) => {
                 const base64 = e.target.result;
 
-                let fileType = 'document';
-                if (file.type.startsWith('image/')) fileType = 'image';
-                else if (file.type.startsWith('audio/')) fileType = 'audio';
+                let imageUrl = null;
+                let audioUrl = null;
+                let docUrl = null;
+                let docName = null;
+
+                if (file.type.startsWith('image/')) {
+                    imageUrl = base64;
+                } else if (file.type.startsWith('audio/')) {
+                    audioUrl = base64;
+                } else {
+                    docUrl = base64;
+                    docName = file.name;
+                }
 
                 try {
-                    const fileRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
-                    await set(fileRef, {
-                        fileName: file.name,
-                        fileType,
-                        fileData: base64,
-                        mimeType: file.type,
-                        uploadedBy: 'admin',
-                        uploadedByName: localStorage.getItem('name') || 'Admin',
-                        uploadedAt: new Date().toISOString(),
-                        sizeBytes: file.size,
+                    const ids = [companyId, currentDirectChatEmpId].sort();
+                    const chatId = ids.join('_');
+                    const timestamp = serverTimestamp();
+                    const adminName = localStorage.getItem('name') || 'Admin';
+
+                    const msgRef = push(ref(db, `direct_chats/${chatId}/messages`));
+                    await set(msgRef, {
+                        senderId: companyId,
+                        senderName: adminName,
+                        imageUrl: imageUrl || null,
+                        audioUrl: audioUrl || null,
+                        docUrl: docUrl || null,
+                        docName: docName || null,
+                        timestamp: timestamp
                     });
+
+                    let preview = "Sent a file";
+                    if (imageUrl) preview = "Photo";
+                    if (audioUrl) preview = "Voice message";
+                    if (docUrl) preview = "Document: " + docName;
+
+                    await updateDirectChatThread(chatId, currentDirectChatEmpId, preview, 'file', Date.now());
                 } catch (err) {
                     alert("Upload failed: " + err.message);
                 }
@@ -1170,13 +1433,13 @@
             event.target.value = '';
         };
 
-        window.startVoiceRecording = async function() {
+        window.toggleVoiceRecord = async function() {
             const btn = document.getElementById('voiceRecordBtn');
             const status = document.getElementById('voiceRecordStatus');
 
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
-                btn.textContent = '🎤 Record Voice Note';
+                btn.style.color = 'var(--primary)';
                 status.style.display = 'none';
                 return;
             }
@@ -1189,7 +1452,7 @@
                 mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
                     stream.getTracks().forEach(t => t.stop());
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const blob = new Blob(audioChunks, { type: 'audio/m4a' });
 
                     if (blob.size > 5 * 1024 * 1024) {
                         alert("Recording too large. Keep it under 5MB.");
@@ -1198,19 +1461,22 @@
 
                     const reader = new FileReader();
                     reader.onload = async (e) => {
-                        if (!currentDetailId) return;
+                        if (!currentDirectChatEmpId) return;
                         try {
-                            const fileRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
-                            await set(fileRef, {
-                                fileName: `voice_note_${Date.now()}.webm`,
-                                fileType: 'audio',
-                                fileData: e.target.result,
-                                mimeType: 'audio/webm',
-                                uploadedBy: 'admin',
-                                uploadedByName: localStorage.getItem('name') || 'Admin',
-                                uploadedAt: new Date().toISOString(),
-                                sizeBytes: blob.size,
+                            const ids = [companyId, currentDirectChatEmpId].sort();
+                            const chatId = ids.join('_');
+                            const timestamp = serverTimestamp();
+                            const adminName = localStorage.getItem('name') || 'Admin';
+
+                            const msgRef = push(ref(db, `direct_chats/${chatId}/messages`));
+                            await set(msgRef, {
+                                senderId: companyId,
+                                senderName: adminName,
+                                audioUrl: e.target.result,
+                                timestamp: timestamp
                             });
+
+                            await updateDirectChatThread(chatId, currentDirectChatEmpId, "Voice message", 'audio', Date.now());
                         } catch (err) {
                             alert("Upload failed: " + err.message);
                         }
@@ -1219,48 +1485,15 @@
                 };
 
                 mediaRecorder.start();
-                btn.textContent = '⏹ Stop Recording';
-                status.style.display = 'inline';
+                btn.style.color = 'var(--danger)';
+                status.style.display = 'block';
             } catch (err) {
                 alert("Microphone access denied.");
             }
         };
 
-        window.previewImage = async function(fileId) {
-            if (!currentDetailId) return;
-            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
-            if (!snap.exists()) return;
-            const file = snap.val();
-            const win = window.open('', '_blank');
-            win.document.write(`<html><body style="margin:0;background:#0b0f14;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${file.fileData}" style="max-width:100%;max-height:100vh;object-fit:contain;">` + '</bo' + 'dy></ht' + 'ml>');
-        };
-
-        window.playAudio = async function(fileId) {
-            if (!currentDetailId) return;
-            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
-            if (!snap.exists()) return;
-            const file = snap.val();
-            const audio = new Audio(file.fileData);
-            audio.play();
-        };
-
-        window.downloadFile = async function(fileId) {
-            if (!currentDetailId) return;
-            const snap = await get(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
-            if (!snap.exists()) return;
-            const file = snap.val();
-            const a = document.createElement('a');
-            a.href = file.fileData;
-            a.download = file.fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        };
-
         window.deleteFile = async function(fileId) {
-            if (!currentDetailId) return;
-            if (!confirm("Delete this file?")) return;
-            await remove(ref(db, `project_files/${companyId}/${currentDetailId}/${fileId}`));
+            // Deprecated locally, managed via long press on mobile
         };
 
         // ------------------------- Helpers -------------------------
