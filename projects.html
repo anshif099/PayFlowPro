@@ -372,24 +372,25 @@
                 <button class="btn-outline btn-small" onclick="closeDetailModal()">✕ Close</button>
             </div>
 
-            <div class="tabs" id="detailTabs">
-                <div class="tab active" onclick="switchTab('tabOverview', this)">Overview</div>
-                <div class="tab" onclick="switchTab('tabTeam', this)">Team & Tasks</div>
-                <div class="tab" onclick="switchTab('tabFiles', this)">Communication</div>
-            </div>
-
-            <!-- Overview Tab -->
-            <div class="tab-content active" id="tabOverview">
+            <div style="display:flex; flex-direction:column; gap:24px; max-height:70vh; overflow-y:auto; padding-right:10px;">
                 <div id="detailOverview"></div>
+                <div>
+                    <h4 style="margin-bottom:12px; color:var(--primary);">Team & Tasks</h4>
+                    <div id="detailTeam"></div>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Team Tab -->
-            <div class="tab-content" id="tabTeam">
-                <div id="detailTeam"></div>
+    <!-- DIRECT CHAT MODAL -->
+    <div class="modal-overlay" id="directChatModal">
+        <div class="modal" style="max-width:600px; display:flex; flex-direction:column; height:80vh;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 id="directChatTitle" style="margin-bottom:0;">Chat</h3>
+                <button class="btn-outline btn-small" onclick="closeDirectChatModal()">✕ Close</button>
             </div>
-
-            <!-- Communication Tab -->
-            <div class="tab-content" id="tabFiles">
+            
+            <div id="filesList" style="flex:1; overflow-y:auto; margin-bottom:16px; padding:10px; background:var(--bg); border-radius:8px; display:flex; flex-direction:column; gap:12px;"></div>
                 <!-- Text message input -->
                 <div style="display:flex;gap:8px;margin-bottom:12px;">
                     <input type="text" id="chatMsgInput" placeholder="Type a message..." style="flex:1;padding:10px 16px;border-radius:24px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')sendChatMessage()">
@@ -405,7 +406,39 @@
                     <button class="btn-outline btn-small" onclick="startVoiceRecording()" id="voiceRecordBtn">🎤 Record Voice Note</button>
                     <span id="voiceRecordStatus" style="font-size:12px;color:var(--danger);margin-left:8px;display:none;">● Recording...</span>
                 </div>
-                <div class="file-list" id="filesList"></div>
+        </div>
+    </div>
+
+    <!-- ASSIGN WORK MODAL -->
+    <div class="modal-overlay" id="assignWorkModal">
+        <div class="modal" style="max-width:500px;">
+            <h3 id="assignWorkTitle">Assign Work</h3>
+            <input type="hidden" id="awEmpId">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Work Title / Role *</label>
+                    <input id="awWorkTitle" placeholder="e.g. UI Design">
+                </div>
+                <div class="form-group">
+                    <label>Start Date *</label>
+                    <input type="date" id="awStartDate">
+                </div>
+                <div class="form-group">
+                    <label>End Date *</label>
+                    <input type="date" id="awEndDate">
+                </div>
+                <div class="form-group">
+                    <label>Target Hours</label>
+                    <input type="number" id="awTargetHours" placeholder="e.g. 24">
+                </div>
+                <div class="form-group">
+                    <label>Target Days</label>
+                    <input type="number" id="awTargetDays" placeholder="e.g. 3">
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top:24px;">
+                <button class="btn-outline" onclick="closeAssignWorkModal()">Cancel</button>
+                <button onclick="saveAssignedWork()">💾 Save Work</button>
             </div>
         </div>
     </div>
@@ -470,6 +503,15 @@
                 allProjects.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
                 updateStats();
                 renderProjects();
+
+                if (currentDetailId && document.getElementById('detailModal').classList.contains('show')) {
+                    const updatedProj = allProjects.find(p => p.id === currentDetailId);
+                    if (updatedProj) {
+                        currentDetailProject = updatedProj;
+                        renderDetailOverview(updatedProj);
+                        renderDetailTeam(updatedProj);
+                    }
+                }
             });
         }
 
@@ -547,7 +589,7 @@
                 const statusText = isOverdue ? 'OVERDUE' : proj.status.toUpperCase();
 
                 tbody.innerHTML += `
-                    <tr>
+                    <tr style="cursor:pointer;" onclick="if(!event.target.closest('button')) openDetailModal('${proj.id}')">
                         <td>
                             <div style="font-weight:600;font-size:15px;">${escHtml(proj.name)}</div>
                             <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${proj.client ? escHtml(proj.client) : 'No client'}</div>
@@ -740,6 +782,70 @@
             } catch (e) { alert(e.message); }
         };
 
+        // --------- Assign Work ---------
+        window.openAssignWorkModal = function(empId, empName) {
+            const proj = currentDetailProject;
+            if (!proj) return;
+            const existing = proj.assignedEmployees?.[empId] || {};
+            
+            document.getElementById('assignWorkTitle').textContent = `Assign Work - ${empName}`;
+            document.getElementById('awEmpId').value = empId;
+            document.getElementById('awWorkTitle').value = existing.workTitle !== 'Team Member' ? (existing.workTitle || '') : '';
+            document.getElementById('awStartDate').value = existing.startDate || proj.startDate || '';
+            document.getElementById('awEndDate').value = existing.endDate || proj.endDate || '';
+            document.getElementById('awTargetHours').value = existing.targetHours || '';
+            document.getElementById('awTargetDays').value = existing.targetDays || '';
+            
+            const pStart = proj.startDate;
+            const pEnd = proj.endDate;
+            document.getElementById('awStartDate').min = pStart;
+            document.getElementById('awStartDate').max = pEnd;
+            document.getElementById('awEndDate').min = pStart;
+            document.getElementById('awEndDate').max = pEnd;
+            
+            document.getElementById('assignWorkModal').classList.add('show');
+        };
+
+        window.closeAssignWorkModal = function() {
+            document.getElementById('assignWorkModal').classList.remove('show');
+        };
+
+        window.saveAssignedWork = async function() {
+            const empId = document.getElementById('awEmpId').value;
+            const workTitle = document.getElementById('awWorkTitle').value.trim();
+            const startDate = document.getElementById('awStartDate').value;
+            const endDate = document.getElementById('awEndDate').value;
+            const targetHours = document.getElementById('awTargetHours').value;
+            const targetDays = document.getElementById('awTargetDays').value;
+
+            if (!workTitle) return alert("Work title is required.");
+            if (!startDate) return alert("Start date is required.");
+            if (!endDate) return alert("End date is required.");
+            if (endDate < startDate) return alert("End date must be after start date.");
+
+            const proj = currentDetailProject;
+            if (!proj || !currentDetailId) return;
+
+            const existing = proj.assignedEmployees?.[empId] || {};
+            
+            const updatedAssignment = {
+                ...existing,
+                workTitle,
+                startDate,
+                endDate,
+                targetHours,
+                targetDays,
+                status: existing.status === 'pending' || !existing.status ? 'pending' : existing.status
+            };
+
+            try {
+                await update(ref(db, `projects/${companyId}/${currentDetailId}/assignedEmployees/${empId}`), updatedAssignment);
+                closeAssignWorkModal();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
         // --------- Detail Modal ---------
         window.openDetailModal = function(id) {
             const proj = allProjects.find(p => p.id === id);
@@ -749,8 +855,6 @@
             document.getElementById('detailTitle').textContent = proj.name;
             renderDetailOverview(proj);
             renderDetailTeam(proj);
-            loadProjectFiles(id);
-            switchTab('tabOverview', document.querySelector('#detailTabs .tab'));
             document.getElementById('detailModal').classList.add('show');
         };
 
@@ -760,12 +864,20 @@
             currentDetailProject = null;
         };
 
-        window.switchTab = function(tabId, el) {
-            document.querySelectorAll('#detailTabs .tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+        let currentDirectChatEmpId = null;
+        window.openDirectChatModal = function(empId, empName) {
+            currentDirectChatEmpId = empId;
+            document.getElementById('directChatTitle').textContent = 'Chat with ' + empName;
+            document.getElementById('directChatModal').classList.add('show');
+            loadDirectChat(empId);
         };
+
+        window.closeDirectChatModal = function() {
+            document.getElementById('directChatModal').classList.remove('show');
+            currentDirectChatEmpId = null;
+        };
+
+
 
         function renderDetailOverview(proj) {
             const today = new Date().toISOString().split('T')[0];
@@ -863,11 +975,15 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                             <div>
                                 <div style="font-weight:600;font-size:15px;">${escHtml(empName)}</div>
-                                <div style="font-size:13px;color:var(--primary);margin-top:2px;">📋 ${escHtml(a.workTitle || 'No role assigned')}</div>
+                                <div style="font-size:13px;color:var(--primary);margin-top:2px;">📋 ${escHtml(a.workTitle === 'Team Member' ? 'No work assigned' : (a.workTitle || 'No role assigned'))}</div>
                             </div>
                             <div style="text-align:right;">
                                 ${statusBadge}
                                 ${isOverdue ? '<div style="font-size:11px;color:var(--danger);margin-top:4px;">⚠ OVERDUE</div>' : ''}
+                                <div style="margin-top:8px;">
+                                    <button class="btn-outline btn-small" onclick="openDirectChatModal('${empId}', '${escHtml(empName).replace(/'/g, "\\'")}')">💬 Chat</button>
+                                    <button class="btn-outline btn-small" onclick="openAssignWorkModal('${empId}', '${escHtml(empName).replace(/'/g, "\\'")}')">✏️ Assign Work</button>
+                                </div>
                             </div>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px;">
@@ -905,12 +1021,19 @@
             container.innerHTML = html;
         }
 
-        // --------- File Communication ---------
-        function loadProjectFiles(projectId) {
+        // --------- Direct Chat Loading ---------
+        let directChatUnsubscribe = null;
+        function loadDirectChat(empId) {
+            if (directChatUnsubscribe) off(directChatUnsubscribe);
             const container = document.getElementById('filesList');
             container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading messages...</div>';
 
-            onValue(ref(db, `project_files/${companyId}/${projectId}`), snap => {
+            const ids = [companyId, empId].sort();
+            const chatId = ids.join('_');
+            const chatRef = ref(db, `direct_chats/${chatId}/messages`);
+            
+            directChatUnsubscribe = chatRef;
+            onValue(chatRef, snap => {
                 container.innerHTML = '';
                 if (!snap.exists()) {
                     container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No messages yet. Start the conversation!</div>';
@@ -921,58 +1044,65 @@
                 snap.forEach(child => {
                     items.push({ id: child.key, ...child.val() });
                 });
-                items.sort((a, b) => (a.uploadedAt || '').localeCompare(b.uploadedAt || ''));
+                items.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-                items.forEach(file => {
-                    const isAdmin = file.uploadedBy === 'admin';
-                    const senderName = file.uploadedByName || (isAdmin ? 'Admin' : 'Employee');
-                    const timeStr = file.uploadedAt ? formatDateTime(file.uploadedAt) : '';
-
-                    // TEXT MESSAGE - chat bubble
-                    if (file.fileType === 'text') {
-                        container.innerHTML += `
-                            <div style="display:flex;justify-content:${isAdmin ? 'flex-end' : 'flex-start'};margin-bottom:8px;">
-                                <div style="max-width:70%;padding:10px 14px;border-radius:14px ${isAdmin ? '14px 4px 14px' : '4px 14px 14px'};background:${isAdmin ? 'rgba(0,255,195,0.12)' : 'rgba(139,146,160,0.12)'};border:1px solid ${isAdmin ? 'rgba(0,255,195,0.2)' : 'rgba(139,146,160,0.15)'}">
-                                    <div style="font-size:10px;font-weight:600;color:${isAdmin ? 'var(--primary)' : 'var(--text-muted)'};margin-bottom:3px;">${escHtml(senderName)}</div>
-                                    <div style="font-size:14px;color:var(--text);">${escHtml(file.fileName)}</div>
-                                    <div style="font-size:9px;color:var(--text-muted);margin-top:4px;text-align:${isAdmin ? 'right' : 'left'};">${timeStr}</div>
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    // FILE / IMAGE / AUDIO - card style
-                    const icon = file.fileType === 'image' ? '🖼️' : file.fileType === 'audio' ? '🎵' : '📄';
-                    const sizeStr = file.sizeBytes ? formatFileSize(file.sizeBytes) : '';
-
-                    let actionHtml = '';
-                    if (file.fileType === 'image' && file.fileData) {
-                        actionHtml = `<button class="btn-outline btn-small" onclick="previewImage('${file.id}')" style="padding:4px 8px;font-size:11px;">👁</button>`;
-                    } else if (file.fileType === 'audio' && file.fileData) {
-                        actionHtml = `<button class="btn-outline btn-small" onclick="playAudio('${file.id}')" style="padding:4px 8px;font-size:11px;">▶️</button>`;
-                    } else if (file.fileData) {
-                        actionHtml = `<button class="btn-outline btn-small" onclick="downloadFile('${file.id}')" style="padding:4px 8px;font-size:11px;">⬇</button>`;
-                    }
+                items.forEach(msg => {
+                    const isAdmin = msg.senderId === companyId;
+                    const senderName = msg.senderName || (isAdmin ? 'Admin' : 'Employee');
+                    const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleString([], {hour:'2-digit', minute:'2-digit', month:'short', day:'numeric'}) : '';
 
                     const alignStyle = isAdmin ? 'flex-end' : 'flex-start';
+                    const bgStyle = isAdmin ? 'var(--primary)' : 'var(--bg-dark)';
+                    const colorStyle = isAdmin ? '#000' : 'var(--text)';
+                    
+                    let contentHtml = '';
+                    if (msg.imageUrl) {
+                        contentHtml += `<img src="${msg.imageUrl}" style="max-width:200px; border-radius:8px; display:block; margin-bottom:4px;">`;
+                    }
+                    if (msg.audioUrl) {
+                        contentHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; padding:8px; background:rgba(255,255,255,0.1); border-radius:8px;"><span style="font-size:16px;">🎵</span> <a href="${msg.audioUrl}" download="voice_note.m4a" style="color:inherit; font-size:12px; font-weight:bold;">Download Audio</a></div>`;
+                    }
+                    if (msg.docUrl) {
+                        contentHtml += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; padding:8px; background:rgba(255,255,255,0.1); border-radius:8px;"><span style="font-size:16px;">📄</span> <a href="${msg.docUrl}" download="${msg.docName || 'document'}" style="color:inherit; font-size:12px; font-weight:bold;">${escHtml(msg.docName || 'Document')}</a></div>`;
+                    }
+                    if (msg.text) {
+                        contentHtml += `<div style="font-size:14px;">${escHtml(msg.text)}</div>`;
+                    }
+
                     container.innerHTML += `
                         <div style="display:flex;justify-content:${alignStyle};margin-bottom:8px;">
-                            <div class="file-card" data-file-id="${file.id}" style="max-width:75%;">
-                                <div style="font-size:10px;font-weight:600;color:${isAdmin ? 'var(--primary)' : 'var(--text-muted)'};margin-bottom:4px;">${escHtml(senderName)}</div>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <div class="file-icon">${icon}</div>
-                                    <div class="file-info">
-                                        <div class="file-name">${escHtml(file.fileName)}</div>
-                                        <div class="file-meta">${sizeStr} • ${timeStr}</div>
-                                    </div>
-                                    ${actionHtml}
-                                    <button class="btn-danger btn-small" onclick="deleteFile('${file.id}')" style="padding:4px 8px;font-size:11px;">✕</button>
-                                </div>
+                            <div style="max-width:75%;padding:10px 14px;border-radius:14px;background:${bgStyle};color:${colorStyle};">
+                                <div style="font-size:10px;font-weight:600;opacity:0.7;margin-bottom:4px;">${escHtml(senderName)}</div>
+                                ${contentHtml}
+                                <div style="font-size:9px;opacity:0.6;margin-top:6px;text-align:right;">${timeStr}</div>
                             </div>
                         </div>
                     `;
                 });
+                // Auto scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        async function updateDirectChatThread(chatId, empId, preview, type, timestamp) {
+            const adminName = localStorage.getItem('name') || 'Admin';
+            await update(ref(db, `direct_chat_threads/${chatId}`), {
+                [`participants/${companyId}`]: true,
+                [`participants/${empId}`]: true,
+                lastMessagePreview: preview,
+                lastMessageTimestamp: timestamp,
+                lastMessageType: type,
+                lastSenderId: companyId,
+                lastSenderName: adminName,
+                [`readBy/${companyId}`]: timestamp
+            });
+            await push(ref(db, `notifications/${empId}`), {
+                title: "New Message from " + adminName,
+                body: preview,
+                type: "direct_chat",
+                senderId: companyId,
+                senderName: adminName,
+                timestamp: timestamp
             });
         }
 
@@ -980,19 +1110,25 @@
         window.sendChatMessage = async function() {
             const input = document.getElementById('chatMsgInput');
             const text = input.value.trim();
-            if (!text || !currentDetailId) return;
+            if (!text || !currentDirectChatEmpId) return;
             input.value = '';
             try {
-                const msgRef = push(ref(db, `project_files/${companyId}/${currentDetailId}`));
+                const ids = [companyId, currentDirectChatEmpId].sort();
+                const chatId = ids.join('_');
+                const timestamp = serverTimestamp();
+                const adminName = localStorage.getItem('name') || 'Admin';
+
+                const msgRef = push(ref(db, `direct_chats/${chatId}/messages`));
                 await set(msgRef, {
-                    fileName: text,
-                    fileType: 'text',
-                    uploadedBy: 'admin',
-                    uploadedByName: localStorage.getItem('name') || 'Admin',
-                    uploadedAt: new Date().toISOString(),
+                    senderId: companyId,
+                    senderName: adminName,
+                    text: text,
+                    timestamp: timestamp
                 });
+
+                await updateDirectChatThread(chatId, currentDirectChatEmpId, text, 'text', Date.now());
             } catch (e) {
-                alert('Failed to send: ' + e.message);
+                alert("Error sending message: " + e.message);
             }
         };
 
