@@ -5,6 +5,7 @@
     const impersonatorRole = localStorage.getItem("impersonator_role");
     const currentPage = window.location.pathname.split('/').pop() || '';
     const canManageBranches = role === "super_admin" || role === "company_admin";
+    const retiredModuleHrefs = new Set(['timetrack.html', 'projects.html']);
     let isNormalizingBranchLinks = false;
 
     // Feature Mapping (Must match TierManagementPage in Flutter/Web)
@@ -34,10 +35,31 @@
         'manage_admins.html': 'branches',
         'nav-branch-admins': 'branches',
         'teamsive_passport.html': 'teamsive_passport',
-        'hire_resign.html': 'hire_resign',
-        'timetrack.html': 'timetrack',
-        'projects.html': 'projects'
+        'hire_resign.html': 'hire_resign'
     };
+
+    if (retiredModuleHrefs.has(currentPage)) {
+        window.location.replace('dashboard.html');
+        return;
+    }
+
+    function removeRetiredModuleLinks() {
+        document.querySelectorAll('.sidebar-nav a').forEach(item => {
+            const href = item.getAttribute('href');
+            if (href && retiredModuleHrefs.has(href)) {
+                item.remove();
+            }
+        });
+    }
+
+    function scheduleRetiredModuleRemoval() {
+        removeRetiredModuleLinks();
+        setTimeout(removeRetiredModuleLinks, 0);
+        setTimeout(removeRetiredModuleLinks, 100);
+        setTimeout(removeRetiredModuleLinks, 500);
+        window.addEventListener('load', removeRetiredModuleLinks);
+        document.addEventListener('DOMContentLoaded', removeRetiredModuleLinks);
+    }
 
     function normalizeBranchLinks() {
         if (isNormalizingBranchLinks) return;
@@ -389,6 +411,7 @@
     }
     window.addEventListener('load', applyRoleVisibility);
 
+    scheduleRetiredModuleRemoval();
     scheduleBranchLinkNormalization();
     scheduleSubscriptionLinkNormalization();
     scheduleStatutoryLinkNormalization();

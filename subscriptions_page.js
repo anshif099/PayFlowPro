@@ -3,6 +3,7 @@ import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/fireb
 
 const role = localStorage.getItem("role") || "";
 const isAdmin = localStorage.getItem("admin") === "true";
+const retiredSubscriptionFeatures = new Set(["timetrack", "projects"]);
 
 if (!isAdmin || role === "super_admin") {
     // Super admin keeps the inline company subscription manager.
@@ -124,7 +125,8 @@ if (!isAdmin || role === "super_admin") {
 
         const subscription = state.subscription;
         const features = subscription?.plan && state.planDefinitions?.[subscription.plan]?.features
-            ? Object.entries(state.planDefinitions[subscription.plan].features).filter(([, enabled]) => enabled === true)
+            ? Object.entries(state.planDefinitions[subscription.plan].features)
+                .filter(([feature, enabled]) => enabled === true && !retiredSubscriptionFeatures.has(feature))
             : [];
         const status = subscriptionStatus(subscription);
         const cards = [

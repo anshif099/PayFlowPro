@@ -141,14 +141,6 @@
                 <span class="nav-icon">✅</span>
                 <span data-i18n="attendance">Attendance</span>
             </a>
-            <a href="timetrack.html" class="nav-item">
-                <span class="nav-icon">⏱️</span>
-                <span data-i18n="timetrack">TimeTrack</span>
-            </a>
-            <a href="projects.html" class="nav-item">
-                <span class="nav-icon">📂</span>
-                <span data-i18n="projects">Projects</span>
-            </a>
             <a href="leave_management.html" class="nav-item">
                 <span class="nav-icon">🏖️</span>
                 <span data-i18n="leave_management">Leave Management</span>
@@ -265,7 +257,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, get, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    import { getDatabase, ref, get, onValue, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -347,11 +339,6 @@
           const workStatus = dayData.currentWorkStatus || '-';
           const price = dayData.dailyPrice || 0;
           
-          let actionBtn = "";
-          if (emp.waitingForAssignment) {
-             actionBtn = `<button onclick="approveAssignment('${emp.empId}')" style="background:var(--primary); border:none; color:black; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;">APPROVE NEXT WORK</button>`;
-          }
-
           if (status.toLowerCase() === 'in' || status.toLowerCase() === 'out') present++;
 
           tbody.innerHTML += `
@@ -362,7 +349,7 @@
                 <td>${punchOut}</td>
                 <td onclick="openChat('${emp.empId}', '${emp.name}')" style="cursor:pointer; color:var(--primary);"><i style="font-size:12px;">${workStatus}</i> 💬</td>
                 <td>${currency}${price}</td>
-                <td>${actionBtn}</td>
+                <td></td>
              </tr>`;
        });
 
@@ -424,33 +411,6 @@
 
              input.value = "";
           };
-       };
-
-       window.approveAssignment = async (empId) => {
-          if (!confirm("Approve this employee to start next work?")) return;
-          
-          const now = new Date();
-          const dateStr = now.toISOString().split('T')[0];
-          const monthStr = dateStr.substring(0, 7);
-          
-          const tsRef = ref(db, `timesheets/${companyId}/${empId}/${monthStr}/${dateStr}`);
-          const tsSnap = await get(tsRef);
-          
-          const updates = {};
-          updates[`employees/${empId}/waitingForAssignment`] = false;
-          
-          if (tsSnap.exists() && tsSnap.val().entries) {
-             const entries = tsSnap.val().entries;
-             Object.keys(entries).forEach(id => {
-                if (entries[id].status === 'submitted') {
-                   updates[`timesheets/${companyId}/${empId}/${monthStr}/${dateStr}/entries/${id}/status`] = 'approved';
-                }
-             });
-          }
-          
-          await update(ref(db), updates);
-          alert("Approved! Employee can now see the 'Start Work' buttons.");
-          fetchData();
        };
 
        document.getElementById('totalEmployees').textContent = employees.length;
