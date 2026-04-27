@@ -634,6 +634,9 @@
             <span aria-hidden="true">+</span>
             <span class="button-label">Add Project</span>
         </button>
+        <button class="ghost-button" style="color:var(--primary);border-color:var(--primary);" onclick="openProjectSelector()" type="button">
+            <span class="button-label">Summary</span>
+        </button>
     </header>
 
     <main class="content">
@@ -708,6 +711,8 @@
                     <h2 id="detailTitle">Project</h2>
                     <div class="detail-meta" id="detailMeta"></div>
                 </div>
+                <button class="ghost-button" style="color:var(--primary);border-color:var(--primary);" onclick="getAIProjectSummary(currentProject?.id)" type="button">Summary</button>
+                <button class="ghost-button danger-button" onclick="deleteProject(currentProject?.id)" type="button">Delete Project</button>
                 <button class="ghost-button" onclick="closeProjectDetail()" type="button">Close</button>
             </div>
             <div class="modal-body">
@@ -729,6 +734,30 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal detail-modal fullscreen">
+            <div class="modal-header">
+                <h2 style="flex:1;">AI Summary & Analytics</h2>
+                <button class="ghost-button" onclick="$('summaryModal').classList.remove('show')" type="button">Close</button>
+            </div>
+            <div class="modal-body" id="summaryBody" style="max-height: 80vh; overflow-y: auto;">
+                <div id="summaryChart" style="margin-bottom: 24px;"></div>
+                <div id="summaryText" style="line-height: 1.8; white-space: pre-wrap; font-size: 15px; color: var(--text);">Generating summary...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="projectSelectorModal">
+        <div class="modal" style="width: min(450px, 95%);">
+            <div class="modal-header">
+                <h2 style="flex:1;">Select Project</h2>
+                <button class="ghost-button" onclick="$('projectSelectorModal').classList.remove('show')" type="button">Close</button>
+            </div>
+            <div class="modal-body" id="projectSelectorList" style="max-height: 60vh; overflow-y: auto; padding: 12px;">
             </div>
         </div>
     </div>
@@ -763,6 +792,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
         const role = localStorage.getItem("role") || "";
         const companyId = (localStorage.getItem("companyId") || "").trim().toLowerCase();
         const adminBranch = localStorage.getItem("branch") || "";
@@ -782,8 +812,8 @@
 
         const STATUS_ORDER = ["todo", "in_progress", "in_review", "finish"];
 
-        const $ = (id) => document.getElementById(id);
-        const esc = (value) => (value || "").toString()
+        window.$ = (id) => document.getElementById(id);
+        window.esc = (value) => (value || "").toString()
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
@@ -952,6 +982,11 @@
                     <select class="status-select" onclick="event.stopPropagation()" onchange="updateWorkStatus('${esc(work.projectId)}', '${esc(work.workId)}', this.value)">
                         ${STATUS_ORDER.map((status) => `<option value="${status}" ${work.status === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
                     </select>
+                    <div class="card-actions" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                        <button class="ghost-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();reassignWork('${esc(work.projectId)}','${esc(work.workId)}')" type="button">Reassign</button>
+                        <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteWork('${esc(work.projectId)}','${esc(work.workId)}')" type="button">Delete Work</button>
+                        <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteProject('${esc(work.projectId)}')" type="button">Delete Project</button>
+                    </div>
                 </article>
             `;
         }
@@ -966,6 +1001,183 @@
                 updates[`timetrack_assignments/${empId}/${projectId}_${workId}/status`] = status;
             });
             await update(ref(db), updates);
+        };
+
+        window.deleteWork = async function(projectId, workId) {
+            if (!confirm("Delete this work and remove all its assignments?")) return;
+            const project = cachedProjects.find((item) => item.id === projectId);
+            const work = project?.works?.[workId];
+            const updates = {};
+            updates[`timetrack_projects/${scopeId}/${projectId}/works/${workId}`] = null;
+            if (work && work.assignedEmployees) {
+                Object.keys(work.assignedEmployees).forEach((empId) => {
+                    updates[`timetrack_assignments/${empId}/${projectId}_${workId}`] = null;
+                });
+            }
+            await update(ref(db), updates);
+            alert("Work deleted.");
+        };
+
+        window.deleteProject = async function(projectId) {
+            if (!confirm("Delete this entire project, all works, and all assignments?")) return;
+            const project = cachedProjects.find((item) => item.id === projectId);
+            const updates = {};
+            updates[`timetrack_projects/${scopeId}/${projectId}`] = null;
+            updates[`timetrack_project_chats/${scopeId}/${projectId}`] = null;
+            if (project && project.works) {
+                Object.entries(project.works).forEach(([wId, work]) => {
+                    if (work && work.assignedEmployees) {
+                        Object.keys(work.assignedEmployees).forEach((empId) => {
+                            updates[`timetrack_assignments/${empId}/${projectId}_${wId}`] = null;
+                        });
+                    }
+                });
+            }
+            await update(ref(db), updates);
+            closeProjectDetail();
+            alert("Project deleted.");
+        };
+
+        window.reassignWork = async function(projectId, workId) {
+            const project = cachedProjects.find((item) => item.id === projectId);
+            const work = project?.works?.[workId];
+            if (!project || !work) return;
+            const currentIds = new Set(Object.keys(work.assignedEmployees || {}));
+            const lines = employees.map((emp) => {
+                const checked = currentIds.has(emp.id) ? "checked" : "";
+                return `<label style='display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;'><input type='checkbox' class='reassign-cb' data-id='${emp.id}' ${checked}> ${esc(emp.name)}</label>`;
+            }).join("");
+            const overlay = document.createElement("div");
+            overlay.className = "modal-overlay show";
+            overlay.innerHTML = `
+                <div class='modal' style='width:min(420px,95%);max-height:80vh;'>
+                    <div class='modal-header'>
+                        <h2 style='flex:1;font-size:16px;'>Reassign: ${esc(work.name || "Work")}</h2>
+                        <button class='ghost-button' onclick='this.closest(".modal-overlay").remove()' type='button'>Close</button>
+                    </div>
+                    <div class='modal-body' style='overflow-y:auto;'>
+                        <div id='reassignEmployees'>${lines}</div>
+                    </div>
+                    <div class='modal-actions'>
+                        <button class='ghost-button' onclick='this.closest(".modal-overlay").remove()' type='button'>Cancel</button>
+                        <button class='primary-button' id='reassignSaveBtn' type='button'>Save</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.querySelector("#reassignSaveBtn").addEventListener("click", async () => {
+                const boxes = overlay.querySelectorAll(".reassign-cb");
+                const selected = new Set();
+                boxes.forEach((cb) => { if (cb.checked) selected.add(cb.dataset.id); });
+                if (!selected.size) { showError("Select at least one employee."); return; }
+                const updates = {};
+                const newAssigned = {};
+                selected.forEach((id) => newAssigned[id] = true);
+                updates[`timetrack_projects/${scopeId}/${projectId}/works/${workId}/assignedEmployees`] = newAssigned;
+                // Remove old
+                currentIds.forEach((empId) => {
+                    if (!selected.has(empId)) {
+                        updates[`timetrack_assignments/${empId}/${projectId}_${workId}`] = null;
+                    }
+                });
+                // Add new
+                const now = new Date().toISOString();
+                selected.forEach((empId) => {
+                    if (!currentIds.has(empId)) {
+                        updates[`timetrack_assignments/${empId}/${projectId}_${workId}`] = {
+                            assignmentId: `${projectId}_${workId}`,
+                            projectId, workId, companyId: scopeId,
+                            projectTitle: project.title || "",
+                            projectStartDate: project.startDate || "",
+                            projectEndDate: project.endDate || "",
+                            workName: work.name || "",
+                            workStartDate: work.startDate || "",
+                            workEndDate: work.endDate || "",
+                            status: work.status || "todo",
+                            assignedAt: now,
+                            assignedBy: adminName
+                        };
+                    }
+                });
+                await update(ref(db), updates);
+                overlay.remove();
+                if (currentProject && currentProject.id === projectId) {
+                    const snap = await get(ref(db, `timetrack_projects/${scopeId}/${projectId}`));
+                    if (snap.exists()) {
+                        currentProject = { id: projectId, ...snap.val() };
+                        renderDetailWorks(currentProject);
+                    }
+                }
+                alert("Work reassigned.");
+            });
+        };
+
+        window.openProjectSelector = function() {
+            const list = $("projectSelectorList");
+            list.innerHTML = cachedProjects.length ? cachedProjects.map(p => `
+                <div class="detail-work" style="cursor:pointer;margin-bottom:8px;" onclick="selectProjectForSummary('${esc(p.id)}')">
+                    <h3 style="margin:0;">${esc(p.title)}</h3>
+                    <div class="muted" style="font-size:11px;">${formatDate(p.startDate)} - ${formatDate(p.endDate)}</div>
+                </div>
+            `).join("") : `<div class="muted">No projects found.</div>`;
+            $("projectSelectorModal").classList.add("show");
+        };
+
+        window.selectProjectForSummary = function(projectId) {
+            $("projectSelectorModal").classList.remove("show");
+            getAIProjectSummary(projectId);
+        };
+
+        window.getAIProjectSummary = async function(projectId) {
+            const project = cachedProjects.find((p) => p.id === projectId);
+            if (!project) return;
+
+            $("summaryModal").classList.add("show");
+            $("summaryText").textContent = "Generating summary with AI...";
+            $("summaryChart").innerHTML = "";
+
+            const workEntries = Object.values(project.works || {});
+            const stats = { todo: 0, in_progress: 0, in_review: 0, finish: 0 };
+            workEntries.forEach(w => stats[w.status || "todo"]++);
+
+            // Simple status chart
+            const total = workEntries.length || 1;
+            $("summaryChart").innerHTML = `
+                <div style="font-weight:700;margin-bottom:12px;font-size:14px;">Work Status Distribution</div>
+                <div style="display:flex;height:24px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.05);">
+                    <div style="width:${(stats.todo / total) * 100}%;background:#8b92a0;" title="To Do: ${stats.todo}"></div>
+                    <div style="width:${(stats.in_progress / total) * 100}%;background:var(--primary);" title="In Progress: ${stats.in_progress}"></div>
+                    <div style="width:${(stats.in_review / total) * 100}%;background:#f1c40f;" title="In Review: ${stats.in_review}"></div>
+                    <div style="width:${(stats.finish / total) * 100}%;background:#4caf50;" title="Finished: ${stats.finish}"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-muted);">
+                    <span>To Do (${stats.todo})</span>
+                    <span>Working (${stats.in_progress})</span>
+                    <span>Review (${stats.in_review})</span>
+                    <span>Done (${stats.finish})</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                let summaryText = "Project Overview:\n\n";
+                summaryText += `• Total Works: ${total}\n`;
+                summaryText += `• Completed: ${stats.finish}\n`;
+                summaryText += `• In Progress: ${stats.in_progress}\n`;
+                summaryText += `• In Review: ${stats.in_review}\n`;
+                summaryText += `• To Do: ${stats.todo}\n\n`;
+
+                if (total === 0) {
+                    summaryText += "There are no works assigned to this project yet.";
+                } else if (stats.finish === total) {
+                    summaryText += "The project is fully completed. All tasks are finished.";
+                } else if (stats.in_progress > 0 || stats.in_review > 0) {
+                    summaryText += "The project is currently active and work is underway.";
+                } else {
+                    summaryText += "The project has not started yet. Tasks are waiting in the 'To Do' state.";
+                }
+
+                $("summaryText").textContent = summaryText;
+            }, 300);
         };
 
         function resetModal() {
@@ -1219,6 +1431,10 @@
                     <select class="status-select" onchange="updateWorkStatus('${esc(project.id)}', '${esc(workId)}', this.value)">
                         ${STATUS_ORDER.map((status) => `<option value="${status}" ${(work.status || "todo") === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
                     </select>
+                    <div style="display:flex;gap:4px;margin-top:6px;">
+                        <button class="ghost-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="reassignWork('${esc(project.id)}','${esc(workId)}')" type="button">Reassign</button>
+                        <button class="ghost-button danger-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="deleteWork('${esc(project.id)}','${esc(workId)}')" type="button">Delete</button>
+                    </div>
                 </div>
             `).join("");
         }
