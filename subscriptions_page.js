@@ -3,7 +3,7 @@ import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/fireb
 
 const role = localStorage.getItem("role") || "";
 const isAdmin = localStorage.getItem("admin") === "true";
-const retiredSubscriptionFeatures = new Set(["timetrack", "projects"]);
+const retiredSubscriptionFeatures = new Set(["projects"]);
 
 if (!isAdmin || role === "super_admin") {
     // Super admin keeps the inline company subscription manager.

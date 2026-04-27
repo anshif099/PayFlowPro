@@ -5,7 +5,7 @@
     const impersonatorRole = localStorage.getItem("impersonator_role");
     const currentPage = window.location.pathname.split('/').pop() || '';
     const canManageBranches = role === "super_admin" || role === "company_admin";
-    const retiredModuleHrefs = new Set(['timetrack.html', 'projects.html']);
+    const retiredModuleHrefs = new Set(['projects.html']);
     let isNormalizingBranchLinks = false;
 
     // Feature Mapping (Must match TierManagementPage in Flutter/Web)
@@ -16,6 +16,8 @@
         'nav-interval-management': 'interval',
         'nav-intervals-history': 'interval',
         'intervalDropdown': 'interval',
+        'timetrack.html': 'timetrack',
+        'nav-timetrack': 'timetrack',
         'attendance.html': 'attendance',
         'leave_management.html': 'leaves',
         'salary_settings.html': 'salary',
@@ -196,6 +198,68 @@
         setTimeout(normalizeStatutoryLinks, 500);
         window.addEventListener('load', normalizeStatutoryLinks);
         document.addEventListener('DOMContentLoaded', normalizeStatutoryLinks);
+    }
+
+    function createTimeTrackNavItem() {
+        const item = document.createElement('a');
+        item.href = 'timetrack.html';
+        item.className = 'nav-item';
+        item.id = 'nav-timetrack';
+        item.innerHTML = `
+            <span class="nav-icon">&#9201;</span>
+            <span data-i18n="timetrack">TimeTrack</span>
+        `;
+        return item;
+    }
+
+    function normalizeTimeTrackLinks() {
+        const containers = document.querySelectorAll('.sidebar-nav');
+        const isActivePage = currentPage === 'timetrack.html';
+
+        containers.forEach(container => {
+            let timeTrackLink = container.querySelector('#nav-timetrack, a[href="timetrack.html"]');
+
+            if (!timeTrackLink) {
+                timeTrackLink = createTimeTrackNavItem();
+
+                const intervalsHistoryLink = container.querySelector('a[href="intervals_history.html"]');
+                const salarySettingsLink = container.querySelector('a[href="salary_settings.html"]');
+
+                if (intervalsHistoryLink) {
+                    intervalsHistoryLink.insertAdjacentElement('afterend', timeTrackLink);
+                } else if (salarySettingsLink) {
+                    salarySettingsLink.insertAdjacentElement('beforebegin', timeTrackLink);
+                } else {
+                    container.appendChild(timeTrackLink);
+                }
+            }
+
+            timeTrackLink.setAttribute('href', 'timetrack.html');
+            timeTrackLink.id = 'nav-timetrack';
+
+            const labelEl = timeTrackLink.querySelector('span[data-i18n]') ||
+                Array.from(timeTrackLink.querySelectorAll('span')).find(span => !span.classList.contains('nav-icon'));
+
+            if (labelEl) {
+                labelEl.setAttribute('data-i18n', 'timetrack');
+                labelEl.textContent = typeof t === 'function' ? t('timetrack') : 'TimeTrack';
+            }
+
+            if (isActivePage) {
+                timeTrackLink.classList.add('active');
+            } else {
+                timeTrackLink.classList.remove('active');
+            }
+        });
+    }
+
+    function scheduleTimeTrackLinkNormalization() {
+        normalizeTimeTrackLinks();
+        setTimeout(normalizeTimeTrackLinks, 0);
+        setTimeout(normalizeTimeTrackLinks, 100);
+        setTimeout(normalizeTimeTrackLinks, 500);
+        window.addEventListener('load', normalizeTimeTrackLinks);
+        document.addEventListener('DOMContentLoaded', normalizeTimeTrackLinks);
     }
 
     if (impersonatorRole === 'super_admin' || impersonatorRole === 'company_admin') {
@@ -401,6 +465,7 @@
     }
 
     // Schedule role visibility to run at multiple points to handle any load timing
+    scheduleTimeTrackLinkNormalization();
     applyRoleVisibility();
     setTimeout(applyRoleVisibility, 0);
     setTimeout(applyRoleVisibility, 100);

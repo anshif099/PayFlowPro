@@ -3,9 +3,23 @@
     const defaultPrimary = '#00ffc3';
     const defaultPrimaryHover = '#00e6af';
 
+    function getSavedTheme() {
+        const theme =
+            localStorage.getItem('admin_theme') ||
+            localStorage.getItem('adminTheme') ||
+            localStorage.getItem('theme') ||
+            'dark';
+
+        const normalized = theme === 'light' ? 'light' : 'dark';
+        localStorage.setItem('admin_theme', normalized);
+        localStorage.setItem('adminTheme', normalized);
+        localStorage.setItem('theme', normalized);
+        return normalized;
+    }
+
     // Initialize Theme
     function initTheme() {
-        const theme = localStorage.getItem('admin_theme') || 'dark';
+        const theme = getSavedTheme();
         const applyBodyClass = () => {
             if (theme === 'light') {
                 document.body.classList.add('light-mode');
@@ -301,9 +315,13 @@
     // Export functions globally
     window.themeManager = {
         init: initTheme,
+        getTheme: getSavedTheme,
         setTheme: function(type) {
-            localStorage.setItem('admin_theme', type);
-            if (type === 'light') {
+            const normalized = type === 'light' ? 'light' : 'dark';
+            localStorage.setItem('admin_theme', normalized);
+            localStorage.setItem('adminTheme', normalized);
+            localStorage.setItem('theme', normalized);
+            if (normalized === 'light') {
                 document.body.classList.add('light-mode');
             } else {
                 document.body.classList.remove('light-mode');

@@ -1264,7 +1264,9 @@
             window.themeManager.setTheme(isDark ? 'dark' : 'light');
         };
 
-        const currentTheme = localStorage.getItem('admin_theme') || 'dark';
+        const currentTheme = window.themeManager && typeof window.themeManager.getTheme === 'function'
+            ? window.themeManager.getTheme()
+            : (localStorage.getItem('admin_theme') || localStorage.getItem('adminTheme') || localStorage.getItem('theme') || 'dark');
         document.getElementById('themeToggle').checked = currentTheme === 'dark';
 
         const colorPicker = document.getElementById('colorPrimaryPicker');

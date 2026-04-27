@@ -538,7 +538,8 @@
         };
 
         fetchMarketplace();
-        if (localStorage.getItem("theme") === "light") document.body.classList.add("light-mode");
+        const savedAdminTheme = localStorage.getItem("admin_theme") || localStorage.getItem("adminTheme") || localStorage.getItem("theme") || "dark";
+        if (savedAdminTheme === "light") document.body.classList.add("light-mode");
     </script>
 </body>
 </html>

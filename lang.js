@@ -1840,12 +1840,26 @@ function injectThemeStyles() {
 
 window.toggleTheme = function () {
     const isLight = document.body.classList.toggle('light-mode');
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    const nextTheme = isLight ? 'light' : 'dark';
+    if (window.themeManager && typeof window.themeManager.setTheme === 'function') {
+        window.themeManager.setTheme(nextTheme);
+    } else {
+        localStorage.setItem('admin_theme', nextTheme);
+        localStorage.setItem('adminTheme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
+    }
 }
 
 function applyTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
+    const savedTheme = localStorage.getItem('admin_theme') ||
+        localStorage.getItem('adminTheme') ||
+        localStorage.getItem('theme') ||
+        'dark';
+    const normalized = savedTheme === 'light' ? 'light' : 'dark';
+    localStorage.setItem('admin_theme', normalized);
+    localStorage.setItem('adminTheme', normalized);
+    localStorage.setItem('theme', normalized);
+    if (normalized === 'light') {
         document.body.classList.add('light-mode');
     } else {
         document.body.classList.remove('light-mode');

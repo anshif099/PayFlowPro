@@ -330,11 +330,22 @@
 
     if (localStorage.getItem("admin") !== "true") location = "index.html";
     const now = new Date(); $("salaryMonth").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    if (localStorage.getItem("adminTheme") === "light") document.body.classList.add("light-mode");
+    const savedAdminTheme = localStorage.getItem("admin_theme") || localStorage.getItem("adminTheme") || localStorage.getItem("theme") || "dark";
+    const normalizedAdminTheme = savedAdminTheme === "light" ? "light" : "dark";
+    localStorage.setItem("admin_theme", normalizedAdminTheme);
+    localStorage.setItem("adminTheme", normalizedAdminTheme);
+    localStorage.setItem("theme", normalizedAdminTheme);
+    if (normalizedAdminTheme === "light") document.body.classList.add("light-mode");
 
     window.toggleSidebar = () => $("sidebar").classList.toggle("open");
     window.logout = () => { localStorage.clear(); location = "index.html"; };
-    window.toggleTheme = () => { document.body.classList.toggle("light-mode"); localStorage.setItem("adminTheme", document.body.classList.contains("light-mode") ? "light" : "dark"); };
+    window.toggleTheme = () => {
+      document.body.classList.toggle("light-mode");
+      const nextTheme = document.body.classList.contains("light-mode") ? "light" : "dark";
+      localStorage.setItem("admin_theme", nextTheme);
+      localStorage.setItem("adminTheme", nextTheme);
+      localStorage.setItem("theme", nextTheme);
+    };
     window.toggleLinkFields = () => {};
 
     onValue(ref(db, "settings/currencySymbol"), (snapshot) => {
