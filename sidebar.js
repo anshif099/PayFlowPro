@@ -5,7 +5,7 @@
     const impersonatorRole = localStorage.getItem("impersonator_role");
     const currentPage = window.location.pathname.split('/').pop() || '';
     const canManageBranches = role === "super_admin" || role === "company_admin";
-    const retiredModuleHrefs = new Set(['projects.html']);
+    const retiredModuleHrefs = new Set();
     let isNormalizingBranchLinks = false;
 
     // Feature Mapping (Must match TierManagementPage in Flutter/Web)
