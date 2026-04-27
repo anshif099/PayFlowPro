@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Management - PayFlow Pro</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -509,6 +508,7 @@
         }
 
         const renderLeaveTables = () => {
+            console.log('[DEBUG renderLeaveTables] Called. leaveRequestsRaw length:', leaveRequestsRaw.length, 'employeesLoaded:', employeesLoaded);
             const pendingData = document.getElementById('pendingLeavesData');
             const historyData = document.getElementById('leaveHistoryData');
             pendingData.innerHTML = "";
@@ -521,7 +521,10 @@
                 const req = item.v;
                 const id = item.k;
 
-                if (!allowedEmpIds.has(req.employeeId)) return;
+                // Improved Filtering to match Dashboard logic
+                if (!allowedEmpIds.has(req.employeeId) && !allowedEmpIds.has(id)) {
+                    return;
+                }
 
                 let approvedDays = 0;
                 if (req.fromDate) {
@@ -530,7 +533,7 @@
                     const reqYear = reqDate.getFullYear();
                     leaveRequestsRaw.forEach(pastItem => {
                         const pReq = pastItem.v;
-                        if (pReq.employeeId === req.employeeId && pReq.status === 'approved' && pReq.fromDate) {
+                        if ((pReq.employeeId === req.employeeId || pReq.employeeId === id) && pReq.status === 'approved' && pReq.fromDate) {
                             const pDate = new Date(pReq.fromDate);
                             if (pDate.getMonth() === reqMonth && pDate.getFullYear() === reqYear) {
                                 approvedDays += parseInt(pReq.days || 0);
@@ -547,13 +550,13 @@
 
                     if (leaveType === 'sick') {
                         actionButtons = `
-                            <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','sick','${req.fromDate}','${req.toDate}',true)">✓ Paid</button>
-                            <button class="btn-small" style="margin-right:4px;background:#ffa726;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','sick','${req.fromDate}','${req.toDate}',false)">✓ Unpaid</button>
+                            <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId || id}','sick','${req.fromDate}','${req.toDate}',true)">✓ Paid</button>
+                            <button class="btn-small" style="margin-right:4px;background:#ffa726;color:#000" onclick="window.approveLeave('${id}','${req.employeeId || id}','sick','${req.fromDate}','${req.toDate}',false)">✓ Unpaid</button>
                             <button class="btn-danger btn-small" onclick="window.rejectLeave('${id}')">✗ Reject</button>
                         `;
                     } else {
                         actionButtons = `
-                            <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','${leaveType}','${req.fromDate}','${req.toDate}',null)">✓ Approve</button>
+                            <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId || id}','${leaveType}','${req.fromDate}','${req.toDate}',null)">✓ Approve</button>
                             <button class="btn-danger btn-small" onclick="window.rejectLeave('${id}')">✗ Reject</button>
                         `;
                     }
@@ -604,43 +607,38 @@
             if (!hasHistory) historyData.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No leave history available</td></tr>';
         };
 
-        onValue(ref(db, "admins"), adminsSnap => {
-            const branchAdminBranches = new Set();
-            if (adminsSnap.exists()) {
-                adminsSnap.forEach(a => {
-                    const admin = a.val();
-                    if (admin.role === 'branch_admin' && admin.branch) branchAdminBranches.add(admin.branch);
+        onValue(ref(db, "employees"), s => {
+            console.log('[DEBUG employees] Triggered. s.exists():', s.exists());
+            allowedEmpIds.clear();
+            if (s.exists()) {
+                s.forEach(c => {
+                    const e = c.val();
+                    let allow = true;
+                    const empBranch = (e.branch || "").trim().toLowerCase();
+                    const empCompanyId = (e.companyId || "").trim().toLowerCase();
+                    const sessionBranch = (adminBranch || "").trim().toLowerCase();
+                    const sessionCompanyId = (companyId || "").trim().toLowerCase();
+
+                    if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
+                        allow = false;
+                    } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId)) {
+                        // Company Admin sees all employees in their company, regardless of branch admin presence
+                        allow = false;
+                    } else if (adminRole === 'super_admin' && sessionCompanyId && empCompanyId !== sessionCompanyId && empCompanyId !== "") {
+                        allow = false;
+                    } else if (adminRole === 'company_admin' && empCompanyId === sessionCompanyId) {
+                        allow = true;
+                    }
+
+                    if (allow) {
+                        allowedEmpIds.add(c.key);
+                        if (e.empId) allowedEmpIds.add(e.empId);
+                    }
                 });
             }
-
-            onValue(ref(db, "employees"), s => {
-                allowedEmpIds.clear();
-                if (s.exists()) {
-                    s.forEach(c => {
-                        const e = c.val();
-                        let allow = true;
-                        const empBranch = (e.branch || "").trim().toLowerCase();
-                        const empCompanyId = (e.companyId || "").trim().toLowerCase();
-                        const sessionBranch = (adminBranch || "").trim().toLowerCase();
-                        const sessionCompanyId = (companyId || "").trim().toLowerCase();
-
-                        if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
-                            allow = false;
-                        } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(e.branch))) {
-                            allow = false;
-                        } else if (adminRole === 'super_admin' && sessionCompanyId && empCompanyId !== sessionCompanyId && empCompanyId !== "") {
-                            allow = false;
-                        }
-
-                        if (allow) {
-                            allowedEmpIds.add(c.key);
-                            if (e.empId) allowedEmpIds.add(e.empId);
-                        }
-                    });
-                }
-                employeesLoaded = true;
-                renderLeaveTables();
-            });
+            console.log('[DEBUG employees] Loaded. allowedEmpIds size:', allowedEmpIds.size);
+            employeesLoaded = true;
+            renderLeaveTables();
         });
 
         const configPath = (adminRole === 'branch_admin' && adminBranch)
@@ -670,11 +668,16 @@
         };
 
         onValue(ref(db, "leaveRequests"), s => {
+            console.log('[DEBUG leaveRequests] Triggered. s.exists():', s.exists());
             leaveRequestsRaw = [];
             if (s.exists()) {
-                s.forEach(c => leaveRequestsRaw.push({ k: c.key, v: c.val() }));
+                s.forEach(c => {
+                    console.log('[DEBUG leaveRequests] Item:', c.key, c.val().status);
+                    leaveRequestsRaw.push({ k: c.key, v: c.val() });
+                });
                 leaveRequestsRaw.sort((a, b) => new Date(b.v.requestedAt || 0) - new Date(a.v.requestedAt || 0));
             }
+            console.log('[DEBUG leaveRequests] Total items:', leaveRequestsRaw.length);
             renderLeaveTables();
         });
 
