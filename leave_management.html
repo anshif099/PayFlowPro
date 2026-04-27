@@ -4,181 +4,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leave Management - Teamsive Admin</title>
+    <title>Leave Management - PayFlow Pro</title>
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="theme.js"></script>
-    <script src="lang.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
-            --primary-hover: #00e6af;
-            --bg-dark: #0b0f14;
+            --primary-hover: #00e6b0;
+            --bg-dark: #0b0e11;
             --bg-card: #141a22;
             --bg-input: #0f151d;
             --text: #ffffff;
-            --text-muted: #8b92a0;
-            --border: #1e2530;
-            --success: #00ffc3;
+            --text-muted: #8a94a6;
+            --border: rgba(255, 255, 255, 0.1);
             --danger: #ff5c5c;
-            --warning: #ffa726;
-            --sidebar-width: 260px;
-        }
-
-        body.light-mode {
-            --bg-dark: #f0f2f5;
-            --bg-card: #ffffff;
-            --bg-input: #f8f9fa;
-            --text: #1a1d21;
-            --text-muted: #6c757d;
-            --border: #e9ecef;
+            --success: #00ffc3;
+            --warning: #ffa726
         }
 
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: var(--bg-dark);
+            background-color: var(--bg-dark);
             color: var(--text);
-            overflow-x: hidden
+            display: flex;
+            min-height: 100vh
         }
 
         .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: var(--bg-card);
+            width: 260px;
+            background-color: var(--bg-card);
             border-right: 1px solid var(--border);
-            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
             z-index: 100;
-            overflow-y: auto;
-            transition: transform .3s ease
+            transition: all .3s ease
         }
 
         .sidebar-header {
-            padding: 0 24px 24px;
+            padding: 24px;
             border-bottom: 1px solid var(--border)
         }
 
         .sidebar-header h2 {
-            color: var(--primary);
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px
+            color: var(--primary);
+            letter-spacing: -0.5px
         }
 
         .sidebar-nav {
-            margin-top: 24px;
-            padding: 0 12px
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
             padding: 12px 16px;
-            margin-bottom: 4px;
-            border-radius: 8px;
             color: var(--text-muted);
-            cursor: pointer;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
             transition: all .2s ease;
-            font-weight: 500;
-            font-size: 14px;
-            text-decoration: none
+            gap: 12px
         }
 
-        .nav-item:hover {
-            background: var(--primary-hover-bg);
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(0, 255, 195, .1);
             color: var(--primary)
         }
 
-        .nav-item.active {
-            background: var(--primary-active-bg);
-            color: var(--primary);
-            font-weight: 600
-        }
-
         .nav-icon {
-            width: 20px;
-            height: 20px;
             font-size: 18px
         }
 
         .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            transition: margin-left .3s ease
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column
         }
 
         .top-bar {
-            background: var(--bg-card);
             padding: 20px 32px;
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 50
+            z-index: 90
         }
 
         .top-bar h1 {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600
         }
 
-        .top-bar-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center
-        }
-
-        .menu-toggle {
-            display: none;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px
-        }
-
         .dashboard-section {
-            padding: 32px
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%
         }
 
         .card {
             background: var(--bg-card);
             border-radius: 16px;
-            padding: 28px;
+            border: 1px solid var(--border);
+            padding: 24px;
             margin-bottom: 24px;
-            border: 1px solid var(--border)
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .2)
         }
 
         .card h3 {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 20px;
-            color: var(--text)
+            display: flex;
+            align-items: center;
+            gap: 10px
         }
 
         button {
             padding: 12px 24px;
             background: var(--primary);
-            color: #000;
             border: none;
             border-radius: 8px;
+            color: var(--bg-dark);
             font-weight: 600;
-            font-size: 14px;
             cursor: pointer;
             transition: all .2s ease;
+            font-size: 14px;
             font-family: inherit
         }
 
@@ -310,77 +278,11 @@
                 <option value="ar">العربية</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-      </select>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+            </select>
         </div>
-            <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
-        <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
-        <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
                 <span class="nav-icon">📊</span>
@@ -396,19 +298,19 @@
             </a>
             
             <!-- Employees Dropdown -->
-            <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
+            <div class="nav-item" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer; display: flex; justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <span class="nav-icon">👥</span>
                     <span data-i18n="employees">Employees</span>
                 </div>
                 <span class="chevron">▼</span>
             </div>
-            <div class="nav-dropdown" id="empDropdown">
-                <a href="view_employees.html" class="nav-item" id="nav-view-employees">
+            <div id="empDropdown" style="display: none; flex-direction: column; padding-left: 32px;">
+                <a href="view_employees.html" class="nav-item">
                     <span class="nav-icon">📜</span>
                     <span>List Employees</span>
                 </a>
-                <a href="employees.html" class="nav-item" id="nav-manage-employees">
+                <a href="employees.html" class="nav-item">
                     <span class="nav-icon">✏️</span>
                     <span>Manage Employees</span>
                 </a>
@@ -475,7 +377,6 @@
                 <h1 data-i18n="leave_management">Leave Management</h1>
             </div>
             <div class="top-bar-actions">
-                
                 <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
             </div>
         </div>
@@ -484,14 +385,10 @@
             <div class="card">
                 <h3 data-i18n="leave_configuration">Leave Configuration</h3>
                 <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="leave_config_desc">
-                    Configure monthly paid leave
-                    settings for all employees</p>
-                <div
-                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
+                    Configure monthly paid leave settings for all employees</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
                     <div style="display:flex;flex-direction:column;gap:8px">
-                        <label style="font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:4px"
-                            data-i18n="paid_leaves_per_month">Paid
-                            Leaves Per Month</label>
+                        <label style="font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:4px" data-i18n="paid_leaves_per_month">Paid Leaves Per Month</label>
                         <input type="number" id="paidLeavesPerMonth" placeholder="e.g., 2" min="0" max="31"
                             style="width:100%;padding:12px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;transition:all .2s ease;font-family:inherit">
                     </div>
@@ -501,9 +398,6 @@
 
             <div class="card">
                 <h3 data-i18n="pending_requests">Pending Leave Requests</h3>
-                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px" data-i18n="pending_requests_desc">
-                    Review and manage employee leave
-                    requests</p>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -520,10 +414,7 @@
                         </thead>
                         <tbody id="pendingLeavesData">
                             <tr>
-                                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)"
-                                    data-i18n="no_pending_requests">
-                                    No pending leave requests
-                                </td>
+                                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)" data-i18n="no_pending_requests">No pending leave requests</td>
                             </tr>
                         </tbody>
                     </table>
@@ -554,10 +445,7 @@
                         </thead>
                         <tbody id="leaveHistoryData">
                             <tr>
-                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)"
-                                    data-i18n="no_leave_history">
-                                    No leave history available
-                                </td>
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)" data-i18n="no_leave_history">No leave history available</td>
                             </tr>
                         </tbody>
                     </table>
@@ -585,16 +473,21 @@
         if (localStorage.getItem("admin") !== "true") { location = "index.html" }
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open') };
         window.logout = () => { localStorage.clear(); location = "index.html" };
-
-        // --- AUTH & BRANCH FILTERING ---
-        const allowedEmpIds = new Set();
-        // Global data storage for race condition handling
-        let leaveRequestsRaw = [];
-        let employeesLoaded = false;
+        window.toggleDropdown = (id, el) => {
+            const dropdown = document.getElementById(id);
+            const isShowing = dropdown.style.display === 'flex';
+            dropdown.style.display = isShowing ? 'none' : 'flex';
+            el.querySelector('.chevron').innerText = isShowing ? '▼' : '▲';
+        };
 
         const adminRole = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const adminName = localStorage.getItem("adminName") || "Admin";
+        const companyId = localStorage.getItem("companyId");
+
+        const allowedEmpIds = new Set();
+        let leaveRequestsRaw = [];
+        let employeesLoaded = false;
 
         window.selectedDate = new Date().toISOString().split('T')[0];
         document.getElementById('historyDateFilter').value = window.selectedDate;
@@ -606,28 +499,18 @@
             }
         };
 
-        // --- Sidebar Logic ---
-        (function(){
-            if (adminRole === 'super_admin') {
-                const el1 = document.getElementById('nav-manage-companies'); if (el1) el1.style.display = 'flex';
-                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
-            } else if (adminRole === 'company_admin') {
-                const el2 = document.getElementById('nav-manage-branches'); if (el2) el2.style.display = 'flex';
-                const el3 = document.getElementById('nav-branch-admins'); if (el3) el3.style.display = 'flex';
-            }
-        })();
+        if (adminRole === 'super_admin') {
+            document.getElementById('nav-manage-companies').style.display = 'flex';
+            document.getElementById('nav-manage-branches').style.display = 'flex';
+            document.getElementById('nav-branch-admins').style.display = 'flex';
+        } else if (adminRole === 'company_admin') {
+            document.getElementById('nav-manage-branches').style.display = 'flex';
+            document.getElementById('nav-branch-admins').style.display = 'flex';
+        }
 
-        // Render Function
         const renderLeaveTables = () => {
-            console.log('[DEBUG renderLeaveTables] Called. leaveRequestsRaw length:', leaveRequestsRaw.length, 'employeesLoaded:', employeesLoaded, 'adminRole:', adminRole, 'allowedEmpIds size:', allowedEmpIds.size);
-            if (leaveRequestsRaw.length > 0) {
-                console.log('[DEBUG renderLeaveTables] First item:', JSON.stringify(leaveRequestsRaw[0]));
-            }
             const pendingData = document.getElementById('pendingLeavesData');
             const historyData = document.getElementById('leaveHistoryData');
-
-            // Clear current content
             pendingData.innerHTML = "";
             historyData.innerHTML = "";
 
@@ -638,11 +521,7 @@
                 const req = item.v;
                 const id = item.k;
 
-                // Admin Filter
-                const sessionCompanyId = (localStorage.getItem("companyId") || "").trim().toLowerCase();
-                if (!allowedEmpIds.has(req.employeeId)) {
-                    return;
-                }
+                if (!allowedEmpIds.has(req.employeeId)) return;
 
                 let approvedDays = 0;
                 if (req.fromDate) {
@@ -662,12 +541,10 @@
 
                 if (req.status === 'pending') {
                     hasPending = true;
-
                     const leaveTypeLabel = req.leaveTypeLabel || 'Paid Leave';
                     const leaveType = req.leaveType || 'paid';
                     let actionButtons = '';
 
-                    // Construct action buttons
                     if (leaveType === 'sick') {
                         actionButtons = `
                             <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','sick','${req.fromDate}','${req.toDate}',true)">✓ Paid</button>
@@ -692,7 +569,7 @@
                             <td>${req.toDate}</td>
                             <td>${req.days}</td>
                             <td>${req.reason || '-'}</td>
-                            <td><span class="badge-pending" style="color:#ffa726;background:rgba(255,167,38,.15);padding:4px 8px;border-radius:4px;font-size:12px;text-transform:uppercase">Pending</span></td>
+                            <td><span style="color:#ffa726;background:rgba(255,167,38,.15);padding:4px 8px;border-radius:4px;font-size:12px;text-transform:uppercase">Pending</span></td>
                             <td><div style="display:flex;flex-wrap:wrap;gap:4px">${actionButtons}</div></td>
                         </tr>
                     `;
@@ -705,7 +582,6 @@
                         hasHistory = true;
                         const statusColor = req.status === 'approved' ? '#00ffc3' : '#ff5c5c';
                         const statusBg = req.status === 'approved' ? 'rgba(0,255,195,0.15)' : 'rgba(255,92,92,0.15)';
-
                         historyData.innerHTML += `
                             <tr>
                                 <td>
@@ -728,15 +604,12 @@
             if (!hasHistory) historyData.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No leave history available</td></tr>';
         };
 
-        // Fetch Employees to build whitelist
         onValue(ref(db, "admins"), adminsSnap => {
             const branchAdminBranches = new Set();
             if (adminsSnap.exists()) {
                 adminsSnap.forEach(a => {
                     const admin = a.val();
-                    if (admin.role === 'branch_admin' && admin.branch) {
-                        branchAdminBranches.add(admin.branch);
-                    }
+                    if (admin.role === 'branch_admin' && admin.branch) branchAdminBranches.add(admin.branch);
                 });
             }
 
@@ -746,199 +619,71 @@
                     s.forEach(c => {
                         const e = c.val();
                         let allow = true;
-                        const companyId = localStorage.getItem("companyId");
                         const empBranch = (e.branch || "").trim().toLowerCase();
                         const empCompanyId = (e.companyId || "").trim().toLowerCase();
                         const sessionBranch = (adminBranch || "").trim().toLowerCase();
                         const sessionCompanyId = (companyId || "").trim().toLowerCase();
 
-                        const empBranchName = (e.branch || "").trim();
                         if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
-                        } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
+                        } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(e.branch))) {
                             allow = false;
-                        } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+                        } else if (adminRole === 'super_admin' && sessionCompanyId && empCompanyId !== sessionCompanyId && empCompanyId !== "") {
                             allow = false;
                         }
+
                         if (allow) {
-                            allowedEmpIds.add(c.key); // Always add Firebase UID (UID)
-                            if (e.empId) allowedEmpIds.add(e.empId); // Also add custom ID if exists
+                            allowedEmpIds.add(c.key);
+                            if (e.empId) allowedEmpIds.add(e.empId);
                         }
                     });
                 }
                 employeesLoaded = true;
-                console.log('[DEBUG employees] Loaded. allowedEmpIds:', [...allowedEmpIds]);
                 renderLeaveTables();
             });
         });
 
-        // Config Path Logic
         const configPath = (adminRole === 'branch_admin' && adminBranch)
             ? `settings/branches/${adminBranch}/leaveConfig`
             : (adminRole === 'company_admin' && companyId)
                 ? `settings/companies/${companyId}/leaveConfig`
                 : `settings/leaveConfig`;
 
-        // Load leave configuration
         onValue(ref(db, configPath), s => {
             const el = document.getElementById('paidLeavesPerMonth');
             if (s.exists()) {
-                const config = s.val();
-                el.value = config.paidLeavesPerMonth || 0;
+                el.value = s.val().paidLeavesPerMonth || 0;
             } else {
-                // Fallback for company/branch admin to global settings if specifically not set for them
                 if (configPath !== 'settings/leaveConfig') {
                     get(ref(db, 'settings/leaveConfig')).then(gs => {
-                        if (gs.exists() && !document.getElementById('paidLeavesPerMonth').value) {
-                             document.getElementById('paidLeavesPerMonth').value = gs.val().paidLeavesPerMonth || 0;
-                        }
+                        if (gs.exists()) el.value = gs.val().paidLeavesPerMonth || 0;
                     });
                 }
                 el.value = 0;
             }
         });
 
-        // Save leave configuration
         window.saveLeaveConfig = () => {
-            const paidLeaves = parseInt(document.getElementById('paidLeavesPerMonth').value) || 0;
-            if (paidLeaves < 0 || paidLeaves > 31) {
-                alert('Please enter a valid number between 0 and 31');
-                return;
-            }
-            set(ref(db, configPath), { paidLeavesPerMonth: paidLeaves });
-            alert(`Leave configuration saved!`);
+            const val = parseInt(document.getElementById('paidLeavesPerMonth').value) || 0;
+            if (val < 0 || val > 31) return alert('Invalid range (0-31)');
+            set(ref(db, configPath), { paidLeavesPerMonth: val }).then(() => alert('Saved!'));
         };
 
-        // Load leave requests
         onValue(ref(db, "leaveRequests"), s => {
-            // New Logic to fix race condition
             leaveRequestsRaw = [];
-            console.log('[DEBUG leaveRequests] Snapshot exists:', s.exists());
             if (s.exists()) {
-                s.forEach(c => {
-                    console.log('[DEBUG leaveRequests] key:', c.key, 'val:', JSON.stringify(c.val()));
-                    leaveRequestsRaw.push({ k: c.key, v: c.val() });
-                });
-                // Sort descending by requestedAt
+                s.forEach(c => leaveRequestsRaw.push({ k: c.key, v: c.val() }));
                 leaveRequestsRaw.sort((a, b) => new Date(b.v.requestedAt || 0) - new Date(a.v.requestedAt || 0));
             }
-            console.log('[DEBUG leaveRequests] Total loaded:', leaveRequestsRaw.length);
             renderLeaveTables();
-            return;
-
-            // Old Logic (Dead Code)
-            const pendingData = document.getElementById('pendingLeavesData');
-            const historyData = document.getElementById('leaveHistoryData');
-            pendingData.innerHTML = "";
-            historyData.innerHTML = "";
-            let hasPending = false;
-            let hasHistory = false;
-
-            if (s.exists()) {
-                const arr = [];
-                s.forEach(c => arr.push({ k: c.key, v: c.val() }));
-                // Sort descending by requestedAt
-                arr.sort((a, b) => new Date(b.v.requestedAt || 0) - new Date(a.v.requestedAt || 0));
-
-                arr.forEach(item => {
-                    const req = item.v;
-                    const id = item.k;
-
-                    // Branch Filter
-                    if (adminRole === 'branch_admin' && !allowedEmpIds.has(req.employeeId)) return;
-
-                    if (req.status === 'pending') {
-                        hasPending = true;
-                    // Calculate approved days in the same month
-                    let approvedDays = 0;
-                    if (req.fromDate) {
-                        const reqDate = new Date(req.fromDate);
-                        const reqMonth = reqDate.getMonth();
-                        const reqYear = reqDate.getFullYear();
-                        
-                        leaveRequestsRaw.forEach(pastItem => {
-                            const pReq = pastItem.v;
-                            if (pReq.employeeId === req.employeeId && pReq.status === 'approved' && pReq.fromDate) {
-                                const pDate = new Date(pReq.fromDate);
-                                if (pDate.getMonth() === reqMonth && pDate.getFullYear() === reqYear) {
-                                    approvedDays += parseInt(pReq.days || 0);
-                                }
-                            }
-                        });
-                    }
-                        const leaveTypeLabel = req.leaveTypeLabel || 'Paid Leave';
-                        const leaveType = req.leaveType || 'paid';
-                        let actionButtons = '';
-
-                        // Construct action buttons based on leave type
-                        if (leaveType === 'sick') {
-                            actionButtons = `
-                                <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','sick','${req.fromDate}','${req.toDate}',true)">✓ Paid</button>
-                                <button class="btn-small" style="margin-right:4px;background:#ffa726;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','sick','${req.fromDate}','${req.toDate}',false)">✓ Unpaid</button>
-                                <button class="btn-danger btn-small" onclick="window.rejectLeave('${id}')">✗ Reject</button>
-                            `;
-                        } else {
-                            actionButtons = `
-                                <button class="btn-small" style="margin-right:4px;background:#00ffc3;color:#000" onclick="window.approveLeave('${id}','${req.employeeId}','${leaveType}','${req.fromDate}','${req.toDate}',null)">✓ Approve</button>
-                                <button class="btn-danger btn-small" onclick="window.rejectLeave('${id}')">✗ Reject</button>
-                            `;
-                        }
-
-                        // Append to Pending Table
-                        pendingData.innerHTML += `
-                            <tr>
-                                <td>
-                                ${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}
-                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Taken this month: ${approvedDays}</div>
-                            </td>
-                                <td><span style="background:rgba(255,167,38,.15);color:#ffa726;padding:4px 8px;border-radius:4px;font-size:12px">${leaveTypeLabel}</span></td>
-                                <td>${req.fromDate}</td>
-                                <td>${req.toDate}</td>
-                                <td>${req.days}</td>
-                                <td>${req.reason || '-'}</td>
-                                <td><span style="color:#ffa726;background:rgba(255,167,38,.15);padding:4px 8px;border-radius:4px;font-size:12px;text-transform:uppercase">Pending</span></td>
-                                <td><div style="display:flex;flex-wrap:wrap;gap:4px">${actionButtons}</div></td>
-                            </tr>
-                        `;
-                    } else {
-                        hasHistory = true;
-                        const statusColor = req.status === 'approved' ? '#00ffc3' : '#ff5c5c';
-                        const statusBg = req.status === 'approved' ? 'rgba(0,255,195,0.15)' : 'rgba(255,92,92,0.15)';
-
-                        // Append to History Table
-                        historyData.innerHTML += `
-                            <tr>
-                                <td>
-                                ${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}
-                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Taken this month: ${approvedDays}</div>
-                            </td>
-                                <td>${req.leaveTypeLabel || 'Paid Leave'}</td>
-                                <td>${req.fromDate}</td>
-                                <td>${req.toDate}</td>
-                                <td>${req.days}</td>
-                                <td><span style="color:${statusColor};background:${statusBg};padding:4px 12px;border-radius:20px;font-weight:600;font-size:12px;text-transform:uppercase">${req.status}</span></td>
-                                <td>${req.actionAt ? new Date(req.actionAt).toLocaleDateString() : '-'}</td>
-                            </tr>
-                        `;
-                    }
-                });
-            }
-
-            if (!hasPending) pendingData.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">No pending leave requests</td></tr>';
-            if (!hasHistory) historyData.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No leave history available</td></tr>';
         });
 
         window.approveLeave = async (reqId, empId, type, from, to, isPaid) => {
-            if (adminRole === 'branch_admin' && !allowedEmpIds.has(empId)) { alert("Access Denied"); return; }
-
-            let msg = 'Approve this leave request?';
-            if (type === 'sick' && isPaid !== null) msg = isPaid ? 'Approve as PAID?' : 'Approve as UNPAID?';
-            if (!confirm(msg)) return;
-
+            if (!confirm('Approve?')) return;
             try {
-                let attendanceStatus = 'paid-leave';
-                if (type === 'unpaid') attendanceStatus = 'unpaid-leave';
-                if (type === 'sick') attendanceStatus = (isPaid === false) ? 'unpaid-leave' : 'sick-leave';
+                let status = 'paid-leave';
+                if (type === 'unpaid') status = 'unpaid-leave';
+                if (type === 'sick') status = (isPaid === false) ? 'unpaid-leave' : 'sick-leave';
 
                 const updates = {};
                 updates[`leaveRequests/${reqId}/status`] = 'approved';
@@ -949,9 +694,8 @@
                 const start = new Date(from);
                 const end = new Date(to);
                 for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const dateKey = d.toISOString().split('T')[0];
-                    updates[`attendance/${empId}/${dateKey}`] = {
-                        status: attendanceStatus,
+                    updates[`attendance/${empId}/${d.toISOString().split('T')[0]}`] = {
+                        status: status,
                         leaveType: type,
                         leaveRequestId: reqId,
                         admin: true
@@ -959,23 +703,19 @@
                 }
                 await update(ref(db), updates);
                 alert('Approved!');
-            } catch (e) { console.error(e); alert('Error: ' + e.message); }
+            } catch (e) { alert(e.message); }
         };
 
         window.rejectLeave = async (reqId) => {
             if (!confirm('Reject?')) return;
-            try {
-                await update(ref(db, `leaveRequests/${reqId}`), {
-                    status: 'rejected',
-                    actionAt: new Date().toISOString(),
-                    actionBy: adminName
-                });
-                alert('Rejected.');
-            } catch (e) { alert(e.message); }
+            await update(ref(db, `leaveRequests/${reqId}`), {
+                status: 'rejected',
+                actionAt: new Date().toISOString(),
+                actionBy: adminName
+            });
+            alert('Rejected.');
         };
     </script>
-
     <script src="sidebar.js"></script>
 </body>
-
 </html>

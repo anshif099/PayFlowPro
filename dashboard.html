@@ -227,7 +227,7 @@
           <div class="stat-value" id="absentToday">0</div>
           <div class="stat-label">Absent Today</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" onclick="location.href='leave_management.html'" style="cursor:pointer;">
           <div class="stat-value" id="pendingRequests">0</div>
           <div class="stat-label">Pending Requests</div>
         </div>
@@ -320,9 +320,9 @@
        const employees = [];
        if (empSnap.exists()) {
           empSnap.forEach(c => {
-             if (c.val().companyId === companyId) {
-                const e = c.val(); e.empId = c.key;
-                employees.push(e);
+             const e = c.val();
+             if (e.companyId === companyId) {
+                employees.push({ ...e, uid: c.key });
              }
           });
        }
@@ -332,7 +332,7 @@
        tbody.innerHTML = "";
 
        employees.forEach(emp => {
-          const dayData = (allAtt[emp.empId] && allAtt[emp.empId][today]) ? allAtt[emp.empId][today] : {};
+          const dayData = (allAtt[emp.uid] && allAtt[emp.uid][today]) ? allAtt[emp.uid][today] : {};
           const status = dayData.status || 'absent';
           const punchIn = dayData.punchIn?.time || '-';
           const punchOut = dayData.punchOut?.time || '-';
@@ -347,7 +347,7 @@
                 <td><span class="badge-${status.toLowerCase()}">${status}</span></td>
                 <td>${punchIn}</td>
                 <td>${punchOut}</td>
-                <td onclick="openChat('${emp.empId}', '${emp.name}')" style="cursor:pointer; color:var(--primary);"><i style="font-size:12px;">${workStatus}</i> 💬</td>
+                <td onclick="openChat('${emp.uid}', '${emp.name}')" style="cursor:pointer; color:var(--primary);"><i style="font-size:12px;">${workStatus}</i> 💬</td>
                 <td>${currency}${price}</td>
                 <td></td>
              </tr>`;
@@ -418,8 +418,16 @@
        document.getElementById('absentToday').textContent = employees.length - present;
        
        let pending = 0;
+       const allowedIds = new Set();
+       employees.forEach(e => {
+          allowedIds.add(e.uid);
+          if (e.empId) allowedIds.add(e.empId);
+       });
        if (leaveSnap.exists()) {
-          leaveSnap.forEach(c => { if (c.val().status === 'pending') pending++; });
+          leaveSnap.forEach(c => { 
+             const r = c.val();
+             if (r.status === 'pending' && (allowedIds.has(r.employeeId) || allowedIds.has(c.key))) pending++; 
+          });
        }
        document.getElementById('pendingRequests').textContent = pending;
     }
