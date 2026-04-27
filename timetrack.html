@@ -202,6 +202,48 @@
             margin-bottom: 8px;
         }
 
+        .progress-bar-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        body.light-mode .progress-bar-track {
+            background: rgba(0,0,0,0.06);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.complete {
+            background: #4caf50;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .progress-row .progress-text {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .progress-row .progress-text.complete {
+            color: #4caf50;
+        }
+
         .muted {
             color: var(--text-muted);
             font-size: 13px;
@@ -874,17 +916,39 @@
             }).join("");
         }
 
+        function getProjectProgress(project) {
+            const worksMap = project.works || {};
+            const workEntries = Object.values(worksMap);
+            if (!workEntries.length) return 0;
+            let total = 0;
+            workEntries.forEach((work) => {
+                const s = work.status || "todo";
+                if (s === "in_progress") total += 0.25;
+                else if (s === "in_review") total += 0.75;
+                else if (s === "finish") total += 1;
+            });
+            return Math.round((total / workEntries.length) * 100);
+        }
+
         function renderTaskCard(work) {
             const names = work.assignedEmployeeIds
                 .map((id) => employees.find((employee) => employee.id === id)?.name || id)
                 .map((name) => `<span class="pill">${esc(name)}</span>`)
                 .join("");
+            const progress = getProjectProgress(work.project);
+            const isComplete = progress === 100;
             return `
                 <article class="task-card" onclick="openProjectDetail('${esc(work.projectId)}')">
                     <h3>${esc(work.workName)}</h3>
                     <div class="muted">${esc(work.projectTitle)}</div>
                     <div class="muted" style="margin-top:8px;">${formatDate(work.workStartDate)} - ${formatDate(work.workEndDate)}</div>
                     <div class="pill-row">${names}</div>
+                    <div class="progress-row">
+                        <div class="progress-bar-track" style="flex:1;">
+                            <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width:${progress}%;"></div>
+                        </div>
+                        <span class="progress-text ${isComplete ? 'complete' : ''}">${progress}%</span>
+                    </div>
                     <select class="status-select" onclick="event.stopPropagation()" onchange="updateWorkStatus('${esc(work.projectId)}', '${esc(work.workId)}', this.value)">
                         ${STATUS_ORDER.map((status) => `<option value="${status}" ${work.status === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
                     </select>
