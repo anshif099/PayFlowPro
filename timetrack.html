@@ -284,6 +284,10 @@
             display: flex;
         }
 
+        #taskModal.show {
+            z-index: 1010;
+        }
+
         .modal {
             width: min(760px, 100%);
             max-height: 92vh;
@@ -669,37 +673,45 @@
                         </div>
                     </div>
 
-                    <div class="section-title">Work Creating</div>
-                    <div class="form-grid">
-                        <div class="form-group full">
-                            <label for="workName">Work Name</label>
-                            <input id="workName" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="workStart">Work Start Date</label>
-                            <input type="date" id="workStart">
-                        </div>
-                        <div class="form-group">
-                            <label for="workEnd">Work End Date</label>
-                            <input type="date" id="workEnd">
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-                        <button class="ghost-button" onclick="addWorkDraft()" type="button">+ Add Work</button>
-                    </div>
-                    <div class="work-list" id="workDraftList"></div>
-                </section>
-
-                <section id="assignmentStep" class="hidden">
-                    <div class="work-list" id="assignmentList"></div>
+                    <div class="section-title">Project Employees</div>
+                    <div class="employee-grid" id="projectEmployeeList"></div>
                 </section>
             </div>
 
             <div class="modal-actions">
-                <button class="ghost-button hidden" id="backBtn" onclick="goProjectStep()" type="button">Back</button>
                 <button class="ghost-button" onclick="closeCreateProject()" type="button">Close</button>
-                <button class="primary-button" id="nextBtn" onclick="goAssignmentStep()" type="button">Next</button>
-                <button class="primary-button hidden" id="sendBtn" onclick="saveProject()" type="button">Send</button>
+                <button class="primary-button" id="sendBtn" onclick="saveProject()" type="button">Send Project</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal" style="width:min(620px,95%);">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Add Task</h2>
+                <button class="ghost-button" onclick="closeAddTaskModal()" type="button">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label for="taskName">Task Name</label>
+                        <input id="taskName" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskStart">Task Start Date</label>
+                        <input type="date" id="taskStart">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEnd">Task End Date</label>
+                        <input type="date" id="taskEnd">
+                    </div>
+                </div>
+                <div class="section-title">Assign To</div>
+                <div class="employee-grid" id="taskEmployeeList"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="ghost-button" onclick="closeAddTaskModal()" type="button">Cancel</button>
+                <button class="primary-button" id="saveTaskBtn" onclick="saveProjectTask()" type="button">Add Task</button>
             </div>
         </div>
     </div>
@@ -711,6 +723,7 @@
                     <h2 id="detailTitle">Project</h2>
                     <div class="detail-meta" id="detailMeta"></div>
                 </div>
+                <button class="ghost-button" style="color:var(--primary);border-color:var(--primary);" onclick="openAddTaskModal()" type="button">+ Add Task</button>
                 <button class="ghost-button" style="color:var(--primary);border-color:var(--primary);" onclick="getAIProjectSummary(currentProject?.id)" type="button">Summary</button>
                 <button class="ghost-button danger-button" onclick="deleteProject(currentProject?.id)" type="button">Delete Project</button>
                 <button class="ghost-button" onclick="closeProjectDetail()" type="button">Close</button>
@@ -800,7 +813,8 @@
         const scopeId = companyId || safeKey(adminBranch || role || "global");
 
         let employees = [];
-        let works = [];
+        let projectEmployeeIds = new Set();
+        let taskEmployeeIds = new Set();
         let saving = false;
         let cachedProjects = [];
         let currentProject = null;
@@ -903,6 +917,16 @@
                 projects.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
                 cachedProjects = projects;
                 renderBoard(projects);
+                if (currentProject) {
+                    const refreshed = projects.find((item) => item.id === currentProject.id);
+                    if (refreshed) {
+                        currentProject = refreshed;
+                        $("detailTitle").textContent = refreshed.title || "Project";
+                        $("detailMeta").textContent = `${formatDate(refreshed.startDate)} - ${formatDate(refreshed.endDate)}`;
+                        renderDetailWorks(refreshed);
+                        renderMentionRow();
+                    }
+                }
             });
         }
 
@@ -922,7 +946,7 @@
                         projectStartDate: project.startDate || "",
                         projectEndDate: project.endDate || "",
                         workId,
-                        workName: work.name || "Work",
+                        workName: work.name || "Task",
                         workStartDate: work.startDate || "",
                         workEndDate: work.endDate || "",
                         status: work.status || "todo",
@@ -934,16 +958,58 @@
             $("projectList").className = "kanban-board";
             $("projectList").innerHTML = STATUS_ORDER.map((status) => {
                 const columnWorks = boardWorks.filter((work) => work.status === status);
+                const columnProjects = status === "todo" ? projects : [];
+                const itemCount = columnProjects.length + columnWorks.length;
                 return `
                     <section class="kanban-column">
                         <div class="column-head">
                             <span>${statusLabel(status)}</span>
-                            <span class="muted">${columnWorks.length}</span>
+                            <span class="muted">${itemCount}</span>
                         </div>
-                        ${columnWorks.length ? columnWorks.map(renderTaskCard).join("") : '<div class="empty-card muted">No works</div>'}
+                        ${itemCount ? `${columnProjects.map(renderProjectCard).join("")}${columnWorks.map(renderTaskCard).join("")}` : `<div class="empty-card muted">${status === "todo" ? "No projects or tasks" : "No tasks"}</div>`}
                     </section>
                 `;
             }).join("");
+        }
+
+        function getProjectEmployeeIds(project) {
+            return Object.keys(project?.assignedEmployees || {});
+        }
+
+        function getProjectEmployees(project) {
+            const ids = getProjectEmployeeIds(project);
+            if (!ids.length) return employees;
+            return employees.filter((employee) => ids.includes(employee.id));
+        }
+
+        function renderProjectCard(project) {
+            const progress = getProjectProgress(project);
+            const isComplete = progress === 100;
+            const projectEmployees = getProjectEmployees(project);
+            const names = projectEmployees.slice(0, 4)
+                .map((employee) => `<span class="pill">${esc(employee.name)}</span>`)
+                .join("");
+            return `
+                <article class="task-card" onclick="openProjectDetail('${esc(project.id)}')">
+                    <h3>${esc(project.title || "Untitled project")}</h3>
+                    <div class="muted">${formatDate(project.startDate)} - ${formatDate(project.endDate)}</div>
+                    <div class="pill-row">
+                        <span class="pill">${Object.keys(project.works || {}).length} tasks</span>
+                        <span class="pill">${projectEmployees.length} employees</span>
+                    </div>
+                    ${names ? `<div class="pill-row">${names}</div>` : ""}
+                    <div class="progress-row">
+                        <div class="progress-bar-track" style="flex:1;">
+                            <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width:${progress}%;"></div>
+                        </div>
+                        <span class="progress-text ${isComplete ? 'complete' : ''}">${progress}%</span>
+                    </div>
+                    <div class="card-actions" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                        <button class="ghost-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();openProjectDetail('${esc(project.id)}');openAddTaskModal()" type="button">Add Task</button>
+                        <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteProject('${esc(project.id)}')" type="button">Delete Project</button>
+                    </div>
+                </article>
+            `;
         }
 
         function getProjectProgress(project) {
@@ -984,7 +1050,7 @@
                     </select>
                     <div class="card-actions" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
                         <button class="ghost-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();reassignWork('${esc(work.projectId)}','${esc(work.workId)}')" type="button">Reassign</button>
-                        <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteWork('${esc(work.projectId)}','${esc(work.workId)}')" type="button">Delete Work</button>
+                        <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteWork('${esc(work.projectId)}','${esc(work.workId)}')" type="button">Delete Task</button>
                         <button class="ghost-button danger-button" style="min-height:28px;padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteProject('${esc(work.projectId)}')" type="button">Delete Project</button>
                     </div>
                 </article>
@@ -1004,7 +1070,7 @@
         };
 
         window.deleteWork = async function(projectId, workId) {
-            if (!confirm("Delete this work and remove all its assignments?")) return;
+            if (!confirm("Delete this task and remove all its assignments?")) return;
             const project = cachedProjects.find((item) => item.id === projectId);
             const work = project?.works?.[workId];
             const updates = {};
@@ -1015,11 +1081,14 @@
                 });
             }
             await update(ref(db), updates);
-            alert("Work deleted.");
+            if (currentProject && currentProject.id === projectId) {
+                await refreshCurrentProject(projectId);
+            }
+            alert("Task deleted.");
         };
 
         window.deleteProject = async function(projectId) {
-            if (!confirm("Delete this entire project, all works, and all assignments?")) return;
+            if (!confirm("Delete this entire project, all tasks, and all assignments?")) return;
             const project = cachedProjects.find((item) => item.id === projectId);
             const updates = {};
             updates[`timetrack_projects/${scopeId}/${projectId}`] = null;
@@ -1043,7 +1112,12 @@
             const work = project?.works?.[workId];
             if (!project || !work) return;
             const currentIds = new Set(Object.keys(work.assignedEmployees || {}));
-            const lines = employees.map((emp) => {
+            const projectEmployees = getProjectEmployees(project);
+            if (!projectEmployees.length) {
+                showError("No employees available for this project.");
+                return;
+            }
+            const lines = projectEmployees.map((emp) => {
                 const checked = currentIds.has(emp.id) ? "checked" : "";
                 return `<label style='display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;'><input type='checkbox' class='reassign-cb' data-id='${emp.id}' ${checked}> ${esc(emp.name)}</label>`;
             }).join("");
@@ -1052,7 +1126,7 @@
             overlay.innerHTML = `
                 <div class='modal' style='width:min(420px,95%);max-height:80vh;'>
                     <div class='modal-header'>
-                        <h2 style='flex:1;font-size:16px;'>Reassign: ${esc(work.name || "Work")}</h2>
+                        <h2 style='flex:1;font-size:16px;'>Reassign: ${esc(work.name || "Task")}</h2>
                         <button class='ghost-button' onclick='this.closest(".modal-overlay").remove()' type='button'>Close</button>
                     </div>
                     <div class='modal-body' style='overflow-y:auto;'>
@@ -1108,7 +1182,7 @@
                         renderDetailWorks(currentProject);
                     }
                 }
-                alert("Work reassigned.");
+                alert("Task reassigned.");
             });
         };
 
@@ -1141,14 +1215,15 @@
             workEntries.forEach(w => stats[w.status || "todo"]++);
 
             // Simple status chart
-            const total = workEntries.length || 1;
+            const totalTasks = workEntries.length;
+            const chartTotal = totalTasks || 1;
             $("summaryChart").innerHTML = `
-                <div style="font-weight:700;margin-bottom:12px;font-size:14px;">Work Status Distribution</div>
+                <div style="font-weight:700;margin-bottom:12px;font-size:14px;">Task Status Distribution</div>
                 <div style="display:flex;height:24px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.05);">
-                    <div style="width:${(stats.todo / total) * 100}%;background:#8b92a0;" title="To Do: ${stats.todo}"></div>
-                    <div style="width:${(stats.in_progress / total) * 100}%;background:var(--primary);" title="In Progress: ${stats.in_progress}"></div>
-                    <div style="width:${(stats.in_review / total) * 100}%;background:#f1c40f;" title="In Review: ${stats.in_review}"></div>
-                    <div style="width:${(stats.finish / total) * 100}%;background:#4caf50;" title="Finished: ${stats.finish}"></div>
+                    <div style="width:${(stats.todo / chartTotal) * 100}%;background:#8b92a0;" title="To Do: ${stats.todo}"></div>
+                    <div style="width:${(stats.in_progress / chartTotal) * 100}%;background:var(--primary);" title="In Progress: ${stats.in_progress}"></div>
+                    <div style="width:${(stats.in_review / chartTotal) * 100}%;background:#f1c40f;" title="In Review: ${stats.in_review}"></div>
+                    <div style="width:${(stats.finish / chartTotal) * 100}%;background:#4caf50;" title="Finished: ${stats.finish}"></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-muted);">
                     <span>To Do (${stats.todo})</span>
@@ -1160,15 +1235,15 @@
 
             setTimeout(() => {
                 let summaryText = "Project Overview:\n\n";
-                summaryText += `• Total Works: ${total}\n`;
-                summaryText += `• Completed: ${stats.finish}\n`;
-                summaryText += `• In Progress: ${stats.in_progress}\n`;
-                summaryText += `• In Review: ${stats.in_review}\n`;
-                summaryText += `• To Do: ${stats.todo}\n\n`;
+                summaryText += `- Total Tasks: ${totalTasks}\n`;
+                summaryText += `- Completed: ${stats.finish}\n`;
+                summaryText += `- In Progress: ${stats.in_progress}\n`;
+                summaryText += `- In Review: ${stats.in_review}\n`;
+                summaryText += `- To Do: ${stats.todo}\n\n`;
 
-                if (total === 0) {
-                    summaryText += "There are no works assigned to this project yet.";
-                } else if (stats.finish === total) {
+                if (totalTasks === 0) {
+                    summaryText += "There are no tasks assigned to this project yet.";
+                } else if (stats.finish === totalTasks) {
                     summaryText += "The project is fully completed. All tasks are finished.";
                 } else if (stats.in_progress > 0 || stats.in_review > 0) {
                     summaryText += "The project is currently active and work is underway.";
@@ -1181,15 +1256,12 @@
         };
 
         function resetModal() {
-            works = [];
+            projectEmployeeIds = new Set();
             $("projectTitle").value = "";
             $("projectStart").value = "";
             $("projectEnd").value = "";
-            $("workName").value = "";
-            $("workStart").value = "";
-            $("workEnd").value = "";
-            renderWorkDrafts();
-            goProjectStep();
+            renderProjectEmployees();
+            $("modalTitle").textContent = "Add Project";
         }
 
         window.openCreateProject = async function() {
@@ -1209,194 +1281,217 @@
             $("projectModal").classList.remove("show");
         };
 
-        function syncWorkDateLimits() {
+        function syncProjectDateLimits() {
             const start = $("projectStart").value;
-            const end = $("projectEnd").value;
             $("projectEnd").min = start || "";
-            $("workStart").min = start || "";
-            $("workStart").max = end || "";
-            $("workEnd").min = $("workStart").value || start || "";
-            $("workEnd").max = end || "";
         }
 
-        ["projectStart", "projectEnd", "workStart"].forEach((id) => {
-            $(id).addEventListener("change", syncWorkDateLimits);
+        ["projectStart", "projectEnd"].forEach((id) => {
+            $(id).addEventListener("change", syncProjectDateLimits);
         });
 
-        window.addWorkDraft = function() {
-            const name = $("workName").value.trim();
-            const projectStart = $("projectStart").value;
-            const projectEnd = $("projectEnd").value;
-            const start = $("workStart").value;
-            const end = $("workEnd").value;
-
-            if (!name) return showError("Work name is required.");
-            if (!projectStart || !projectEnd) return showError("Select project dates first.");
-            if (!start || !end) return showError("Select work start and end dates.");
-            if (projectEnd < projectStart) return showError("Project end date must be after start date.");
-            if (start < projectStart || end > projectEnd) return showError("Work dates must be inside the project dates.");
-            if (end < start) return showError("Work end date must be after start date.");
-
-            works.push({
-                id: `work_${Date.now()}_${works.length}`,
-                name,
-                startDate: start,
-                endDate: end,
-                employeeIds: new Set()
-            });
-
-            $("workName").value = "";
-            $("workStart").value = "";
-            $("workEnd").value = "";
-            renderWorkDrafts();
-            syncWorkDateLimits();
-        };
-
-        function renderWorkDrafts() {
-            $("workDraftList").innerHTML = works.map((work, index) => `
-                <div class="work-card">
-                    <div class="work-card-header">
-                        <div>
-                            <h4>${esc(work.name)}</h4>
-                            <div class="muted">${formatDate(work.startDate)} - ${formatDate(work.endDate)}</div>
-                        </div>
-                        <button class="ghost-button danger-button" onclick="removeWorkDraft(${index})" type="button">Delete</button>
-                    </div>
-                </div>
+        function renderProjectEmployees() {
+            $("projectEmployeeList").innerHTML = employees.map((employee) => `
+                <label class="employee-chip">
+                    <input type="checkbox" onchange="toggleProjectEmployee('${esc(employee.id)}', this.checked)" ${projectEmployeeIds.has(employee.id) ? "checked" : ""}>
+                    <span>${esc(employee.name)}</span>
+                </label>
             `).join("");
         }
 
-        window.removeWorkDraft = function(index) {
-            works.splice(index, 1);
-            renderWorkDrafts();
-        };
-
-        window.goAssignmentStep = function() {
-            const title = $("projectTitle").value.trim();
-            const projectStart = $("projectStart").value;
-            const projectEnd = $("projectEnd").value;
-
-            if (!title) return showError("Project title is required.");
-            if (!projectStart || !projectEnd) return showError("Select project start and end dates.");
-            if (projectEnd < projectStart) return showError("Project end date must be after start date.");
-            if (!works.length) return showError("Add at least one work.");
-
-            $("modalTitle").textContent = "Assign Works";
-            $("projectStep").classList.add("hidden");
-            $("assignmentStep").classList.remove("hidden");
-            $("nextBtn").classList.add("hidden");
-            $("sendBtn").classList.remove("hidden");
-            $("backBtn").classList.remove("hidden");
-            renderAssignments();
-        };
-
-        window.goProjectStep = function() {
-            $("modalTitle").textContent = "Add Project";
-            $("projectStep").classList.remove("hidden");
-            $("assignmentStep").classList.add("hidden");
-            $("nextBtn").classList.remove("hidden");
-            $("sendBtn").classList.add("hidden");
-            $("backBtn").classList.add("hidden");
-        };
-
-        function renderAssignments() {
-            $("assignmentList").innerHTML = works.map((work, workIndex) => `
-                <div class="work-card">
-                    <h4>${esc(work.name)}</h4>
-                    <div class="muted">${formatDate(work.startDate)} - ${formatDate(work.endDate)}</div>
-                    <div class="employee-grid">
-                        ${employees.map((employee) => `
-                            <label class="employee-chip">
-                                <input type="checkbox" onchange="toggleEmployee(${workIndex}, '${esc(employee.id)}', this.checked)" ${work.employeeIds.has(employee.id) ? "checked" : ""}>
-                                <span>${esc(employee.name)}</span>
-                            </label>
-                        `).join("")}
-                    </div>
-                </div>
-            `).join("");
-        }
-
-        window.toggleEmployee = function(workIndex, empId, checked) {
-            if (!works[workIndex]) return;
+        window.toggleProjectEmployee = function(empId, checked) {
             if (checked) {
-                works[workIndex].employeeIds.add(empId);
+                projectEmployeeIds.add(empId);
             } else {
-                works[workIndex].employeeIds.delete(empId);
+                projectEmployeeIds.delete(empId);
             }
         };
 
         window.saveProject = async function() {
             if (saving) return;
-            if (works.some((work) => work.employeeIds.size === 0)) {
-                showError("Assign employees to every work.");
-                return;
-            }
+            const projectTitle = $("projectTitle").value.trim();
+            const projectStart = $("projectStart").value;
+            const projectEnd = $("projectEnd").value;
+            if (!projectTitle) return showError("Project title is required.");
+            if (!projectStart || !projectEnd) return showError("Select project start and end dates.");
+            if (projectEnd < projectStart) return showError("Project end date must be after start date.");
+            if (!projectEmployeeIds.size) return showError("Select employees for this project.");
 
             saving = true;
             $("sendBtn").textContent = "Sending...";
             try {
-                const projectTitle = $("projectTitle").value.trim();
-                const projectStart = $("projectStart").value;
-                const projectEnd = $("projectEnd").value;
                 const now = new Date().toISOString();
                 const projectRef = push(ref(db, `timetrack_projects/${scopeId}`));
                 const projectId = projectRef.key;
-                const worksData = {};
-                const updates = {};
+                const assignedEmployees = {};
+                projectEmployeeIds.forEach((empId) => assignedEmployees[empId] = true);
 
-                works.forEach((work) => {
-                    const assignedEmployees = {};
-                    work.employeeIds.forEach((empId) => assignedEmployees[empId] = true);
-                    worksData[work.id] = {
-                        name: work.name,
-                        startDate: work.startDate,
-                        endDate: work.endDate,
-                        status: "todo",
-                        assignedEmployees,
-                        createdAt: now
-                    };
-
-                    work.employeeIds.forEach((empId) => {
-                        const assignmentId = `${projectId}_${work.id}`;
-                        updates[`timetrack_assignments/${empId}/${assignmentId}`] = {
-                            assignmentId,
-                            projectId,
-                            workId: work.id,
-                            companyId: scopeId,
-                            projectTitle,
-                            projectStartDate: projectStart,
-                            projectEndDate: projectEnd,
-                            workName: work.name,
-                            workStartDate: work.startDate,
-                            workEndDate: work.endDate,
-                            status: "todo",
-                            assignedAt: now,
-                            assignedBy: adminName
-                        };
-                    });
-                });
-
-                updates[`timetrack_projects/${scopeId}/${projectId}`] = {
+                await update(ref(db, `timetrack_projects/${scopeId}/${projectId}`), {
                     id: projectId,
                     title: projectTitle,
                     companyId: scopeId,
                     startDate: projectStart,
                     endDate: projectEnd,
-                    works: worksData,
+                    assignedEmployees,
+                    works: {},
                     createdAt: now,
                     createdBy: adminName
-                };
-
-                await update(ref(db), updates);
+                });
                 $("projectModal").classList.remove("show");
-                alert("Project sent to employee TimeTrack.");
+                alert("Project created. Add tasks from project detail.");
             } catch (error) {
                 showError("Unable to save project: " + error.message);
             } finally {
                 saving = false;
-                $("sendBtn").textContent = "Send";
+                $("sendBtn").textContent = "Send Project";
             }
         };
+
+        function resetTaskModal() {
+            taskEmployeeIds = new Set();
+            $("taskName").value = "";
+            $("taskStart").value = "";
+            $("taskEnd").value = "";
+        }
+
+        function syncTaskDateLimits() {
+            const projectStart = currentProject?.startDate || "";
+            const projectEnd = currentProject?.endDate || "";
+            const taskStart = $("taskStart").value;
+
+            $("taskStart").min = projectStart;
+            $("taskStart").max = projectEnd;
+            $("taskEnd").min = taskStart || projectStart;
+            $("taskEnd").max = projectEnd;
+
+            if ($("taskEnd").value && taskStart && $("taskEnd").value < taskStart) {
+                $("taskEnd").value = "";
+            }
+        }
+
+        ["taskStart", "taskEnd"].forEach((id) => {
+            $(id).addEventListener("change", syncTaskDateLimits);
+        });
+
+        function renderTaskEmployees() {
+            const projectEmployees = getProjectEmployees(currentProject);
+            $("taskEmployeeList").innerHTML = projectEmployees.map((employee) => `
+                <label class="employee-chip">
+                    <input type="checkbox" onchange="toggleTaskEmployee('${esc(employee.id)}', this.checked)" ${taskEmployeeIds.has(employee.id) ? "checked" : ""}>
+                    <span>${esc(employee.name)}</span>
+                </label>
+            `).join("");
+        }
+
+        window.toggleTaskEmployee = function(empId, checked) {
+            if (checked) {
+                taskEmployeeIds.add(empId);
+            } else {
+                taskEmployeeIds.delete(empId);
+            }
+        };
+
+        window.openAddTaskModal = function() {
+            if (!currentProject) {
+                showError("Select a project first.");
+                return;
+            }
+            const projectEmployees = getProjectEmployees(currentProject);
+            if (!projectEmployees.length) {
+                showError("No employees available for this project.");
+                return;
+            }
+
+            resetTaskModal();
+            $("taskModalTitle").textContent = `Add Task - ${currentProject.title || "Project"}`;
+            renderTaskEmployees();
+            syncTaskDateLimits();
+            $("taskModal").classList.add("show");
+        };
+
+        window.closeAddTaskModal = function() {
+            if (saving) return;
+            $("taskModal").classList.remove("show");
+        };
+
+        window.saveProjectTask = async function() {
+            if (saving || !currentProject) return;
+            const projectId = currentProject.id;
+            const taskName = $("taskName").value.trim();
+            const taskStart = $("taskStart").value;
+            const taskEnd = $("taskEnd").value;
+            if (!taskName) return showError("Task name is required.");
+            if (!taskStart || !taskEnd) return showError("Select task start and end dates.");
+            if (taskEnd < taskStart) return showError("Task end date must be after start date.");
+            if (currentProject.startDate && taskStart < currentProject.startDate) return showError("Task start date cannot be before project start date.");
+            if (currentProject.endDate && taskEnd > currentProject.endDate) return showError("Task end date cannot be after project end date.");
+            if (!taskEmployeeIds.size) return showError("Select employees for this task.");
+            const allowedEmployeeIds = new Set(getProjectEmployees(currentProject).map((employee) => employee.id));
+            if (Array.from(taskEmployeeIds).some((empId) => !allowedEmployeeIds.has(empId))) {
+                return showError("Select only employees assigned to this project.");
+            }
+
+            saving = true;
+            $("saveTaskBtn").textContent = "Adding...";
+            try {
+                const now = new Date().toISOString();
+                const workRef = push(ref(db, `timetrack_projects/${scopeId}/${projectId}/works`));
+                const workId = workRef.key;
+                if (!workId) throw new Error("Unable to create task id.");
+                const assignedEmployees = {};
+                taskEmployeeIds.forEach((empId) => assignedEmployees[empId] = true);
+
+                const updates = {};
+                updates[`timetrack_projects/${scopeId}/${projectId}/works/${workId}`] = {
+                    name: taskName,
+                    startDate: taskStart,
+                    endDate: taskEnd,
+                    status: "todo",
+                    assignedEmployees,
+                    createdAt: now,
+                    createdBy: adminName
+                };
+
+                taskEmployeeIds.forEach((empId) => {
+                    const assignmentId = `${projectId}_${workId}`;
+                    updates[`timetrack_assignments/${empId}/${assignmentId}`] = {
+                        assignmentId,
+                        projectId,
+                        workId,
+                        companyId: scopeId,
+                        projectTitle: currentProject.title || "",
+                        projectStartDate: currentProject.startDate || "",
+                        projectEndDate: currentProject.endDate || "",
+                        workName: taskName,
+                        workStartDate: taskStart,
+                        workEndDate: taskEnd,
+                        status: "todo",
+                        assignedAt: now,
+                        assignedBy: adminName
+                    };
+                });
+
+                await update(ref(db), updates);
+                $("taskModal").classList.remove("show");
+                await refreshCurrentProject(projectId);
+                alert("Task sent to selected employees.");
+            } catch (error) {
+                showError("Unable to add task: " + error.message);
+            } finally {
+                saving = false;
+                $("saveTaskBtn").textContent = "Add Task";
+            }
+        };
+
+        async function refreshCurrentProject(projectId) {
+            const snap = await get(ref(db, `timetrack_projects/${scopeId}/${projectId}`));
+            if (!snap.exists()) return;
+            currentProject = { id: projectId, ...snap.val() };
+            $("detailTitle").textContent = currentProject.title || "Project";
+            $("detailMeta").textContent = `${formatDate(currentProject.startDate)} - ${formatDate(currentProject.endDate)}`;
+            renderDetailWorks(currentProject);
+            renderMentionRow();
+        }
 
         window.openProjectDetail = function(projectId) {
             const project = cachedProjects.find((item) => item.id === projectId);
@@ -1421,26 +1516,40 @@
         };
 
         function renderDetailWorks(project) {
-            $("detailWorks").innerHTML = Object.entries(project.works || {}).map(([workId, work]) => `
-                <div class="detail-work">
-                    <h3>${esc(work.name || "Work")}</h3>
-                    <div class="muted">${formatDate(work.startDate)} - ${formatDate(work.endDate)}</div>
-                    <div class="pill-row">
-                        <span class="pill">${statusLabel(work.status || "todo")}</span>
+            const entries = Object.entries(project.works || {});
+            if (!entries.length) {
+                $("detailWorks").innerHTML = `<div class="detail-work" style="flex:1;">No tasks yet. Use Add Task to send work to project employees.</div>`;
+                return;
+            }
+
+            $("detailWorks").innerHTML = entries.map(([workId, work]) => {
+                const assignedNames = Object.keys(work.assignedEmployees || {})
+                    .map((id) => employees.find((employee) => employee.id === id)?.name || id)
+                    .map((name) => `<span class="pill">${esc(name)}</span>`)
+                    .join("");
+                return `
+                    <div class="detail-work">
+                        <h3>${esc(work.name || "Task")}</h3>
+                        <div class="muted">${formatDate(work.startDate)} - ${formatDate(work.endDate)}</div>
+                        <div class="pill-row">
+                            <span class="pill">${statusLabel(work.status || "todo")}</span>
+                        </div>
+                        ${assignedNames ? `<div class="pill-row">${assignedNames}</div>` : ""}
+                        <select class="status-select" onchange="updateWorkStatus('${esc(project.id)}', '${esc(workId)}', this.value)">
+                            ${STATUS_ORDER.map((status) => `<option value="${status}" ${(work.status || "todo") === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
+                        </select>
+                        <div style="display:flex;gap:4px;margin-top:6px;">
+                            <button class="ghost-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="reassignWork('${esc(project.id)}','${esc(workId)}')" type="button">Reassign</button>
+                            <button class="ghost-button danger-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="deleteWork('${esc(project.id)}','${esc(workId)}')" type="button">Delete</button>
+                        </div>
                     </div>
-                    <select class="status-select" onchange="updateWorkStatus('${esc(project.id)}', '${esc(workId)}', this.value)">
-                        ${STATUS_ORDER.map((status) => `<option value="${status}" ${(work.status || "todo") === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
-                    </select>
-                    <div style="display:flex;gap:4px;margin-top:6px;">
-                        <button class="ghost-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="reassignWork('${esc(project.id)}','${esc(workId)}')" type="button">Reassign</button>
-                        <button class="ghost-button danger-button" style="min-height:26px;padding:2px 7px;font-size:10px;" onclick="deleteWork('${esc(project.id)}','${esc(workId)}')" type="button">Delete</button>
-                    </div>
-                </div>
-            `).join("");
+                `;
+            }).join("");
         }
 
         function renderMentionRow() {
-            $("mentionRow").innerHTML = employees.map((employee) => `
+            const mentionTargets = currentProject ? getProjectEmployees(currentProject) : employees;
+            $("mentionRow").innerHTML = mentionTargets.map((employee) => `
                 <button class="mention-chip ${mentionIds.has(employee.id) ? "active" : ""}" onclick="toggleMention('${esc(employee.id)}')" type="button">@${esc(employee.name)}</button>
             `).join("");
         }
