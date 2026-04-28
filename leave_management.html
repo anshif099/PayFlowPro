@@ -485,8 +485,85 @@
         const companyId = localStorage.getItem("companyId");
 
         const allowedEmpIds = new Set();
+        const employeeStartDates = {};
         let leaveRequestsRaw = [];
         let employeesLoaded = false;
+        let paidLeaveConfig = { paidLeavesPerMonth: 0, paidLeaveEffectiveFrom: null };
+
+        const parseLocalDate = (value) => {
+            if (!value) return null;
+            const parts = String(value).split('T')[0].split('-').map(Number);
+            if (parts.length < 3 || parts.some(Number.isNaN)) return null;
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        };
+
+        const parseMonth = (value) => {
+            if (!value) return null;
+            const parts = String(value).split('-').map(Number);
+            if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return null;
+            return new Date(parts[0], parts[1] - 1, 1);
+        };
+
+        const monthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
+        const monthEnd = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        const monthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+        const requestCountsAsPaid = (req) => {
+            const type = String(req.leaveType || '').toLowerCase();
+            const approvedAs = String(req.approvedAs || '').toLowerCase();
+            if (approvedAs === 'unpaid') return false;
+            return type === 'paid' || (type === 'sick' && approvedAs === 'paid');
+        };
+
+        const countRequestDays = (from, to) => {
+            const start = parseLocalDate(from);
+            const end = parseLocalDate(to) || start;
+            if (!start || !end || end < start) return 0;
+            return Math.floor((end - start) / 86400000) + 1;
+        };
+
+        const resolveAccrualStart = (empId) => {
+            const configStart = parseMonth(paidLeaveConfig.paidLeaveEffectiveFrom) || monthStart(new Date());
+            const employeeStart = parseLocalDate(employeeStartDates[empId]);
+            if (!employeeStart) return configStart;
+            const employeeMonth = monthStart(employeeStart);
+            return employeeMonth > configStart ? employeeMonth : configStart;
+        };
+
+        const getPaidLeaveBalance = (empId, targetDate, includePending = false) => {
+            const target = parseLocalDate(targetDate) || new Date();
+            const startMonth = resolveAccrualStart(empId);
+            const targetMonth = monthStart(target);
+            const monthsAccrued = targetMonth < startMonth
+                ? 0
+                : ((targetMonth.getFullYear() - startMonth.getFullYear()) * 12) + targetMonth.getMonth() - startMonth.getMonth() + 1;
+            const accrued = Math.max(0, parseInt(paidLeaveConfig.paidLeavesPerMonth || 0)) * monthsAccrued;
+            const startBoundary = monthStart(startMonth);
+            const endBoundary = monthEnd(target);
+            let used = 0;
+
+            leaveRequestsRaw.forEach(item => {
+                const req = item.v;
+                if (String(req.employeeId || '') !== String(empId)) return;
+                if (!requestCountsAsPaid(req)) return;
+
+                const status = String(req.status || 'pending').toLowerCase();
+                if (['rejected', 'cancelled', 'denied'].includes(status)) return;
+                if (!includePending && status !== 'approved') return;
+
+                const from = parseLocalDate(req.fromDate);
+                const to = parseLocalDate(req.toDate) || from;
+                if (!from || !to || to < from) return;
+
+                const countFrom = from < startBoundary ? startBoundary : from;
+                const countTo = to > endBoundary ? endBoundary : to;
+                if (countTo < countFrom) return;
+
+                used += Math.floor((countTo - countFrom) / 86400000) + 1;
+            });
+
+            return { accrued, used, remaining: Math.max(0, accrued - used), monthsAccrued };
+        };
 
         window.selectedDate = new Date().toISOString().split('T')[0];
         document.getElementById('historyDateFilter').value = window.selectedDate;
@@ -526,21 +603,7 @@
                     return;
                 }
 
-                let approvedDays = 0;
-                if (req.fromDate) {
-                    const reqDate = new Date(req.fromDate);
-                    const reqMonth = reqDate.getMonth();
-                    const reqYear = reqDate.getFullYear();
-                    leaveRequestsRaw.forEach(pastItem => {
-                        const pReq = pastItem.v;
-                        if ((pReq.employeeId === req.employeeId || pReq.employeeId === id) && pReq.status === 'approved' && pReq.fromDate) {
-                            const pDate = new Date(pReq.fromDate);
-                            if (pDate.getMonth() === reqMonth && pDate.getFullYear() === reqYear) {
-                                approvedDays += parseInt(pReq.days || 0);
-                            }
-                        }
-                    });
-                }
+                const paidBalance = getPaidLeaveBalance(req.employeeId || id, req.toDate || req.fromDate, false);
 
                 if (req.status === 'pending') {
                     hasPending = true;
@@ -565,7 +628,7 @@
                         <tr>
                             <td>
                                 ${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}
-                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Taken this month: ${approvedDays}</div>
+                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Paid balance: ${paidBalance.remaining}</div>
                             </td>
                             <td><span style="background:rgba(255,167,38,.15);color:#ffa726;padding:4px 8px;border-radius:4px;font-size:12px">${leaveTypeLabel}</span></td>
                             <td>${req.fromDate}</td>
@@ -589,7 +652,7 @@
                             <tr>
                                 <td>
                                 ${(req.employeeName && req.employeeName !== 'Unknown') ? req.employeeName : (req.employeeId || 'Unknown')}
-                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Taken this month: ${approvedDays}</div>
+                                <br><div style="margin-top: 4px; display: inline-block; padding: 2px 6px; background: rgba(255, 167, 38, 0.15); color: #ffa726; border-radius: 4px; font-size: 10px; font-weight: bold;">Paid balance: ${paidBalance.remaining}</div>
                             </td>
                                 <td>${req.leaveTypeLabel || 'Paid Leave'}</td>
                                 <td>${req.fromDate}</td>
@@ -610,6 +673,7 @@
         onValue(ref(db, "employees"), s => {
             console.log('[DEBUG employees] Triggered. s.exists():', s.exists());
             allowedEmpIds.clear();
+            Object.keys(employeeStartDates).forEach(key => delete employeeStartDates[key]);
             if (s.exists()) {
                 s.forEach(c => {
                     const e = c.val();
@@ -632,7 +696,12 @@
 
                     if (allow) {
                         allowedEmpIds.add(c.key);
-                        if (e.empId) allowedEmpIds.add(e.empId);
+                        const startDate = e.onboardingDate || e.createdAt || '';
+                        if (startDate) employeeStartDates[c.key] = startDate;
+                        if (e.empId) {
+                            allowedEmpIds.add(e.empId);
+                            if (startDate) employeeStartDates[e.empId] = startDate;
+                        }
                     }
                 });
             }
@@ -650,21 +719,56 @@
         onValue(ref(db, configPath), s => {
             const el = document.getElementById('paidLeavesPerMonth');
             if (s.exists()) {
-                el.value = s.val().paidLeavesPerMonth || 0;
+                const effectiveFrom = s.val().paidLeaveEffectiveFrom || monthKey(new Date());
+                paidLeaveConfig = {
+                    paidLeavesPerMonth: s.val().paidLeavesPerMonth || 0,
+                    paidLeaveEffectiveFrom: effectiveFrom
+                };
+                el.value = paidLeaveConfig.paidLeavesPerMonth;
+                if (!s.val().paidLeaveEffectiveFrom) {
+                    update(ref(db, configPath), {
+                        paidLeaveEffectiveFrom: effectiveFrom,
+                        paidLeaveCarryForward: true
+                    });
+                }
             } else {
                 if (configPath !== 'settings/leaveConfig') {
                     get(ref(db, 'settings/leaveConfig')).then(gs => {
-                        if (gs.exists()) el.value = gs.val().paidLeavesPerMonth || 0;
+                        if (gs.exists()) {
+                            const effectiveFrom = gs.val().paidLeaveEffectiveFrom || monthKey(new Date());
+                            paidLeaveConfig = {
+                                paidLeavesPerMonth: gs.val().paidLeavesPerMonth || 0,
+                                paidLeaveEffectiveFrom: effectiveFrom
+                            };
+                            el.value = paidLeaveConfig.paidLeavesPerMonth;
+                            if (!gs.val().paidLeaveEffectiveFrom) {
+                                update(ref(db, 'settings/leaveConfig'), {
+                                    paidLeaveEffectiveFrom: effectiveFrom,
+                                    paidLeaveCarryForward: true
+                                });
+                            }
+                            renderLeaveTables();
+                        }
                     });
                 }
+                paidLeaveConfig = { paidLeavesPerMonth: 0, paidLeaveEffectiveFrom: null };
                 el.value = 0;
             }
+            renderLeaveTables();
         });
 
-        window.saveLeaveConfig = () => {
+        window.saveLeaveConfig = async () => {
             const val = parseInt(document.getElementById('paidLeavesPerMonth').value) || 0;
             if (val < 0 || val > 31) return alert('Invalid range (0-31)');
-            set(ref(db, configPath), { paidLeavesPerMonth: val }).then(() => alert('Saved!'));
+            const existingSnap = await get(ref(db, configPath));
+            const existing = existingSnap.exists() ? existingSnap.val() : {};
+            const effectiveFrom = existing.paidLeaveEffectiveFrom || monthKey(new Date());
+            await set(ref(db, configPath), {
+                paidLeavesPerMonth: val,
+                paidLeaveEffectiveFrom: effectiveFrom,
+                paidLeaveCarryForward: true
+            });
+            alert('Saved!');
         };
 
         onValue(ref(db, "leaveRequests"), s => {
@@ -687,6 +791,16 @@
                 let status = 'paid-leave';
                 if (type === 'unpaid') status = 'unpaid-leave';
                 if (type === 'sick') status = (isPaid === false) ? 'unpaid-leave' : 'sick-leave';
+
+                const consumesPaidBalance = type === 'paid' || (type === 'sick' && isPaid === true);
+                if (consumesPaidBalance) {
+                    const requestedDays = countRequestDays(from, to);
+                    const balance = getPaidLeaveBalance(empId, to, false);
+                    if (requestedDays > balance.remaining) {
+                        alert(`Only ${balance.remaining} paid leave day(s) available.`);
+                        return;
+                    }
+                }
 
                 const updates = {};
                 updates[`leaveRequests/${reqId}/status`] = 'approved';
