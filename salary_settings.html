@@ -912,17 +912,26 @@
             let presentCount = 0;
             let totalLateMins = 0;
             let totalExtraMins = 0;
+            const statusNow = new Date();
+            const statusTodayStr = `${statusNow.getFullYear()}-${String(statusNow.getMonth() + 1).padStart(2, '0')}-${String(statusNow.getDate()).padStart(2, '0')}`;
+            const normalizeAttendanceStatus = (record, dateKey) => {
+                const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
+                const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
+                if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) return 'out';
+                if (rawStatus === 'in' && !hasPunchOut && (dateKey < statusTodayStr || (dateKey === statusTodayStr && statusNow.getHours() >= 23))) return 'halfday';
+                return rawStatus;
+            };
 
             if (attSnap.exists()) {
                 attSnap.forEach(d => {
                     if (d.key.startsWith(monthVal)) {
                         const val = d.val();
-                        const status = val.status;
+                        const status = normalizeAttendanceStatus(val, d.key);
 
-                        if (status === 'in' || status === 'paid-leave' || status === 'present') {
+                        if (status === 'in' || status === 'out' || status === 'paid-leave' || status === 'present') {
                             presentCount++;
 
-                            if (status === 'in' && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
+                            if ((status === 'in' || status === 'out' || status === 'present') && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
                                 // Time Calculation
                                 // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
                                 const parseTimePart = (tStr) => {

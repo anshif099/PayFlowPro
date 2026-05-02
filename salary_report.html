@@ -615,6 +615,13 @@
                 // 3. Compute Employee Algorithm Iterator Engine Mapping Logic directly mirroring Flutter formula securely
                 const now = new Date();
                 let daysForAbsentCalc = daysInMonth;
+                const normalizeAttendanceStatus = (record, dateKey) => {
+                    const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
+                    const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
+                    if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) return 'out';
+                    if (rawStatus === 'in' && !hasPunchOut && (dateKey < todayDateStr || (dateKey === todayDateStr && now.getHours() >= 23))) return 'halfday';
+                    return rawStatus;
+                };
                 
                 if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
                     daysForAbsentCalc = (now.getDate() - 1) < 0 ? 0 : (now.getDate() - 1);
@@ -652,9 +659,9 @@
                         for (let dateKey in empAtt) {
                             if (dateKey.startsWith(monthStr)) {
                                 const vMap = empAtt[dateKey];
-                                const status = vMap.status;
+                                const status = normalizeAttendanceStatus(vMap, dateKey);
 
-                                if (status === 'in') {
+                                if (status === 'in' || status === 'out' || status === 'present') {
                                     presentCount++;
 
                                     if (vMap.punchIn && vMap.punchOut && vMap.punchIn.time && vMap.punchOut.time) {

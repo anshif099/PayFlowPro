@@ -27,10 +27,10 @@ const translations = {
         punch_in_optional: "Punch In (Optional - uses office time if empty)",
         punch_out_optional: "Punch Out (Optional - uses office time if empty)",
         mark_bulk: "Mark Bulk Attendance",
-        filter_emp_id: "Filter by Employee ID",
+        filter_emp_id: "Filter by Employee ID or Name",
         filter_date: "Filter by Date",
         clear_filters: "Clear Filters",
-        search_select_emp: "Search or Select Employee ID...",
+        search_select_emp: "Search Employee ID or Name...",
         time_analysis: "Time Analysis",
         office_time: "Office Time",
 

@@ -749,6 +749,13 @@
                 let html = "";
                 const allAttendance = attendanceSnap.val() || {};
                 const allApprovals = approvalsSnap.val() || {};
+                const normalizeAttendanceStatus = (record, dateKey) => {
+                    const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
+                    const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
+                    if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) return 'out';
+                    if (rawStatus === 'in' && !hasPunchOut && (dateKey < todayDateStr || (dateKey === todayDateStr && today.getHours() >= 23))) return 'halfday';
+                    return rawStatus;
+                };
 
                 employees.forEach(emp => {
                     const empAttData = allAttendance[emp.empId] || {};
@@ -762,13 +769,13 @@
                     for (const dateKey of empAttKeys) {
                         if (dateKey.startsWith(monthVal)) {
                             const val = empAttData[dateKey];
-                            const status = val.status;
+                            const status = normalizeAttendanceStatus(val, dateKey);
 
-                            if (status === 'in' || status === 'present') {
+                            if (status === 'in' || status === 'out' || status === 'present') {
                                 presentCount += 1;
 
                                 // Time Calculation
-                                if (status === 'in' && val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
+                                if (val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
                                     // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
                                     const parseTimePart = (tStr) => {
                                         if (!tStr) return null;

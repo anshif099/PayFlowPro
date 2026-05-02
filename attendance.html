@@ -179,7 +179,52 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 8px
+            gap: 8px;
+            position: relative
+        }
+
+        .employee-search-field {
+            position: relative
+        }
+
+        .employee-suggestions {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            max-height: 260px;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+            z-index: 120;
+        }
+
+        .employee-suggestion {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .employee-suggestion:last-child {
+            border-bottom: none
+        }
+
+        .employee-suggestion:hover {
+            background: var(--primary-active-bg)
+        }
+
+        .employee-suggestion strong {
+            display: block;
+            color: var(--text);
+            font-size: 14px
+        }
+
+        .employee-suggestion span {
+            color: var(--text-muted);
+            font-size: 12px
         }
 
         label {
@@ -284,7 +329,8 @@
         }
 
         .badge-present,
-        .badge-in {
+        .badge-in,
+        .badge-out {
             color: #00ffc3;
             background: var(--primary-active-bg);
             padding: 4px 12px;
@@ -561,8 +607,14 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label data-i18n="employee_id">Employee ID</label>
-                        <input id="attEmpId" list="empList" placeholder="Enter Employee Name or ID"
-                            data-i18n="employee_id" oninput="updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay')">
+                        <div class="employee-search-field">
+                            <input id="attEmpId" autocomplete="off" placeholder="Search Employee ID or Name..."
+                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('attEmpId', 'attEmpNameDisplay')"
+                                onfocus="showEmployeeSuggestions('attEmpId', 'attEmpNameDisplay')"
+                                onblur="setTimeout(() => hideEmployeeSuggestions('attEmpId'), 150)"
+                                onchange="updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay')">
+                            <div id="attEmpIdSuggestions" class="employee-suggestions"></div>
+                        </div>
                         <div id="attEmpNameDisplay"
                             style="color: #00ffc3; font-size: 12px; margin-top: 4px; font-weight: bold; min-height: 16px;">
                         </div>
@@ -604,8 +656,14 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label data-i18n="employee_id">Employee ID</label>
-                        <input id="bulkEmpId" list="empList" placeholder="Enter Employee Name or ID"
-                            data-i18n="employee_id" oninput="updateEmpNameDisplay('bulkEmpId', 'bulkEmpNameDisplay')">
+                        <div class="employee-search-field">
+                            <input id="bulkEmpId" autocomplete="off" placeholder="Search Employee ID or Name..."
+                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('bulkEmpId', 'bulkEmpNameDisplay')"
+                                onfocus="showEmployeeSuggestions('bulkEmpId', 'bulkEmpNameDisplay')"
+                                onblur="setTimeout(() => hideEmployeeSuggestions('bulkEmpId'), 150)"
+                                onchange="updateEmpNameDisplay('bulkEmpId', 'bulkEmpNameDisplay')">
+                            <div id="bulkEmpIdSuggestions" class="employee-suggestions"></div>
+                        </div>
                         <div id="bulkEmpNameDisplay"
                             style="color: #00ffc3; font-size: 12px; margin-top: 4px; font-weight: bold; min-height: 16px;">
                         </div>
@@ -638,11 +696,15 @@
                     <div style="flex:1">
                         <label
                             style="font-size:13px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px"
-                            data-i18n="filter_emp_id">Filter
-                            by Employee ID</label>
-                        <input id="filterEmpId" list="empList" placeholder="Search or Select Employee ID..."
-                            oninput="renderAttendanceTable()" data-i18n="search_select_emp">
-                        <datalist id="empList"></datalist>
+                            data-i18n="filter_emp_id">Filter by Employee ID or Name</label>
+                        <div class="employee-search-field">
+                            <input id="filterEmpId" autocomplete="off" placeholder="Search Employee ID or Name..."
+                                oninput="handleEmployeeSearchInput('filterEmpId', null, true)"
+                                onfocus="showEmployeeSuggestions('filterEmpId', null, true)"
+                                onblur="setTimeout(() => hideEmployeeSuggestions('filterEmpId'), 150)"
+                                onchange="renderAttendanceTable()" data-i18n="search_select_emp">
+                            <div id="filterEmpIdSuggestions" class="employee-suggestions"></div>
+                        </div>
                     </div>
                     <div style="flex:1">
                         <label
@@ -735,14 +797,193 @@
         // Fetch Employees to build whitelist and populate datalist
         const empMap = {}; // Map ID -> Name
         const empOnboardingMap = {}; // Map ID -> onboardingDate or createdAt
+        const empRecordKeyMap = {}; // Map searchable ID/custom ID -> Firebase employee key
+        const empOptionIds = [];
+        let employeesLoaded = false;
+
+        const employeeRecordKey = (empId) => empRecordKeyMap[empId] || empId;
+
+        const employeeAliasesForRecord = (empId) => {
+            const recordKey = employeeRecordKey(empId);
+            const aliases = Object.keys(empRecordKeyMap).filter(id => empRecordKeyMap[id] === recordKey);
+            if (!aliases.length && empMap[empId]) aliases.push(empId);
+            return aliases;
+        };
+
+        const employeeNameForId = (empId) => {
+            const directName = (empMap[empId] || "").trim();
+            if (directName) return directName;
+
+            const alias = employeeAliasesForRecord(empId).find(id => (empMap[id] || "").trim());
+            return alias ? empMap[alias] : "";
+        };
+
+        const employeeOptionLabel = (empId) => {
+            const name = employeeNameForId(empId);
+            return name ? `${empId} - ${name}` : empId;
+        };
+
+        const stripEmployeeLabel = (input) => {
+            const value = (input || "").trim();
+            const separatorIndex = value.indexOf(" - ");
+            return separatorIndex >= 0 ? value.slice(0, separatorIndex).trim() : value;
+        };
+
+        const employeeMatches = (input) => {
+            const value = (input || "").trim();
+            if (!value) return [];
+
+            const stripped = stripEmployeeLabel(value);
+            const query = value.toLowerCase();
+            const strippedQuery = stripped.toLowerCase();
+            const ids = Object.keys(empMap);
+
+            const exactMatches = ids.filter(id => {
+                const idLower = id.toLowerCase();
+                const nameLower = (empMap[id] || "").toLowerCase();
+                const labelLower = employeeOptionLabel(id).toLowerCase();
+                return idLower === query ||
+                    idLower === strippedQuery ||
+                    nameLower === query ||
+                    labelLower === query;
+            });
+            if (exactMatches.length) return exactMatches;
+
+            return ids.filter(id => {
+                const idLower = id.toLowerCase();
+                const nameLower = (empMap[id] || "").toLowerCase();
+                const labelLower = employeeOptionLabel(id).toLowerCase();
+                return idLower.includes(query) ||
+                    idLower.includes(strippedQuery) ||
+                    nameLower.includes(query) ||
+                    labelLower.includes(query);
+            });
+        };
+
+        const matchesSingleEmployeeRecord = (matches) => {
+            const recordKeys = new Set(matches.map(employeeRecordKey));
+            return recordKeys.size === 1;
+        };
+
+        const sameEmployeeRecord = (firstId, secondId) => {
+            return employeeRecordKey(firstId) === employeeRecordKey(secondId);
+        };
+
+        const preferredEmployeeId = (matches) => {
+            const customId = matches.find(id => employeeRecordKey(id) !== id);
+            return customId || matches[0] || "";
+        };
+
+        const resolveEmployeeId = (input, allowPartial = false) => {
+            const value = (input || "").trim();
+            if (!value) return "";
+
+            const stripped = stripEmployeeLabel(value);
+            if (empMap[stripped]) return stripped;
+
+            const matches = employeeMatches(value);
+            if (!matches.length) return "";
+            if (!allowPartial) return preferredEmployeeId(matches);
+            if (matches.length === 1 || matchesSingleEmployeeRecord(matches)) {
+                return preferredEmployeeId(matches);
+            }
+            return "";
+        };
+
+        const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, c => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c]));
+
+        const employeeSearchOptions = (input) => {
+            const value = (input || "").trim();
+            const query = value.toLowerCase();
+            const strippedQuery = stripEmployeeLabel(value).toLowerCase();
+            const sourceIds = empOptionIds.length ? empOptionIds : Object.keys(empMap);
+            const uniqueIds = [];
+
+            sourceIds.forEach(id => {
+                if (!id || uniqueIds.includes(id)) return;
+                uniqueIds.push(id);
+            });
+
+            if (!query) return uniqueIds.slice(0, 12);
+
+            return uniqueIds.filter(id => {
+                const idLower = id.toLowerCase();
+                const nameLower = employeeNameForId(id).toLowerCase();
+                const labelLower = employeeOptionLabel(id).toLowerCase();
+                return idLower.includes(query) ||
+                    idLower.includes(strippedQuery) ||
+                    nameLower.includes(query) ||
+                    labelLower.includes(query);
+            }).slice(0, 12);
+        };
+
+        const renderEmployeeSuggestions = (inputId, displayId = null, shouldFilter = false) => {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(`${inputId}Suggestions`);
+            if (!input || !box) return;
+
+            const matches = employeeSearchOptions(input.value);
+            box.innerHTML = "";
+
+            if (!matches.length) {
+                const item = document.createElement("div");
+                item.className = "employee-suggestion";
+                const hasEmployees = employeesLoaded && Object.keys(empMap).length > 0;
+                item.innerHTML = hasEmployees
+                    ? "<strong>No employee found</strong><span>Try another name or ID</span>"
+                    : "<strong>Loading employees...</strong><span>Please wait a moment</span>";
+                box.appendChild(item);
+                box.style.display = "block";
+                return;
+            }
+
+            matches.forEach(empId => {
+                const item = document.createElement("div");
+                item.className = "employee-suggestion";
+                const name = employeeNameForId(empId) || "Unknown";
+                item.innerHTML = `<strong>${escapeHtml(name)}</strong><span>${escapeHtml(empId)}</span>`;
+                item.addEventListener("mousedown", event => {
+                    event.preventDefault();
+                    input.value = employeeOptionLabel(empId);
+                    if (displayId) window.updateEmpNameDisplay(inputId, displayId);
+                    window.hideEmployeeSuggestions(inputId);
+                    if (shouldFilter) window.renderAttendanceTable();
+                });
+                box.appendChild(item);
+            });
+
+            box.style.display = "block";
+        };
+
+        window.showEmployeeSuggestions = (inputId, displayId = null, shouldFilter = false) => {
+            renderEmployeeSuggestions(inputId, displayId, shouldFilter);
+        };
+
+        window.hideEmployeeSuggestions = (inputId) => {
+            const box = document.getElementById(`${inputId}Suggestions`);
+            if (box) box.style.display = "none";
+        };
+
+        window.handleEmployeeSearchInput = (inputId, displayId = null, shouldFilter = false) => {
+            if (displayId) window.updateEmpNameDisplay(inputId, displayId);
+            renderEmployeeSuggestions(inputId, displayId, shouldFilter);
+            if (shouldFilter) window.renderAttendanceTable();
+        };
+
         // Initialize date inputs to max today
         // Initialize date inputs to max today AND set default filter to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('attDate').max = today;
         // document.getElementById('bulkFrom').max = today;
         // document.getElementById('bulkTo').max = today;
-        document.getElementById('filterFromDate').value = today; // Default to today
-        document.getElementById('filterToDate').value = today; // Default to today
+        document.getElementById('filterFromDate').value = today;
+        document.getElementById('filterToDate').value = today;
 
         // Load Emp List
         onValue(ref(db, "admins"), adminsSnap => {
@@ -758,11 +999,13 @@
 
             onValue(ref(db, "employees"), s => {
                 allowedEmpIds.clear();
-                const empList = document.getElementById('empList');
-                empList.innerHTML = '';
+                empOptionIds.length = 0;
 
                 // Clear map
                 for (const key in empMap) delete empMap[key];
+                for (const key in empOnboardingMap) delete empOnboardingMap[key];
+                for (const key in empRecordKeyMap) delete empRecordKeyMap[key];
+                employeesLoaded = false;
 
                 if (s.exists()) {
                     s.forEach(c => {
@@ -778,15 +1021,19 @@
                             allow = false;
                         } else if (adminRole === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                             allow = false;
-                        } else if (adminRole === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
-                            allow = false;
                         }
                         if (allow) {
                             allowedEmpIds.add(c.key);
                             if (e.empId) allowedEmpIds.add(e.empId);
+                            const sanitizedEmpId = e.empId ? e.empId.replace(/[.#$\[\]]/g, '_') : "";
+                            if (sanitizedEmpId) allowedEmpIds.add(sanitizedEmpId);
 
                             empMap[c.key] = e.name;
                             if (e.empId) empMap[e.empId] = e.name;
+                            if (sanitizedEmpId) empMap[sanitizedEmpId] = e.name;
+                            empRecordKeyMap[c.key] = c.key;
+                            if (e.empId) empRecordKeyMap[e.empId] = c.key;
+                            if (sanitizedEmpId) empRecordKeyMap[sanitizedEmpId] = c.key;
 
                             let obDate = e.onboardingDate;
                             if (!obDate && e.createdAt) {
@@ -794,15 +1041,15 @@
                             }
                             empOnboardingMap[c.key] = obDate;
                             if (e.empId) empOnboardingMap[e.empId] = obDate;
+                            if (sanitizedEmpId) empOnboardingMap[sanitizedEmpId] = obDate;
 
-                            // Populate datalist with Value=ID, Label=Name
-                            const option = document.createElement('option');
-                            option.value = e.empId || c.key;
-                            option.label = e.name; 
-                            empList.appendChild(option);
+                            const optionId = e.empId || c.key;
+                            if (!empOptionIds.includes(optionId)) empOptionIds.push(optionId);
                         }
                     });
                 }
+                employeesLoaded = true;
+                empOptionIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
                 
                 // Unconditionally render table now that employee mappings are loaded/refreshed
                 renderAttendanceTable();
@@ -814,13 +1061,19 @@
             const display = document.getElementById(displayId);
             const val = input.value.trim();
 
-            if (empMap[val]) {
-                display.textContent = empMap[val];
+            if (!val) {
+                display.textContent = "";
+                return;
+            }
+
+            const resolvedId = resolveEmployeeId(val, true);
+            if (resolvedId) {
+                display.textContent = employeeOptionLabel(resolvedId);
                 display.style.color = "#00ffc3";
             } else {
-                // Try reverse lookup if they typed exact name? 
-                // No, datalist handles typing name -> selecting ID
-                display.textContent = "";
+                const matches = employeeMatches(val);
+                display.textContent = matches.length > 1 ? "Multiple matches - choose one from list" : "";
+                display.style.color = "#ffb74d";
             }
         };
 
@@ -940,16 +1193,10 @@
                 return;
             }
 
-            let empId = empIdInput;
-            if (!empMap[empId]) {
-                // Try to find matching ID by Name (case-insensitive)
-                const foundId = Object.keys(empMap).find(id => empMap[id].toLowerCase() === empIdInput.toLowerCase());
-                if (foundId) {
-                    empId = foundId;
-                } else {
-                    alert("Invalid Employee Name or ID: " + empIdInput);
-                    return;
-                }
+            const empId = resolveEmployeeId(empIdInput, true);
+            if (!empId) {
+                alert("Invalid Employee Name or ID: " + empIdInput);
+                return;
             }
 
             if (adminRole === 'branch_admin' && !allowedEmpIds.has(empId)) {
@@ -1001,6 +1248,7 @@
 
             alert('Attendance marked successfully!');
             document.getElementById('attEmpId').value = '';
+            document.getElementById('attEmpNameDisplay').textContent = '';
             document.getElementById('attDate').value = '';
             document.getElementById('attIn').value = '';
             document.getElementById('attOut').value = '';
@@ -1021,15 +1269,10 @@
                 return;
             }
 
-            let emp = empInput;
-            if (!empMap[emp]) {
-                const foundId = Object.keys(empMap).find(id => empMap[id].toLowerCase() === empInput.toLowerCase());
-                if (foundId) {
-                    emp = foundId;
-                } else {
-                    alert("Invalid Employee Name or ID: " + empInput);
-                    return;
-                }
+            const emp = resolveEmployeeId(empInput, true);
+            if (!emp) {
+                alert("Invalid Employee Name or ID: " + empInput);
+                return;
             }
 
             if (adminRole === 'branch_admin' && !allowedEmpIds.has(emp)) {
@@ -1062,7 +1305,8 @@
 
             let settingsRoot = "settings";
             if (emp) {
-                const empSnap = await get(ref(db, `employees/${emp}`));
+                const employeeKey = empRecordKeyMap[emp] || emp;
+                const empSnap = await get(ref(db, `employees/${employeeKey}`));
                 const employee = empSnap.val() || {};
                 if (employee.companyId) {
                     const compSnap = await get(ref(db, `settings/companies/${employee.companyId}`));
@@ -1117,6 +1361,7 @@
                 
                 // Clear form
                 document.getElementById('bulkEmpId').value = '';
+                document.getElementById('bulkEmpNameDisplay').textContent = '';
                 document.getElementById('bulkFrom').value = '';
                 document.getElementById('bulkTo').value = '';
                 document.getElementById('bulkIn').value = '';
@@ -1132,6 +1377,28 @@
             toggleBulkTimes();
         };
 
+        function normalizeAttendanceStatus(record, dateKey) {
+            const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
+            const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
+
+            if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) {
+                return 'out';
+            }
+
+            if (rawStatus === 'in' && !hasPunchOut) {
+                const now = new Date();
+                const todayY = now.getFullYear();
+                const todayM = String(now.getMonth() + 1).padStart(2, '0');
+                const todayD = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${todayY}-${todayM}-${todayD}`;
+                if (dateKey < todayStr || (dateKey === todayStr && now.getHours() >= 23)) {
+                    return 'halfday';
+                }
+            }
+
+            return rawStatus;
+        }
+
         // --- LISTENER ---
         let allAttendanceData = [];
 
@@ -1142,23 +1409,15 @@
 
                     emp.forEach(day => {
                         const r = day.val();
-                        let status = r.status || '';
-                        if (status === 'in' && !r.punchOut) {
-                            const now = new Date();
-                            const todayY = now.getFullYear();
-                            const todayM = String(now.getMonth() + 1).padStart(2, '0');
-                            const todayD = String(now.getDate()).padStart(2, '0');
-                            const todayStr = `${todayY}-${todayM}-${todayD}`;
-                            if (day.key < todayStr || (day.key === todayStr && now.getHours() >= 23)) {
-                                status = 'halfday';
-                            }
-                        }
+                        const rawStatus = r.status || '';
+                        const status = normalizeAttendanceStatus(r, day.key);
                         allAttendanceData.push({
                             empId: emp.key,
                             date: day.key,
                             punchIn: r.punchIn?.time || "-",
                             punchOut: r.punchOut?.time || "-",
                             status: status,
+                            rawStatus: rawStatus,
                             punchInRaw: r.punchIn?.time || '',
                             punchOutRaw: r.punchOut?.time || '',
                             punchInImg: r.punchIn?.imageBase64 || null,
@@ -1180,7 +1439,9 @@
         };
 
         window.renderAttendanceTable = () => {
-            const filterEmp = document.getElementById('filterEmpId').value.toLowerCase();
+            const filterEmpRaw = document.getElementById('filterEmpId').value.trim();
+            const filterEmp = filterEmpRaw.toLowerCase();
+            const resolvedFilterEmp = resolveEmployeeId(filterEmpRaw, true);
             const filterFromDate = document.getElementById('filterFromDate').value;
             const filterToDate = document.getElementById('filterToDate').value;
             const list = document.getElementById('attendanceData');
@@ -1191,8 +1452,22 @@
                 if (adminRole !== 'super_admin' && !allowedEmpIds.has(row.empId)) return;
 
                 // Client-side filtering
-                const empName = empMap[row.empId] ? empMap[row.empId].toLowerCase() : '';
-                if (filterEmp && !row.empId.toLowerCase().includes(filterEmp) && !empName.includes(filterEmp)) return;
+                const empName = employeeNameForId(row.empId).toLowerCase();
+                const empLabel = employeeOptionLabel(row.empId).toLowerCase();
+                if (resolvedFilterEmp && !sameEmployeeRecord(row.empId, resolvedFilterEmp)) return;
+                if (!resolvedFilterEmp && filterEmp) {
+                    const aliases = employeeAliasesForRecord(row.empId);
+                    if (!aliases.length) aliases.push(row.empId);
+                    const matchesEmployeeSearch = aliases.some(alias => {
+                        const aliasLower = alias.toLowerCase();
+                        const aliasName = employeeNameForId(alias).toLowerCase();
+                        const aliasLabel = employeeOptionLabel(alias).toLowerCase();
+                        return aliasLower.includes(filterEmp) ||
+                            aliasName.includes(filterEmp) ||
+                            aliasLabel.includes(filterEmp);
+                    });
+                    if (!matchesEmployeeSearch && !empName.includes(filterEmp) && !empLabel.includes(filterEmp)) return;
+                }
                 
                 if (filterFromDate && row.date < filterFromDate) return;
                 if (filterToDate && row.date > filterToDate) return;
@@ -1317,7 +1592,7 @@
                 }
 
                 list.innerHTML += `<tr>
-                        <td>${row.empId} <br><span style="font-size:11px;color:var(--text-muted)">${empMap[row.empId] || ''}</span></td>
+                        <td>${row.empId} <br><span style="font-size:11px;color:var(--text-muted)">${employeeNameForId(row.empId) || ''}</span></td>
                         <td>${row.date}</td>
                         <td>${row.punchIn} ${punchInImgBtn}</td>
                         <td>${row.punchOut} ${punchOutImgBtn}</td>
@@ -1346,6 +1621,7 @@
 
         window.editAttendance = (emp, day, punchIn, punchOut) => {
             document.getElementById('attEmpId').value = emp;
+            updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay');
             document.getElementById('attDate').value = day;
             document.getElementById('attIn').value = punchIn;
             document.getElementById('attOut').value = punchOut;
@@ -1354,7 +1630,7 @@
             // Find record to get images
             const record = allAttendanceData.find(r => r.empId === emp && r.date === day);
             if (record) {
-                document.getElementById('attStatus').value = record.status;
+                document.getElementById('attStatus').value = record.status === 'out' ? 'in' : (record.rawStatus || record.status);
 
                 if (record.punchInImg) {
                     document.getElementById('attInBase64').value = record.punchInImg;
