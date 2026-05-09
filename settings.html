@@ -1202,11 +1202,11 @@
                     location-based attendance verification</p>
                 <div class="form-grid">
                     <div class="form-group"><label data-i18n="latitude">Latitude</label><input type="number"
-                            step="0.000001" id="officeLat" placeholder="e.g., 11.2588"></div>
+                            step="0.000001" min="-90" max="90" id="officeLat" placeholder="e.g., 11.2588"></div>
                     <div class="form-group"><label data-i18n="longitude">Longitude</label><input type="number"
-                            step="0.000001" id="officeLng" placeholder="e.g., 75.7804"></div>
+                            step="0.000001" min="-180" max="180" id="officeLng" placeholder="e.g., 75.7804"></div>
                     <div class="form-group"><label data-i18n="allowed_radius">Allowed Radius (meters)</label><input
-                            type="number" id="officeRadius" placeholder="e.g., 100"></div>
+                            type="number" min="1" step="1" id="officeRadius" placeholder="e.g., 100"></div>
                 </div>
                 <button onclick="saveOfficeLocation()" data-i18n="save_office_location">📍 Save Office Location</button>
             </div>
@@ -1813,10 +1813,19 @@
             else { officeLat.value = ''; officeLng.value = ''; officeRadius.value = ''; }
         });
         window.saveOfficeLocation = () => {
-            const lat = parseFloat(officeLat.value); const lng = parseFloat(officeLng.value); const radius = parseInt(officeRadius.value);
-            if (isNaN(lat) || isNaN(lng) || isNaN(radius)) { alert('Please enter valid values'); return }
-            set(ref(db, `${settingsRoot}/officeLocation`), { lat, lng, radius });
-            alert('Office location saved!')
+            const lat = Number.parseFloat(officeLat.value);
+            const lng = Number.parseFloat(officeLng.value);
+            const radius = Number.parseInt(officeRadius.value, 10);
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(radius) ||
+                lat < -90 || lat > 90 || lng < -180 || lng > 180 || radius <= 0) {
+                alert('Please enter valid location values. Latitude must be -90 to 90, longitude -180 to 180, and radius greater than 0 meters.');
+                return;
+            }
+
+            set(ref(db, `${settingsRoot}/officeLocation`), { lat, lng, radius }).then(() => {
+                alert('Office location saved!');
+            });
         };
 
         // --- Department Management ---
