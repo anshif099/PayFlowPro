@@ -522,12 +522,12 @@
                 <div class="salary-card">
                     <div class="salary-title" data-i18n="total_payable_salary">Total Payable Salary</div>
                     <div class="salary-amount" id="finalSalary">₹0</div>
-                    <div class="salary-meta" id="baseSalaryDisplay">Calculated: ₹0</div>
+                    <div class="salary-meta" id="baseSalaryDisplay">Base: ₹0</div>
                 </div>
 
                 <div id="penaltySection" class="salary-card"
                     style="border-color: var(--warning); display:none; margin-top: -20px;">
-                    <div class="salary-title" style="color: var(--warning);">Late Penalty Deduction</div>
+                    <div class="salary-title" id="penaltySectionTitle" style="color: var(--warning);">Late Penalty Deduction</div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <div style="text-align:left;">
@@ -535,7 +535,7 @@
                             <div id="netLateTime" style="font-size:20px; font-weight:700;">0h 0m</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:14px; color:var(--text-muted);">Penalty Days</div>
+                            <div style="font-size:14px; color:var(--text-muted);" id="penaltyDaysLabel">Penalty Days</div>
                             <div id="penaltyDays" style="font-size:20px; font-weight:700; color:var(--danger);">0 Days
                             </div>
                         </div>
@@ -940,21 +940,39 @@
             document.getElementById('presentDays').textContent = presentCount;
             document.getElementById('weekOffDays').textContent = rangeWeekOffs;
             document.getElementById('holidayDays').textContent = rangeHolidays;
-            document.getElementById('finalSalary').textContent = formatMoney(baseSalary);
-            document.getElementById('baseSalaryDisplay').textContent = `Calculated: ${formatMoney(finalSalary)}`;
+            document.getElementById('finalSalary').textContent = formatMoney(finalSalary);
+            document.getElementById('baseSalaryDisplay').textContent = `Base: ${formatMoney(baseSalary)}`;
             document.getElementById('attendancePercent').textContent = attendancePercent + "%";
 
             const penaltySection = document.getElementById('penaltySection');
             if (penaltySection) {
                 penaltySection.style.display = 'block';
-                const netTimeStr = (netLateMins > 0 ? '-' : '+') + `${Math.floor(Math.abs(netLateMins) / 60)}h ${Math.abs(netLateMins) % 60}m`;
+                // Update border and title colour based on late vs extra
+                penaltySection.style.borderColor = netLateMins > 0 ? 'var(--warning)' : 'var(--success)';
+                const titleEl = document.getElementById('penaltySectionTitle');
+                if (titleEl) {
+                    titleEl.textContent = netLateMins > 0 ? 'LATE PENALTY DEDUCTION' : 'EXTRA REWARD';
+                    titleEl.style.color = netLateMins > 0 ? 'var(--warning)' : 'var(--success)';
+                }
+                const netTimeStr = `${Math.floor(Math.abs(netLateMins) / 60)}h ${Math.abs(netLateMins) % 60}m ${netLateMins > 0 ? 'Late' : 'Extra'}`;
                 const netLateEl = document.getElementById('netLateTime');
                 if (netLateEl) {
                     netLateEl.textContent = netTimeStr;
                     netLateEl.style.color = netLateMins > 0 ? 'var(--danger)' : 'var(--success)';
                 }
                 const pDaysEl = document.getElementById('penaltyDays');
-                if (pDaysEl) pDaysEl.textContent = `${netLateMins > 0 ? penaltyDays : extraDays} Days`;
+                const pDaysLabelEl = document.getElementById('penaltyDaysLabel');
+                if (pDaysEl) {
+                    if (netLateMins > 0) {
+                        pDaysEl.textContent = `${penaltyDays} Days`;
+                        pDaysEl.style.color = 'var(--danger)';
+                        if (pDaysLabelEl) pDaysLabelEl.textContent = 'Penalty Days';
+                    } else {
+                        pDaysEl.textContent = `${extraDays.toFixed(2)} Days`;
+                        pDaysEl.style.color = 'var(--success)';
+                        if (pDaysLabelEl) pDaysLabelEl.textContent = 'Extra Days';
+                    }
+                }
                 const pAmtEl = document.getElementById('penaltyAmountVal');
                 if (pAmtEl) pAmtEl.textContent = formatSignedMoney(-amountToDeduct);
                 const extraRow = document.getElementById('extraRewardRow');

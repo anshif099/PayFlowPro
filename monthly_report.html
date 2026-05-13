@@ -709,7 +709,7 @@
                         <td>${Math.floor(totalExtraMins/60)}h ${totalExtraMins%60}m</td>
                         <td>${Math.floor(Math.abs(netMins)/60)}h ${Math.abs(netMins)%60}m ${netMins>0?'Late':'Extra'}</td>
                         <td>${((cappedPayable/daysInMonth)*100).toFixed(1)}%</td>
-                        <td><span style="color:var(--primary); font-weight:700">${formatMoney(baseSalary)}</span><br><small>Calc: ${formatMoney(finalSalary)} ${approvalStatus}</small></td>
+                        <td><span style="color:var(--primary); font-weight:700">${formatMoney(finalSalary)}</span><br><small>Base: ${formatMoney(baseSalary)} ${approvalStatus}</small></td>
                     </tr>`;
                 });
 
