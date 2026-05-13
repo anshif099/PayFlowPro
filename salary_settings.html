@@ -555,7 +555,7 @@
                             style="display:flex; align-items:center; gap:12px; margin-top:12px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
                             <input type="checkbox" id="applyPenaltyToggle"
                                 style="width:20px; height:20px; cursor:pointer;">
-                            <label for="applyPenaltyToggle" style="cursor:pointer; user-select:none;">Apply Late Penalty
+                            <label id="applyToggleLabel" for="applyPenaltyToggle" style="cursor:pointer; user-select:none;">Apply Late Penalty
                                 to
                                 Final Salary</label>
                         </div>
@@ -931,9 +931,16 @@
             const totalPayableDaysRaw = daysInMonth - absentCount;
             const cappedDays = Math.min(totalPayableDaysRaw, daysInMonth);
             const attendancePercent = ((cappedDays / daysInMonth) * 100).toFixed(1);
-            let penaltyToApply = applyPenalty ? amountToDeduct : 0;
-            let rewardToApply = amountToAdd; // Always apply reward for extra time
-            let finalSalary = Math.round(baseSalary) - penaltyToApply + rewardToApply;
+            // Toggle controls BOTH reward and penalty:
+            // Toggle OFF → baseSalary only (default)
+            // Toggle ON + extra → baseSalary + extraReward
+            // Toggle ON + late → baseSalary - penalty
+            let adjustment = 0;
+            if (applyPenalty) {
+                if (netLateMins > 0) adjustment = -amountToDeduct;
+                else if (netLateMins < 0) adjustment = amountToAdd;
+            }
+            let finalSalary = Math.round(baseSalary) + adjustment;
 
             // 6. Update UI
             document.getElementById('totalDays').textContent = daysInMonth;
@@ -985,6 +992,10 @@
                 if (pWarnEl) {
                     pWarnEl.style.display = (penaltyDays > 0 || extraDays > 0) ? 'block' : 'none';
                     pWarnEl.textContent = netLateMins > 0 ? "* 4 hours of Net Late Time = 0.5 Day Salary Deduction." : "* 4 hours of Net Extra Time = 0.5 Day Salary Reward.";
+                }
+                const toggleLabelEl = document.getElementById('applyToggleLabel');
+                if (toggleLabelEl) {
+                    toggleLabelEl.textContent = netLateMins < 0 ? 'Apply Extra Reward' : 'Apply Late Penalty to Final Salary';
                 }
                 const toggle = document.getElementById('applyPenaltyToggle');
                 if (toggle) toggle.onchange = () => calculateSalary();
