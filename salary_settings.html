@@ -898,6 +898,9 @@
                     rangeWeekOffs++;
                 }
             }
+            // Calculate absentCount: days so far minus (present + weekoffs + holidays)
+            const activeToCheck = isCurrentMonthGlobal ? Math.max(0, today.getDate() - 1) : daysForAbsentCalc;
+            const absentCount = Math.max(0, activeToCheck - (presentCount + rangeWeekOffs + rangeHolidays));
 
             // 4. Calculate Penalty & Extra Reward
             let salaryValue = employeesData[empId].salary || "0";
@@ -925,7 +928,7 @@
             }
 
             // 5. Final Calculation
-            const totalPayableDaysRaw = presentCount + rangeWeekOffs + rangeHolidays;
+            const totalPayableDaysRaw = daysInMonth - absentCount;
             const cappedDays = Math.min(totalPayableDaysRaw, daysInMonth);
             const attendancePercent = ((cappedDays / daysInMonth) * 100).toFixed(1);
             const baseWorkedSalary = Math.round(perDaySalary * cappedDays);

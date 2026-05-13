@@ -674,7 +674,7 @@
                         }
                     });
 
-                    const totalPayableDays = presentCount + leaveCount + monthWeekOffCount + monthHolidayCount;
+                    const totalPayableDays = daysInMonth - absentCount;
                     const cappedPayable = Math.min(totalPayableDays, daysInMonth);
                     const absentCount = Math.max(0, (isCurrentMonthGlobal ? todayDate : daysInMonth) - (presentCount + leaveCount + monthWeekOffCount + monthHolidayCount));
                     
