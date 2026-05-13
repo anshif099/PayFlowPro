@@ -734,6 +734,7 @@
                     // Penalty formula logic execution tree cleanly mapped from Dart Math.Floor logic securely 
                     const netLateMins = totalLateMins - totalExtraMins;
                     let penaltyDays = 0;
+                    let amountToDeduct = 0;
 
                     if (netLateMins > 0) {
                         let netLateHours = netLateMins / 60.0;
@@ -743,19 +744,19 @@
                     const totalPayableDaysRaw = presentCount + leaveCount + weekOffsSoFar + holidaysSoFar;
                     const totalPayableDays = totalPayableDaysRaw > daysInMonth ? daysInMonth : totalPayableDaysRaw;
 
-                    const finalPayableAfterPenalty = (totalPayableDays - penaltyDays);
                     const perDay = baseSalary / daysInMonth;
-                    let finalSalary = Math.round(perDay * finalPayableAfterPenalty);
+                    amountToDeduct = Math.round(perDay * penaltyDays);
 
                     // Add mapping for standard Extra Reward securely mimicking Dart exact rounding behavior tracking net rewards 
                     let extraDays = 0;
                     let amountToAdd = 0;
                     if (netLateMins < 0) {
                         const netExtraHours = Math.abs(netLateMins) / 60.0;
-                        extraDays = Math.floor(netExtraHours / 4) * 0.5;
+                        extraDays = netExtraHours / 8.0;
                         amountToAdd = Math.round(perDay * extraDays);
                     }
 
+                    let finalSalary = Math.round(baseSalary) - amountToDeduct + amountToAdd;
                     let isApproved = false;
                     
                     if (allApprovals[empId] && allApprovals[empId][monthStr]) {
@@ -765,8 +766,6 @@
                         totalLateMins = approval.netLateMins !== undefined ? approval.netLateMins : totalLateMins;
                         isApproved = true;
                     }
-
-                    if (!isApproved) finalSalary += amountToAdd;
 
                     // Build array object state mapping cleanly iteratively
                     currentReportData.push({

@@ -621,9 +621,9 @@
                     const dateObj = new Date(year, month - 1, d);
                     if (isCurrentMonthGlobal && d > todayDate) continue;
                     const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                    let isWO = weekOffNames.includes(dayName);
-                    if (!isWO && dayName === 'Saturday' && d >= 8 && d <= 14) {
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                    let isWO = weekOffNames.map(w => w.toLowerCase()).includes(dayName);
+                    if (!isWO && dayName === 'saturday' && d >= 8 && d <= 14) {
                         if (secondSaturdayData === true || (secondSaturdayData && secondSaturdayData.enabled)) isWO = true;
                     }
                     if (allHolidays[ymd]) monthHolidayCount++;
@@ -680,7 +680,6 @@
                     
                     const baseSalary = parseFloat(String(emp.salary || "0").replace(/[^0-9.]/g, "")) || 0;
                     const perDay = baseSalary / daysInMonth;
-                    const netSalary = Math.round(perDay * cappedPayable);
                     const netMins = totalLateMins - totalExtraMins;
 
                     let penaltyDays = 0;
@@ -694,7 +693,7 @@
                     const amountToAdd = Math.round(perDay * extraDays);
 
                     const approval = (allApprovals[emp.empId] || {})[monthVal];
-                    let finalSalary = approval ? approval.finalSalary : (netSalary - amountToDeduct + amountToAdd);
+                    let finalSalary = approval ? approval.finalSalary : (Math.round(baseSalary) - amountToDeduct + amountToAdd);
                     let approvalStatus = approval ? "✅ Approved" : "";
 
                     html += `<tr>
@@ -710,7 +709,7 @@
                         <td>${Math.floor(totalExtraMins/60)}h ${totalExtraMins%60}m</td>
                         <td>${Math.floor(Math.abs(netMins)/60)}h ${Math.abs(netMins)%60}m ${netMins>0?'Late':'Extra'}</td>
                         <td>${((cappedPayable/daysInMonth)*100).toFixed(1)}%</td>
-                        <td><span style="color:var(--primary); font-weight:700">${formatMoney(finalSalary)}</span><br><small>${approvalStatus}</small></td>
+                        <td><span style="color:var(--primary); font-weight:700">${formatMoney(baseSalary)}</span><br><small>Calc: ${formatMoney(finalSalary)} ${approvalStatus}</small></td>
                     </tr>`;
                 });
 

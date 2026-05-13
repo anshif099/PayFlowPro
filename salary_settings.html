@@ -522,7 +522,7 @@
                 <div class="salary-card">
                     <div class="salary-title" data-i18n="total_payable_salary">Total Payable Salary</div>
                     <div class="salary-amount" id="finalSalary">₹0</div>
-                    <div class="salary-meta" id="baseSalaryDisplay">Base: ₹0</div>
+                    <div class="salary-meta" id="baseSalaryDisplay">Calculated: ₹0</div>
                 </div>
 
                 <div id="penaltySection" class="salary-card"
@@ -871,11 +871,11 @@
             let rangeHolidays = 0;
             for (let d = 1; d <= daysForAbsentCalc; d++) {
                 const dateObj = new Date(year, month - 1, d);
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
                 const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-                let isWO = weekOffNames.includes(dayName);
-                if (!isWO && dayName === 'Saturday' && d >= 8 && d <= 14) {
+                let isWO = weekOffNames.map(w => w.toLowerCase()).includes(dayName);
+                if (!isWO && dayName === 'saturday' && d >= 8 && d <= 14) {
                     if (secondSaturdayData === true) {
                         isWO = true;
                     } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
@@ -931,18 +931,17 @@
             const totalPayableDaysRaw = daysInMonth - absentCount;
             const cappedDays = Math.min(totalPayableDaysRaw, daysInMonth);
             const attendancePercent = ((cappedDays / daysInMonth) * 100).toFixed(1);
-            const baseWorkedSalary = Math.round(perDaySalary * cappedDays);
             let penaltyToApply = applyPenalty ? amountToDeduct : 0;
-            let rewardToApply = applyPenalty ? amountToAdd : 0;
-            let finalSalary = baseWorkedSalary - penaltyToApply + rewardToApply;
+            let rewardToApply = amountToAdd; // Always apply reward for extra time
+            let finalSalary = Math.round(baseSalary) - penaltyToApply + rewardToApply;
 
             // 6. Update UI
             document.getElementById('totalDays').textContent = daysInMonth;
             document.getElementById('presentDays').textContent = presentCount;
             document.getElementById('weekOffDays').textContent = rangeWeekOffs;
             document.getElementById('holidayDays').textContent = rangeHolidays;
-            document.getElementById('finalSalary').textContent = formatMoney(finalSalary);
-            document.getElementById('baseSalaryDisplay').textContent = `${t('base_salary')}: ${formatMoney(baseSalary)}`;
+            document.getElementById('finalSalary').textContent = formatMoney(baseSalary);
+            document.getElementById('baseSalaryDisplay').textContent = `Calculated: ${formatMoney(finalSalary)}`;
             document.getElementById('attendancePercent').textContent = attendancePercent + "%";
 
             const penaltySection = document.getElementById('penaltySection');
