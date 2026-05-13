@@ -674,17 +674,27 @@
                         }
                     });
 
+                    const absentCount = Math.max(0, (isCurrentMonthGlobal ? todayDate : daysInMonth) - (presentCount + leaveCount + monthWeekOffCount + monthHolidayCount));
                     const totalPayableDays = daysInMonth - absentCount;
                     const cappedPayable = Math.min(totalPayableDays, daysInMonth);
-                    const absentCount = Math.max(0, (isCurrentMonthGlobal ? todayDate : daysInMonth) - (presentCount + leaveCount + monthWeekOffCount + monthHolidayCount));
                     
                     const baseSalary = parseFloat(String(emp.salary || "0").replace(/[^0-9.]/g, "")) || 0;
                     const perDay = baseSalary / daysInMonth;
                     const netSalary = Math.round(perDay * cappedPayable);
                     const netMins = totalLateMins - totalExtraMins;
 
+                    let penaltyDays = 0;
+                    let extraDays = 0;
+                    if (netMins > 0) {
+                        penaltyDays = Math.floor(netMins / 60 / 4) * 0.5;
+                    } else if (netMins < 0) {
+                        extraDays = Math.abs(netMins) / 60 / 8;
+                    }
+                    const amountToDeduct = Math.round(perDay * penaltyDays);
+                    const amountToAdd = Math.round(perDay * extraDays);
+
                     const approval = (allApprovals[emp.empId] || {})[monthVal];
-                    let finalSalary = approval ? approval.finalSalary : netSalary;
+                    let finalSalary = approval ? approval.finalSalary : (netSalary - amountToDeduct + amountToAdd);
                     let approvalStatus = approval ? "✅ Approved" : "";
 
                     html += `<tr>

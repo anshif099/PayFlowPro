@@ -923,7 +923,7 @@
             } else if (netLateMins < 0) {
                 const netExtraMins = Math.abs(netLateMins);
                 const netExtraHours = netExtraMins / 60;
-                extraDays = Math.floor(netExtraHours / 4) * 0.5;
+                extraDays = netExtraHours / 8.0; // Granular: 1 hour = 1/8th day
                 amountToAdd = Math.round(perDaySalary * extraDays);
             }
 
@@ -933,7 +933,8 @@
             const attendancePercent = ((cappedDays / daysInMonth) * 100).toFixed(1);
             const baseWorkedSalary = Math.round(perDaySalary * cappedDays);
             let penaltyToApply = applyPenalty ? amountToDeduct : 0;
-            let finalSalary = baseWorkedSalary - penaltyToApply + amountToAdd;
+            let rewardToApply = applyPenalty ? amountToAdd : 0;
+            let finalSalary = baseWorkedSalary - penaltyToApply + rewardToApply;
 
             // 6. Update UI
             document.getElementById('totalDays').textContent = daysInMonth;
