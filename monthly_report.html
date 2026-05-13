@@ -321,50 +321,6 @@
                 <option value="te">తెలుగు (Telugu)</option>
             </select>
         </div>
-            <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
-        <style>
-        .nav-dropdown {
-            display: none;
-            flex-direction: column;
-            padding-left: 32px;
-            margin-bottom: 4px;
-        }
-        .nav-dropdown.show {
-            display: flex;
-        }
-        .dropdown-toggle {
-            justify-content: space-between;
-        }
-        .nav-dropdown .nav-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        .nav-dropdown .nav-icon {
-            font-size: 16px;
-        }
-        </style>
         <style>
         .nav-dropdown {
             display: none;
@@ -580,7 +536,6 @@
             for (let i = 0; i < table.rows.length; i++) {
                 let row = [], cols = table.rows[i].querySelectorAll("td, th");
                 for (let j = 0; j < cols.length; j++) {
-                    // Clean text: remove newlines, commas
                     let txt = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, " ");
                     row.push(txt);
                 }
@@ -597,44 +552,30 @@
             document.body.removeChild(downloadLink);
         };
 
-
-
-        // Default to current month
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
 
         window.generateReport = async () => {
             const monthVal = document.getElementById('reportMonth').value;
-            if (!monthVal) return alert(t('select_month')); // Using t() for alert if desired, though t() is global now
+            if (!monthVal) return alert("Select Month");
 
             const tbody = document.getElementById('reportData');
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">${t('loading_report')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--text-muted);">Loading Report...</td></tr>`;
 
             const adminRole = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
 
             try {
-                // 1. Fetch Basic Data
                 const [empSnap, settingsSnap, attendanceSnap, approvalsSnap, adminsSnap] = await Promise.all([
                     get(ref(db, "employees")),
                     get(ref(db, "settings")),
                     get(ref(db, "attendance")),
-                    get(ref(db, `salary_approvals`)),
+                    get(ref(db, "salary_approvals")),
                     get(ref(db, "admins"))
                 ]);
 
                 if (!empSnap.exists()) {
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">${t('no_employees_found')}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--text-muted);">No employees found</td></tr>`;
                     return;
-                }
-
-                const branchAdminBranches = new Set();
-                if (adminsSnap.exists()) {
-                    adminsSnap.forEach(a => {
-                        const admin = a.val();
-                        if (admin.role === 'branch_admin' && admin.branch) {
-                            branchAdminBranches.add(admin.branch);
-                        }
-                    });
                 }
 
                 const employees = [];
@@ -647,327 +588,130 @@
                     const sessionBranch = (adminBranch || "").trim().toLowerCase();
                     const sessionCompanyId = (companyId || "").trim().toLowerCase();
 
-                    if (adminRole === 'branch_admin' && empBranch !== sessionBranch) {
-                        allow = false;
-                    } else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) {
-                        allow = false;
-                    } else if (adminRole === 'super_admin') {
-                        allow = true;
-                    }
+                    if (adminRole === 'branch_admin' && empBranch !== sessionBranch) allow = false;
+                    else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) allow = false;
+
                     if (allow) {
                         e.empId = c.key;
                         employees.push(e);
                     }
                 });
 
-                // 2. Month Info
                 const year = parseInt(monthVal.split('-')[0]);
                 const month = parseInt(monthVal.split('-')[1]);
                 const daysInMonth = new Date(year, month, 0).getDate();
 
-                // 3. Settings (WeekOffs & Holidays & OfficeTime)
                 const weekOffNames = settingsSnap.child("weekOffs").val() || [];
-                const allHolidaysRaw = settingsSnap.child("holidays").val() || {};
-                // Re-key from push IDs to date strings: {pushId: {date, desc}} -> {"2026-03-20": {date, desc}}
-                const allHolidays = {};
-                Object.values(allHolidaysRaw).forEach(h => {
-                    if (h && h.date) allHolidays[h.date] = h;
-                });
-                const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
                 const secondSaturdayData = settingsSnap.child("secondSaturday").val();
-
-                // Helper: Parse HH:MM to minutes
-                const toMinutes = (timeStr) => {
-                    if (!timeStr) return null;
-                    const [h, m] = timeStr.split(':').map(Number);
-                    return h * 60 + m;
-                };
-
-                const officeStartMins = toMinutes(officeTime.start) || 540; // Default 9:00
-                const officeEndMins = toMinutes(officeTime.end) || 1080;   // Default 18:00
-
-                // Interval Calculation
-                const intervals = [];
-                settingsSnap.child("intervals").forEach(c => intervals.push(c.val()));
-
-                let totalIntervalMins = 0;
-                intervals.forEach(i => {
-                    const start = toMinutes(i.start);
-                    const end = toMinutes(i.end);
-                    if (start !== null && end !== null && end > start) {
-                        totalIntervalMins += (end - start);
-                    }
-                });
-
-                const netOfficeMins = (officeEndMins - officeStartMins) - totalIntervalMins;
-
-                const today = new Date();
-                const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                const todayDate = today.getDate();
-                const isCurrentMonthGlobal = (today.getFullYear() === year && today.getMonth() + 1 === month);
+                const allHolidaysRaw = settingsSnap.child("holidays").val() || {};
+                const allHolidays = {};
+                Object.values(allHolidaysRaw).forEach(h => { if (h && h.date) allHolidays[h.date] = h; });
+                const officeTime = settingsSnap.child("officeTime").val() || { start: "09:00", end: "18:00" };
+                const toMins = (t) => { let [h, m] = t.split(':').map(Number); return h * 60 + m; };
+                const officeStartMins = toMins(officeTime.start);
+                const officeEndMins = toMins(officeTime.end);
 
                 let monthHolidayCount = 0;
-                Object.keys(allHolidays).forEach(dateStr => {
-                    if (dateStr.startsWith(monthVal)) {
-                        if (!isCurrentMonthGlobal || dateStr <= todayDateStr) {
-                            monthHolidayCount++;
-                        }
-                    }
-                });
                 let monthWeekOffCount = 0;
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const date = new Date(year, month - 1, d);
-                    
-                    // Don't count future dates in current month
-                    if (isCurrentMonthGlobal && d > todayDate) continue;
+                const today = new Date();
+                const isCurrentMonthGlobal = (today.getFullYear() === year && today.getMonth() + 1 === month);
+                const todayDate = today.getDate();
 
-                    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateObj = new Date(year, month - 1, d);
+                    if (isCurrentMonthGlobal && d > todayDate) continue;
+                    const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
                     let isWO = weekOffNames.includes(dayName);
-                    // Second Saturday: day 8-14 is the 2nd week
                     if (!isWO && dayName === 'Saturday' && d >= 8 && d <= 14) {
-                        if (secondSaturdayData === true) {
-                            isWO = true;
-                        } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
-                            if (secondSaturdayData.enabled === true) {
-                                isWO = true;
-                            } else if (secondSaturdayData.disabledAt) {
-                                try {
-                                    const disabledDate = new Date(secondSaturdayData.disabledAt);
-                                    const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
-                                    const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                                    if (currentDateOnly <= disabledDateOnly) {
-                                        isWO = true;
-                                    }
-                                } catch (e) { }
-                            }
-                        }
+                        if (secondSaturdayData === true || (secondSaturdayData && secondSaturdayData.enabled)) isWO = true;
                     }
-                    if (isWO) monthWeekOffCount++;
+                    if (allHolidays[ymd]) monthHolidayCount++;
+                    else if (isWO) monthWeekOffCount++;
                 }
 
-                // 4. Calculate Rows
                 let html = "";
                 const allAttendance = attendanceSnap.val() || {};
                 const allApprovals = approvalsSnap.val() || {};
-                const normalizeAttendanceStatus = (record, dateKey) => {
-                    const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
-                    const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
-                    if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) return 'out';
-                    if (rawStatus === 'in' && !hasPunchOut && (dateKey < todayDateStr || (dateKey === todayDateStr && today.getHours() >= 23))) return 'halfday';
-                    return rawStatus;
-                };
 
                 employees.forEach(emp => {
                     const empAttData = allAttendance[emp.empId] || {};
                     let presentCount = 0;
                     let leaveCount = 0;
-
                     let totalLateMins = 0;
                     let totalExtraMins = 0;
 
-                    const empAttKeys = Object.keys(empAttData);
-                    for (const dateKey of empAttKeys) {
+                    Object.keys(empAttData).forEach(dateKey => {
                         if (dateKey.startsWith(monthVal)) {
                             const val = empAttData[dateKey];
-                            const status = normalizeAttendanceStatus(val, dateKey);
-
-                            if (status === 'in' || status === 'out' || status === 'present') {
-                                presentCount += 1;
-
-                                // Time Calculation
-                                if (val.punchIn && val.punchIn.time && val.punchOut && val.punchOut.time) {
-                                    // Parse time to minutes - supports both "09:00 AM" and "08:53"/"18:10"
-                                    const parseTimePart = (tStr) => {
-                                        if (!tStr) return null;
-                                        const upper = tStr.toUpperCase();
-                                        if (upper.includes('AM') || upper.includes('PM')) {
-                                            // 12-hour format: "09:00 AM"
-                                            const parts = tStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                                            if (!parts) return null;
-                                            let h = parseInt(parts[1]);
-                                            const m = parseInt(parts[2]);
-                                            const p = parts[3].toUpperCase();
-                                            if (p === 'PM' && h < 12) h += 12;
-                                            if (p === 'AM' && h === 12) h = 0;
+                            const rawStatus = String(val.status || 'absent').toLowerCase();
+                            if (rawStatus === 'present' || rawStatus === 'out' || rawStatus === 'in') {
+                                presentCount++;
+                                if (val.punchIn?.time && val.punchOut?.time) {
+                                    const parse = (t) => {
+                                        if (!t) return null;
+                                        if (t.includes('AM') || t.includes('PM')) {
+                                            let [time, modifier] = t.split(' ');
+                                            let [h, m] = time.split(':').map(Number);
+                                            if (h === 12) h = 0;
+                                            if (modifier === 'PM') h += 12;
                                             return h * 60 + m;
-                                        } else {
-                                            // 24-hour format: "08:53" or "18:10"
-                                            const parts = tStr.split(':');
-                                            if (parts.length < 2) return null;
-                                            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
                                         }
+                                        let [h, m] = t.split(':').map(Number);
+                                        return h * 60 + m;
                                     };
-
-                                    const inMins = parseTimePart(val.punchIn.time);
-                                    const outMins = parseTimePart(val.punchOut.time);
-
-                                    if (inMins !== null && outMins !== null) {
-                                        // 1. Late In
-                                        if (inMins > officeStartMins) totalLateMins += (inMins - officeStartMins);
-                                        // 2. Early In
-                                        if (inMins < officeStartMins) totalExtraMins += (officeStartMins - inMins);
-
-                                        // 3. Early Out
-                                        if (outMins < officeEndMins) totalLateMins += (officeEndMins - outMins);
-                                        // 4. Late Out
-                                        if (outMins > officeEndMins) totalExtraMins += (outMins - officeEndMins);
+                                    const inM = parse(val.punchIn.time);
+                                    const outM = parse(val.punchOut.time);
+                                    if (inM !== null && outM !== null) {
+                                        if (inM > officeStartMins) totalLateMins += (inM - officeStartMins);
+                                        if (inM < officeStartMins) totalExtraMins += (officeStartMins - inM);
+                                        if (outM < officeEndMins) totalLateMins += (officeEndMins - outM);
+                                        if (outM > officeEndMins) totalExtraMins += (outM - officeEndMins);
                                     }
                                 }
-
-                            } else if (status === 'halfday') {
-                                presentCount += 0.5;
-                            } else if (status === 'paid-leave' || status === 'sick-leave') {
-                                leaveCount += 1;
-                            }
+                            } else if (rawStatus === 'halfday') presentCount += 0.5;
+                            else if (rawStatus === 'paid-leave') leaveCount++;
                         }
-                    }
-
-                    const formatMins = (m) => {
-                        const absM = Math.abs(m);
-                        const h = Math.floor(absM / 60);
-                        const min = absM % 60;
-                        return `${h}h ${min}m`;
-                    };
-
-                    // Correct Absent Calculation
-                    // Rule: If current month, only count days up to YESTERDAY.
-                    const now = new Date();
-                    let daysForAbsentCalc = daysInMonth;
-
-                    const isCurrentMonth = (now.getFullYear() === year && now.getMonth() + 1 === month);
-                    if (isCurrentMonth) {
-                        daysForAbsentCalc = Math.max(0, now.getDate() - 1); // Use yesterday
-                    } else if (now < new Date(year, month - 1, 1)) {
-                        // Future month completely
-                        daysForAbsentCalc = 0;
-                    }
-
-                    // Optimized Approach:
-                    // absent = daysForAbsentCalc - (PresentSoFar + LeavesSoFar + WeekOffsSoFar + HolidaysSoFar)
-
-                    let weekOffsSoFar = 0;
-                    let holidaysSoFar = 0;
-                    let activeJoinDays = 0;
-
-                    let onboardingDate = emp.onboardingDate || "";
-                    if (!onboardingDate && emp.createdAt) {
-                        onboardingDate = emp.createdAt.split('T')[0];
-                    }
-
-                    for (let d = 1; d <= daysForAbsentCalc; d++) {
-                        const dateObj = new Date(year, month - 1, d);
-                        const y = dateObj.getFullYear();
-                        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        const da = String(dateObj.getDate()).padStart(2, '0');
-                        const ymd = `${y}-${m}-${da}`;
-                        if (onboardingDate && ymd < onboardingDate) continue;
-
-                        activeJoinDays++;
-                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-
-                        let isWeekOff = weekOffNames.includes(dayName);
-                        // Second Saturday: day 8-14 is the 2nd week
-                        if (!isWeekOff && dayName === 'Saturday' && dateObj.getDate() >= 8 && dateObj.getDate() <= 14) {
-                            if (secondSaturdayData === true) {
-                                isWeekOff = true;
-                            } else if (secondSaturdayData && typeof secondSaturdayData === 'object') {
-                                if (secondSaturdayData.enabled === true) {
-                                    isWeekOff = true;
-                                } else if (secondSaturdayData.disabledAt) {
-                                    try {
-                                        const disabledDate = new Date(secondSaturdayData.disabledAt);
-                                        const disabledDateOnly = new Date(disabledDate.getFullYear(), disabledDate.getMonth(), disabledDate.getDate());
-                                        const currentDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                                        if (currentDateOnly < disabledDateOnly) {
-                                            isWeekOff = true;
-                                        }
-                                    } catch (e) { }
-                                }
-                            }
-                        }
-
-                        if (allHolidays[ymd]) {
-                            holidaysSoFar++;
-                        } else if (isWeekOff) {
-                            weekOffsSoFar++;
-                        }
-                    }
-
-                    const absentCount = Math.max(0, activeJoinDays - (presentCount + leaveCount + weekOffsSoFar + holidaysSoFar));
-
-                    // ADD ABSENT TIME TO TOTAL LATE
-                    // Logic: If Absent, they are "Late" by the full Net Office Time
-                    if (absentCount > 0) {
-                        totalLateMins += (absentCount * netOfficeMins);
-                    }
+                    });
 
                     const totalPayableDays = presentCount + leaveCount + monthWeekOffCount + monthHolidayCount;
-                    const cappedPresent = Math.min(totalPayableDays, daysInMonth);
-                    const percent = ((cappedPresent / daysInMonth) * 100).toFixed(1);
-
-                    const baseSalary = parseFloat(emp.salary || 0);
+                    const cappedPayable = Math.min(totalPayableDays, daysInMonth);
+                    const absentCount = Math.max(0, (isCurrentMonthGlobal ? todayDate : daysInMonth) - (presentCount + leaveCount + monthWeekOffCount + monthHolidayCount));
+                    
+                    const baseSalary = parseFloat(String(emp.salary || "0").replace(/[^0-9.]/g, "")) || 0;
                     const perDay = baseSalary / daysInMonth;
-                    const netSalary = Math.round(perDay * cappedPresent);
-
+                    const netSalary = Math.round(perDay * cappedPayable);
                     const netMins = totalLateMins - totalExtraMins;
-                    const sign = netMins > 0 ? "Late" : "Extra";
-                    const color = netMins > 0 ? "#ff5c5c" : "#00ffc3"; // Red for Late, Green for Extra
 
-                    // Handle reward for Extra time (Not approved case)
-                    let extraReward = 0;
-                    if (netMins < 0) {
-                        const netExtraHours = Math.abs(netMins) / 60;
-                        const extraDays = Math.floor(netExtraHours / 4) * 0.5;
-                        extraReward = Math.round(perDay * extraDays);
-                    }
-
-                    // Check for official approval
-                    const empApprovals = allApprovals[emp.empId] || {};
-                    const approval = empApprovals[monthVal] || null;
-                    let displaySalary = netSalary + extraReward;
-                    let approvalBadge = "";
-
-                    if (approval) {
-                        displaySalary = approval.finalSalary ?? netSalary;
-                        approvalBadge = `<div style="font-size:10px; color:var(--primary); margin-top:4px;">✅ Approved</div>`;
-                    } else if (extraReward > 0) {
-                        approvalBadge = `<div style="font-size:10px; color:var(--success); margin-top:4px;">+ Extra Reward</div>`;
-                    }
+                    const approval = (allApprovals[emp.empId] || {})[monthVal];
+                    let finalSalary = approval ? approval.finalSalary : netSalary;
+                    let approvalStatus = approval ? "✅ Approved" : "";
 
                     html += `<tr>
                         <td>${emp.name}</td>
                         <td>${emp.empId}</td>
                         <td>${daysInMonth}</td>
-                        <td><span style="color:#00ffc3;font-weight:600">${presentCount}</span></td>
-                        <td><span style="color:#ffa726;font-weight:600">${leaveCount}</span></td>
-                        <td>${weekOffsSoFar}</td>
-                        <td>${holidaysSoFar}</td>
-                        <td><span style="color:#ff5c5c;font-weight:600">${absentCount}</span></td>
-                        <td><span style="color:#ff5c5c">${formatMins(totalLateMins)}</span></td>
-                        <td><span style="color:#00ffc3">${formatMins(totalExtraMins)}</span></td>
-                        <td><span style="color:${color};font-weight:bold">${formatMins(netMins)} ${sign}</span></td>
-                        <td>${percent}%</td>
-                        <td>
-                            <span style="color:#00ffc3;font-weight:700">${formatMoney(displaySalary)}</span>
-                            ${approvalBadge}
-                        </td>
+                        <td>${presentCount}</td>
+                        <td>${leaveCount}</td>
+                        <td>${monthWeekOffCount}</td>
+                        <td>${monthHolidayCount}</td>
+                        <td>${absentCount}</td>
+                        <td>${Math.floor(totalLateMins/60)}h ${totalLateMins%60}m</td>
+                        <td>${Math.floor(totalExtraMins/60)}h ${totalExtraMins%60}m</td>
+                        <td>${Math.floor(Math.abs(netMins)/60)}h ${Math.abs(netMins)%60}m ${netMins>0?'Late':'Extra'}</td>
+                        <td>${((cappedPayable/daysInMonth)*100).toFixed(1)}%</td>
+                        <td><span style="color:var(--primary); font-weight:700">${formatMoney(finalSalary)}</span><br><small>${approvalStatus}</small></td>
                     </tr>`;
                 });
 
-                tbody.innerHTML = html || `<tr><td colspan="12" style="text-align:center;">${t('no_matching_records')}</td></tr>`;
-
+                tbody.innerHTML = html;
             } catch (e) {
                 console.error(e);
-                tbody.innerHTML = `<tr><td colspan="12" style="color:var(--danger);text-align:center;">${t('error_loading_report')}: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:var(--danger);">Error: ${e.message}</td></tr>`;
             }
         };
-
-        // Auto-load on open
         generateReport();
-
     </script>
-
     <script src="sidebar.js"></script>
 </body>
-
 </html>
