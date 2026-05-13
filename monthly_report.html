@@ -693,7 +693,8 @@
                     const amountToAdd = Math.round(perDay * extraDays);
 
                     const approval = (allApprovals[emp.empId] || {})[monthVal];
-                    let finalSalary = approval ? approval.finalSalary : (Math.round(baseSalary) - amountToDeduct + amountToAdd);
+                    // Without approval: base + extra reward only (no penalty deducted until admin approves)
+                    let finalSalary = approval ? approval.finalSalary : (Math.round(baseSalary) + amountToAdd);
                     let approvalStatus = approval ? "✅ Approved" : "";
 
                     html += `<tr>
