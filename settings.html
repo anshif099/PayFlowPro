@@ -1777,19 +1777,35 @@
         onValue(ref(db, `${settingsRoot}/holidays`), s => {
             holidaysData.innerHTML = "";
             if (s.exists()) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                let holidaysArray = [];
+
                 s.forEach(c => {
                     const h = c.val();
-                    holidaysData.innerHTML += `
-                        <tr>
-                            <td>${h.date}</td>
-                            <td>${h.description}</td>
-                            <td>
-                                <button class="btn-small" style="background:#4caf50;color:white;border:none;margin-right:8px;" onclick="editHoliday('${c.key}', '${h.date}', '${h.description}')">✏️ Edit</button>
-                                <button class="btn-danger btn-small" onclick="delHoliday('${c.key}')">🗑️ ${t('delete')}</button>
-                            </td>
-                        </tr>
-                    `;
-                })
+                    const holidayDate = new Date(h.date);
+                    if (holidayDate < today) return; // Skip past dates
+                    holidaysArray.push({ key: c.key, ...h, parsedDate: holidayDate });
+                });
+                
+                holidaysArray.sort((a, b) => a.parsedDate - b.parsedDate);
+                
+                if (holidaysArray.length > 0) {
+                    holidaysArray.forEach(h => {
+                        holidaysData.innerHTML += `
+                            <tr>
+                                <td>${h.date}</td>
+                                <td>${h.description}</td>
+                                <td>
+                                    <button class="btn-small" style="background:#4caf50;color:white;border:none;margin-right:8px;" onclick="editHoliday('${h.key}', '${h.date}', '${h.description}')">✏️ Edit</button>
+                                    <button class="btn-danger btn-small" onclick="delHoliday('${h.key}')">🗑️ ${t('delete')}</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    holidaysData.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">${t('no_holidays_configured')}</td></tr>`;
+                }
             } else {
                 holidaysData.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">${t('no_holidays_configured')}</td></tr>`;
             }
