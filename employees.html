@@ -611,6 +611,10 @@
                         <input type="date" id="onboardingDate">
                     </div>
                     <div class="form-group">
+                        <label style="color: #ff7c7c;">🚪 Resign / Relieve Date <span style="font-weight:400; font-size:11px; opacity:0.7;">(Optional)</span></label>
+                        <input type="date" id="resignDate" style="border-color: rgba(255,92,92,0.3);">
+                    </div>
+                    <div class="form-group">
                         <label data-i18n="shift_type">Shift Type</label>
                         <select id="shiftType" onchange="toggleShiftTimes()">
                             <option value="fixed" data-i18n="fixed_shift">Fixed Shift (Office Time)</option>
@@ -862,6 +866,7 @@
             const deptVal = document.getElementById('department').value;
             const verifStatus = document.getElementById('verificationStatus').value;
             const onboardingVal = document.getElementById('onboardingDate').value;
+            const resignDateVal = document.getElementById('resignDate').value;
             const selectedCompanyId = document.getElementById('companySelect')?.value || companyId;
 
             if (!empIdVal || !nameVal) {
@@ -892,6 +897,7 @@
                 companyId: selectedCompanyId,
                 verificationStatus: verifStatus,
                 onboardingDate: onboardingVal,
+                resignDate: resignDateVal,
                 status: 'active'
             };
 
@@ -912,6 +918,8 @@
                     document.getElementById('shiftType').value = 'fixed';
                     document.getElementById('shiftStart').value = '';
                     document.getElementById('shiftEnd').value = '';
+                    document.getElementById('onboardingDate').value = '';
+                    document.getElementById('resignDate').value = '';
 
                     if (role !== 'branch_admin') {
                         document.getElementById('branch').value = '';
@@ -974,6 +982,14 @@
 
                         const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
                         const status = e.status || 'active';
+                        const resignDate = e.resignDate || '';
+                        const today = new Date().toISOString().split('T')[0];
+                        const isRelieved = resignDate && resignDate <= today;
+                        const resignBadge = resignDate
+                            ? (isRelieved
+                                ? `<br><span style="background:rgba(255,92,92,0.15);color:#ff5c5c;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">🚪 Relieved ${resignDate}</span>`
+                                : `<br><span style="background:rgba(255,200,0,0.12);color:#ffc107;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">📅 Resign: ${resignDate}</span>`)
+                            : '';
 
                         const statusBadge = status === 'active'
                             ? `<span style="background: var(--primary-active-bg); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
@@ -997,11 +1013,11 @@
                         <td>${formatMoney(e.salary)}</td>
                         <td>${punchModeLabel}</td>
                         <td>${shiftLabel}</td>
-                        <td>${statusBadge}</td>
+                        <td>${statusBadge}${resignBadge}</td>
                         <td>
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
-                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}')">✏️ Edit</button>
+                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}', '${e.resignDate || ''}')">✏️ Edit</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
@@ -1029,7 +1045,7 @@
             }
         };
 
-        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId, verifStatus, onboardingVal) => {
+        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId, verifStatus, onboardingVal, resignDateVal) => {
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
             document.getElementById('mobile').value = mobile;
@@ -1043,6 +1059,7 @@
             document.getElementById('shiftEnd').value = shiftEndValue || '';
             document.getElementById('verificationStatus').value = verifStatus || 'pending';
             document.getElementById('onboardingDate').value = onboardingVal || '';
+            document.getElementById('resignDate').value = resignDateVal || '';
             
             // Note: We need to pull onboardingDate if it exists - fetch from listing
             // For now, assume it's passed or just clear it.
