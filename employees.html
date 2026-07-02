@@ -651,10 +651,19 @@
 
                     <div class="form-group">
                         <label data-i18n="punch_mode">Punch Mode</label>
-                        <select id="punchMode">
+                        <select id="punchMode" onchange="toggleHomeLocationFields()">
                             <option value="anywhere" data-i18n="anywhere">Anywhere (No GPS Check)</option>
                             <option value="office" data-i18n="office_only">Office Only (GPS Required)</option>
+                            <option value="wfh">Work From Home (GPS Required)</option>
                         </select>
+                    </div>
+
+                    <div class="form-group" id="wfhLocationGroup" style="display: none;">
+                        <label>🏠 Home Location Coordinates</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="number" step="any" id="homeLatitude" placeholder="Latitude (e.g., 12.9716)">
+                            <input type="number" step="any" id="homeLongitude" placeholder="Longitude (e.g., 77.5946)">
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -982,6 +991,9 @@
             const resignDateVal = document.getElementById('resignDate').value;
             const selectedCompanyId = document.getElementById('companySelect')?.value || companyId;
 
+            const homeLatVal = document.getElementById('homeLatitude').value;
+            const homeLngVal = document.getElementById('homeLongitude').value;
+
             if (!empIdVal || !nameVal) {
                 alert('Please enter Name and Employee ID');
                 return;
@@ -994,6 +1006,11 @@
 
             if (shiftTypeValue === 'rotating' && (!shiftStartValue || !shiftEndValue)) {
                 alert('Please enter shift start and end times for rotating shift');
+                return;
+            }
+
+            if (punchModeValue === 'wfh' && (!homeLatVal || !homeLngVal)) {
+                alert('Please enter Home Location Latitude and Longitude for Work From Home');
                 return;
             }
 
@@ -1019,6 +1036,11 @@
                 employeeData.shiftEnd = shiftEndValue;
             }
 
+            if (punchModeValue === 'wfh') {
+                employeeData.homeLatitude = homeLatVal;
+                employeeData.homeLongitude = homeLngVal;
+            }
+
             update(ref(db, "employees/" + empIdVal), employeeData)
                 .then(() => {
                     alert('Employee saved successfully!');
@@ -1028,6 +1050,8 @@
                     document.getElementById('role').value = '';
                     document.getElementById('salary').value = '';
                     document.getElementById('punchMode').value = 'anywhere';
+                    document.getElementById('homeLatitude').value = '';
+                    document.getElementById('homeLongitude').value = '';
                     document.getElementById('shiftType').value = 'fixed';
                     document.getElementById('shiftStart').value = '';
                     document.getElementById('shiftEnd').value = '';
@@ -1039,9 +1063,20 @@
                     }
                     document.getElementById('department').value = '';
 
+                    toggleHomeLocationFields();
                     toggleShiftTimes();
                 })
                 .catch(error => { alert('Error saving employee: ' + error.message); });
+        };
+
+        window.toggleHomeLocationFields = () => {
+            const punchMode = document.getElementById('punchMode').value;
+            const wfhGroup = document.getElementById('wfhLocationGroup');
+            if (punchMode === 'wfh') {
+                wfhGroup.style.display = 'block';
+            } else {
+                wfhGroup.style.display = 'none';
+            }
         };
 
         window.toggleStatus = (empId, currentStatus) => {
@@ -1100,7 +1135,7 @@
                         employeeCount++;
                         const displayIdx = employeeCount;
 
-                        const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
+                        const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : (e.punchMode === 'wfh' ? '🏠 WFH' : '🏢 Office');
                         const status = e.status || 'active';
                         const resignDate = e.resignDate || '';
                         const today = new Date().toISOString().split('T')[0];
@@ -1138,7 +1173,7 @@
                         <td>
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
-                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}', '${e.resignDate || ''}')">✏️ Edit</button>
+                                onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}', '${e.resignDate || ''}', '${e.homeLatitude || ''}', '${e.homeLongitude || ''}')">✏️ Edit</button>
                             ${!isRelievedFlag ? `<button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>` : ''}
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
@@ -1174,7 +1209,7 @@
             }
         };
 
-        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId, verifStatus, onboardingVal, resignDateVal) => {
+        window.editEmployee = (name, empId, mobile, role, branch, department, salary, punchModeValue, shiftTypeValue, shiftStartValue, shiftEndValue, status, empCompanyId, verifStatus, onboardingVal, resignDateVal, homeLat, homeLng) => {
             document.getElementById('name').value = name;
             document.getElementById('empid').value = empId;
             document.getElementById('mobile').value = mobile;
@@ -1183,6 +1218,8 @@
             document.getElementById('department').value = department;
             document.getElementById('salary').value = salary;
             document.getElementById('punchMode').value = punchModeValue || 'anywhere';
+            document.getElementById('homeLatitude').value = homeLat || '';
+            document.getElementById('homeLongitude').value = homeLng || '';
             document.getElementById('shiftType').value = shiftTypeValue || 'fixed';
             document.getElementById('shiftStart').value = shiftStartValue || '';
             document.getElementById('shiftEnd').value = shiftEndValue || '';
@@ -1199,6 +1236,7 @@
                 if (companySelect) companySelect.value = empCompanyId;
             }
             
+            toggleHomeLocationFields();
             toggleShiftTimes();
             setTimeout(() => { document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
         };
