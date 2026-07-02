@@ -592,6 +592,8 @@
                     else if (adminRole === 'company_admin' && empCompanyId !== sessionCompanyId) allow = false;
 
                     if (allow) {
+                        // Skip resigned employees from monthly report
+                        if (window.isResigned && window.isResigned(e)) return;
                         e.empId = c.key;
                         employees.push(e);
                     }

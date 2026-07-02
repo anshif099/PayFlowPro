@@ -1023,6 +1023,9 @@
                             allow = false;
                         }
                         if (allow) {
+                            // Skip resigned employees from active attendance tracking
+                            if (window.isResigned && window.isResigned(e)) return;
+
                             allowedEmpIds.add(c.key);
                             if (e.empId) allowedEmpIds.add(e.empId);
                             const sanitizedEmpId = e.empId ? e.empId.replace(/[.#$\[\]]/g, '_') : "";

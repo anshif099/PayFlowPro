@@ -695,6 +695,8 @@
                     }
 
                     if (allow) {
+                        // Skip resigned employees from leave tracking
+                        if (window.isResigned && window.isResigned(e)) return;
                         allowedEmpIds.add(c.key);
                         const startDate = e.onboardingDate || e.createdAt || '';
                         if (startDate) employeeStartDates[c.key] = startDate;

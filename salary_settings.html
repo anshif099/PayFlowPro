@@ -717,6 +717,8 @@
                         }
 
                         if (allow) {
+                            // Skip resigned employees from salary settings
+                            if (window.isResigned && window.isResigned(e)) return;
                             employeesData[e.empId] = e;
                             const opt = document.createElement("option");
                             opt.value = e.empId;

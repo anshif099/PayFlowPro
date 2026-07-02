@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="theme.js"></script>
     <script src="lang.js"></script>
+  <script src="sidebar.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -338,19 +339,19 @@
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>💼 Teamsive</h2>
+            <h2>ðŸ’¼ Teamsive</h2>
             <select id="langSelector" onchange="changeLanguage(this.value)"
                 style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
                 <option value="en">English</option>
-                <option value="hi">हिंदी</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="ar">العربية</option>
+                <option value="hi">à¤¹à¤¿à¤‚à¤¦à¥€</option>
+                <option value="es">EspaÃ±ol</option>
+                <option value="fr">FranÃ§ais</option>
+                <option value="ar">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</option>
                 <option value="de">Deutsch</option>
                 <option value="ml">Malayalam</option>
-                <option value="ta">தமிழ் (Tamil)</option>
-                <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                <option value="te">తెలుగు (Telugu)</option>
+                <option value="ta">à®¤à®®à®¿à®´à¯ (Tamil)</option>
+                <option value="kn">à²•à²¨à³à²¨à²¡ (Kannada)</option>
+                <option value="te">à°¤à±†à°²à±à°—à± (Telugu)</option>
             </select>
         </div>
         
@@ -422,88 +423,88 @@
         </style>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
-                <span class="nav-icon">📊</span>
+                <span class="nav-icon">ðŸ“Š</span>
                 <span data-i18n="dashboard">Dashboard</span>
             </a>
             <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
-                <span class="nav-icon">🏢</span>
+                <span class="nav-icon">ðŸ¢</span>
                 <span>Manage Companies</span>
             </a>
             <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🏢</span>
+                <span class="nav-icon">ðŸ¢</span>
                 <span>Manage Branches</span>
             </a>
             
             <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon">ðŸ‘¥</span>
                     <span data-i18n="employees">Employees</span>
                 </div>
-                <span class="chevron">▼</span>
+                <span class="chevron">â–¼</span>
             </div>
             <div class="nav-dropdown" id="empDropdown">
                 <a href="view_employees.html" class="nav-item" id="nav-view-employees">
-                    <span class="nav-icon">📜</span>
+                    <span class="nav-icon">ðŸ“œ</span>
                     <span>List Employees</span>
                 </a>
                 <a href="employees.html" class="nav-item" id="nav-manage-employees">
-                    <span class="nav-icon">✏️</span>
+                    <span class="nav-icon">âœï¸</span>
                     <span>Manage Employees</span>
                 </a>
             </div>
 
             <a href="attendance.html" class="nav-item">
-                <span class="nav-icon">✅</span>
+                <span class="nav-icon">âœ…</span>
                 <span data-i18n="attendance">Attendance</span>
             </a>
             <a href="leave_management.html" class="nav-item">
-                <span class="nav-icon">🏖️</span>
+                <span class="nav-icon">ðŸ–ï¸</span>
                 <span data-i18n="leave_management">Leave Management</span>
             </a>
             <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
-                <span class="nav-icon">🛡️</span>
+                <span class="nav-icon">ðŸ›¡ï¸</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
-            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">â²ï¸</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">â³</span><span>Intervals History</span></a>
             <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
+                <span class="nav-icon">ðŸ’°</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
             </a>
             <a href="salary_payments.html" class="nav-item">
-                <span class="nav-icon">💳</span>
+                <span class="nav-icon">ðŸ’³</span>
                 <span>Salary Payments</span>
             </a>
             <a href="salary_report.html" class="nav-item">
-                <span class="nav-icon">📈</span>
+                <span class="nav-icon">ðŸ“ˆ</span>
                 <span>Salary Report</span>
             </a>
             <a href="monthly_report.html" class="nav-item">
-                <span class="nav-icon">📑</span>
+                <span class="nav-icon">ðŸ“‘</span>
                 <span data-i18n="monthly_report">Monthly Report</span>
             </a>
             <a href="documents.html" class="nav-item">
-                <span class="nav-icon">📄</span>
+                <span class="nav-icon">ðŸ“„</span>
                 <span>Documents</span>
             </a>
             <a href="hire_resign.html" class="nav-item">
-                <span class="nav-icon">🔃</span>
+                <span class="nav-icon">ðŸ”ƒ</span>
                 <span>Hire / Resign</span>
             </a>
             <a href="leaderboard.html" class="nav-item">
-                <span class="nav-icon">🏆</span>
+                <span class="nav-icon">ðŸ†</span>
                 <span>Leaderboard</span>
             </a>
             <a href="ai_prediction.html" class="nav-item">
-                <span class="nav-icon">🧠</span>
+                <span class="nav-icon">ðŸ§ </span>
                 <span>AI Prediction</span>
             </a>
             <a href="subscriptions.html" class="nav-item">
-                <span class="nav-icon">📋</span>
+                <span class="nav-icon">ðŸ“‹</span>
                 <span>Subscriptions</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">âš™ï¸</span><span data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -511,7 +512,7 @@
         <div class="main-content">
             <div class="top-bar">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <button class="menu-toggle" onclick="toggleSidebar()">â˜°</button>
                     <h1 data-i18n="employees_list" id="pageTitle">List Employees</h1>
                 </div>
                 <div class="top-bar-actions">
@@ -763,7 +764,7 @@
                         <td style="text-align:center;">${todayPill}</td>
                         <td style="text-align:right;">
                             <button class="btn-small" style="background: transparent; border: 1px solid var(--primary); color: var(--primary);" 
-                            onclick="window.location.href='employee_details.html?id=${e.empId}&year=${year}&month=${month}'">👁️ View Details</button>
+                            onclick="window.location.href='employee_details.html?id=${e.empId}&year=${year}&month=${month}'">ðŸ‘ï¸ View Details</button>
                         </td>
                     </tr>`;
                 }
@@ -814,7 +815,11 @@
                             } else if (role === 'super_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                                 allow = false;
                             }
-                            if (allow) window.allEmployeesData.push(e);
+                            if (allow) {
+                                // Skip resigned employees from active employee list
+                                if (window.isResigned && window.isResigned(e)) return;
+                                window.allEmployeesData.push(e);
+                            }
                         });
                     }
                     window.renderEmployees();

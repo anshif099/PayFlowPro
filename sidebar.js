@@ -1,4 +1,16 @@
 // sidebar.js — Shared sidebar visibility logic for all admin pages
+
+// ── Global Helper: Is an employee resigned/relieved? ──────────────────────
+// An employee is "resigned" when resignDate is set and resignDate <= today.
+// Available on every admin page as window.isResigned(emp).
+window.isResigned = function(emp) {
+    const rd = (emp && emp.resignDate) ? emp.resignDate.toString() : '';
+    if (!rd) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return rd <= today;
+};
+// ──────────────────────────────────────────────────────────────────────────
+
 (function () {
     const role = localStorage.getItem("role");
     const companyId = localStorage.getItem("companyId");

@@ -322,6 +322,8 @@
           empSnap.forEach(c => {
              const e = c.val();
              if (e.companyId === companyId) {
+                // Skip resigned employees (resignDate set and <= today)
+                if (window.isResigned && window.isResigned(e)) return;
                 employees.push({ ...e, uid: c.key });
              }
           });

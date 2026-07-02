@@ -799,6 +799,9 @@
                         }
                     }
 
+                    // Skip resigned employees from leaderboard
+                    if (window.isResigned && window.isResigned(emp)) continue;
+
                     const activeWorkingDays = getWorkingDays(currentFilter, weekOffs, ssData, holidays, emp.joiningDate);
 
                     let netMins = 0;

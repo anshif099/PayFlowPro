@@ -523,6 +523,11 @@
                     }
                 }
 
+                // Filter out resigned employees
+                if (window.isResigned) {
+                    employees = employees.filter(e => !window.isResigned(e));
+                }
+
                 // 2. Parse Settings Object Structure correctly (WeekOffs & Holidays & Intervals globally)
                 let weekOffs = [];
                 let isSecondSaturday = false;

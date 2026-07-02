@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="theme.js"></script>
     <script src="lang.js"></script>
+  <script src="sidebar.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -363,11 +364,11 @@
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>💼 Teamsive</h2>
+            <h2>ðŸ’¼ Teamsive</h2>
             <select id="langSelector" onchange="changeLanguage(this.value)"
                 style="margin-top: 10px; background: #1e2530; color: white; border: none; padding: 5px; border-radius: 4px;">
                 <option value="en">English</option>
-                <option value="hi">हिंदी</option>
+                <option value="hi">à¤¹à¤¿à¤‚à¤¦à¥€</option>
             </select>
         </div>
         <style>
@@ -438,88 +439,88 @@
         </style>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-item">
-                <span class="nav-icon">📊</span>
+                <span class="nav-icon">ðŸ“Š</span>
                 <span data-i18n="dashboard">Dashboard</span>
             </a>
             <a href="manage_companies.html" class="nav-item" id="nav-manage-companies" style="display:none;">
-                <span class="nav-icon">🏢</span>
+                <span class="nav-icon">ðŸ¢</span>
                 <span>Manage Companies</span>
             </a>
             <a href="manage_branches.html" class="nav-item" id="nav-manage-branches" style="display:none;">
-                <span class="nav-icon">🏢</span>
+                <span class="nav-icon">ðŸ¢</span>
                 <span>Manage Branches</span>
             </a>
             
             <!-- Employees Dropdown -->
             <div class="nav-item dropdown-toggle" onclick="toggleDropdown('empDropdown', this)" style="cursor:pointer;">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon">ðŸ‘¥</span>
                     <span data-i18n="employees">Employees</span>
                 </div>
-                <span class="chevron">▼</span>
+                <span class="chevron">â–¼</span>
             </div>
             <div class="nav-dropdown" id="empDropdown">
                 <a href="view_employees.html" class="nav-item" id="nav-view-employees">
-                    <span class="nav-icon">📜</span>
+                    <span class="nav-icon">ðŸ“œ</span>
                     <span>List Employees</span>
                 </a>
                 <a href="employees.html" class="nav-item" id="nav-manage-employees">
-                    <span class="nav-icon">✏️</span>
+                    <span class="nav-icon">âœï¸</span>
                     <span>Manage Employees</span>
                 </a>
             </div>
 
             <a href="attendance.html" class="nav-item">
-                <span class="nav-icon">✅</span>
+                <span class="nav-icon">âœ…</span>
                 <span data-i18n="attendance">Attendance</span>
             </a>
             <a href="leave_management.html" class="nav-item">
-                <span class="nav-icon">🏖️</span>
+                <span class="nav-icon">ðŸ–ï¸</span>
                 <span data-i18n="leave_management">Leave Management</span>
             </a>
             <a href="manage_admins.html" class="nav-item" id="nav-branch-admins" style="display:none;">
-                <span class="nav-icon">🛡️</span>
+                <span class="nav-icon">ðŸ›¡ï¸</span>
                 <span data-i18n="branch_admins">Branch Admins</span>
             </a>
-            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">⏲️</span><span>Interval Management</span></a>
-            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">⏳</span><span>Intervals History</span></a>
+            <a href="intervalmanagement.html" class="nav-item"><span class="nav-icon">â²ï¸</span><span>Interval Management</span></a>
+            <a href="intervals_history.html" class="nav-item"><span class="nav-icon">â³</span><span>Intervals History</span></a>
             <a href="salary_settings.html" class="nav-item">
-                <span class="nav-icon">💰</span>
+                <span class="nav-icon">ðŸ’°</span>
                 <span data-i18n="salary_settings">Salary Settings</span>
             </a>
             <a href="salary_payments.html" class="nav-item active">
-                <span class="nav-icon">💳</span>
+                <span class="nav-icon">ðŸ’³</span>
                 <span>Salary Payments</span>
             </a>
             <a href="salary_report.html" class="nav-item">
-                <span class="nav-icon">📈</span>
+                <span class="nav-icon">ðŸ“ˆ</span>
                 <span>Salary Report</span>
             </a>
             <a href="monthly_report.html" class="nav-item">
-                <span class="nav-icon">📑</span>
+                <span class="nav-icon">ðŸ“‘</span>
                 <span data-i18n="monthly_report">Monthly Report</span>
             </a>
             <a href="documents.html" class="nav-item">
-                <span class="nav-icon">📄</span>
+                <span class="nav-icon">ðŸ“„</span>
                 <span>Documents</span>
             </a>
             <a href="hire_resign.html" class="nav-item">
-                <span class="nav-icon">🔃</span>
+                <span class="nav-icon">ðŸ”ƒ</span>
                 <span>Hire / Resign</span>
             </a>
             <a href="leaderboard.html" class="nav-item">
-                <span class="nav-icon">🏆</span>
+                <span class="nav-icon">ðŸ†</span>
                 <span>Leaderboard</span>
             </a>
             <a href="ai_prediction.html" class="nav-item">
-                <span class="nav-icon">🧠</span>
+                <span class="nav-icon">ðŸ§ </span>
                 <span>AI Prediction</span>
             </a>
             <a href="subscriptions.html" class="nav-item">
-                <span class="nav-icon">📋</span>
+                <span class="nav-icon">ðŸ“‹</span>
                 <span>Subscriptions</span>
             </a>
-            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span data-i18n="settings">Settings</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">âš™ï¸</span><span data-i18n="settings">Settings</span></a>
         </nav>
     </div>
 
@@ -527,7 +528,7 @@
     <div class="main-content">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <button class="menu-toggle" onclick="toggleSidebar()">â˜°</button>
                 <h1 data-i18n="salary_payments">Salary Payments</h1>
             </div>
             <div class="top-bar-actions">
@@ -578,7 +579,7 @@
                 <h3>Process Payment</h3>
                 <button class="modal-close" onclick="closePaymentModal()">&times;</button>
             </div>
-            <div class="payment-amount" id="modalAmount">₹0</div>
+            <div class="payment-amount" id="modalAmount">â‚¹0</div>
 
             <div class="qr-placeholder">
                 <img id="qrImage" src="" alt="Payment QR Code">
@@ -587,7 +588,7 @@
             <button id="confirmPaymentBtn"
                 style="width:100%; margin-top:16px; background:var(--primary); color:#000; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; border:1px solid #000; font-size:15px; transition:0.2s;"
                 onclick="confirmPayment()" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1"
-                data-i18n="confirm_payment">✅ Confirm Payment</button>
+                data-i18n="confirm_payment">âœ… Confirm Payment</button>
         </div>
     </div>
 
@@ -607,7 +608,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
+        let currencySymbol = localStorage.getItem("currencySymbol") || "â‚¹";
         const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
         const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
 
@@ -624,7 +625,7 @@
         const companyId = localStorage.getItem("companyId");
 
         onValue(ref(db, "settings/currencySymbol"), snap => {
-            currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
+            currencySymbol = snap.exists() ? (snap.val() || "â‚¹") : "â‚¹";
             localStorage.setItem("currencySymbol", currencySymbol);
             document.getElementById('modalAmount').innerText = formatMoney(0);
             loadPayments();
@@ -672,7 +673,7 @@
                     else if (role === 'company_admin' && e.companyId !== companyId) allow = false;
                     else if (role === "super_admin" && e.companyId !== companyId) allow = false;
 
-                    if (allow && e.status !== 'inactive') {
+                    if (allow && e.status !== 'inactive' && !(window.isResigned && window.isResigned(e))) {
                         e.empId = c.key;
 
                         // Discover salary
@@ -702,12 +703,12 @@
                         const isAlreadyPaid = (e.salary_history && e.salary_history[lastMonthStr] && e.salary_history[lastMonthStr].status === 'paid');
 
                         const approvedBadge = isApproved
-                            ? `<span style="background: rgba(0,255,195,0.1); color:#00ffc3; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">✅ Approved</span>`
-                            : `<span style="background: rgba(255,167,38,0.1); color:#ffa726; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">⚠️ Base Salary</span>`;
+                            ? `<span style="background: rgba(0,255,195,0.1); color:#00ffc3; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">âœ… Approved</span>`
+                            : `<span style="background: rgba(255,167,38,0.1); color:#ffa726; padding: 2px 6px; border-radius: 4px; font-size:10px; margin-left:8px;">âš ï¸ Base Salary</span>`;
 
                         const bankStatusBadge = (bank && bank.accountNumber)
-                            ? `<span style="background:rgba(0,255,195,0.1);color:#00ffc3;padding:3px 8px;border-radius:4px;font-size:11px;">✅ Added</span>`
-                            : `<span style="background:rgba(255,167,38,0.1);color:#ffa726;padding:3px 8px;border-radius:4px;font-size:11px;">❌ Not Added</span>`;
+                            ? `<span style="background:rgba(0,255,195,0.1);color:#00ffc3;padding:3px 8px;border-radius:4px;font-size:11px;">âœ… Added</span>`
+                            : `<span style="background:rgba(255,167,38,0.1);color:#ffa726;padding:3px 8px;border-radius:4px;font-size:11px;">âŒ Not Added</span>`;
 
                         tbody.innerHTML += `
                             <tr>
@@ -721,8 +722,8 @@
                                 <td>${bankStatusBadge}</td>
                                 <td>
                                     ${isAlreadyPaid
-                                ? `<span style="background:rgba(0,255,195,0.2);color:#00e6af;padding:6px 12px;border-radius:6px;font-weight:bold;font-size:12px;">✅ Paid</span>`
-                                : `<button class="btn-small" onclick="openPaymentModal('${safeName}', '${safeMobile}', ${salaryAmount}, '${safeEmpId}', '${lastMonthStr}')">💸 Pay</button>`
+                                ? `<span style="background:rgba(0,255,195,0.2);color:#00e6af;padding:6px 12px;border-radius:6px;font-weight:bold;font-size:12px;">âœ… Paid</span>`
+                                : `<button class="btn-small" onclick="openPaymentModal('${safeName}', '${safeMobile}', ${salaryAmount}, '${safeEmpId}', '${lastMonthStr}')">ðŸ’¸ Pay</button>`
                             }
                                 </td>
                             </tr>

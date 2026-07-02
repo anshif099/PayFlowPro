@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="theme.js"></script>
     <script src="lang.js"></script>
+  <script src="sidebar.js"></script>
     <style>
         :root {
             --primary: #00ffc3;
@@ -893,6 +894,8 @@
                     }
 
                     if (allow) {
+                        // Skip resigned employees from active timetrack
+                        if (window.isResigned && window.isResigned(emp)) return;
                         employees.push({
                             id: key,
                             name: emp.name || "Employee",
