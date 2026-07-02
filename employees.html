@@ -336,6 +336,66 @@
             background: rgba(0, 255, 195, 0.03);
         }
 
+        /* ============ TABS ============ */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .tab-btn.active-tab {
+            background: rgba(0, 255, 195, 0.12);
+            border-color: rgba(0, 255, 195, 0.4);
+            color: #00ffc3;
+        }
+
+        .tab-btn.resigned-tab.active-tab {
+            background: rgba(255, 92, 92, 0.12);
+            border-color: rgba(255, 92, 92, 0.4);
+            color: #ff5c5c;
+        }
+
+        .tab-btn:not(.active-tab):hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+        }
+
+        .count-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 20px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 0 6px;
+            margin-left: 6px;
+        }
+
+        .chip-active {
+            background: rgba(0,255,195,0.2);
+            color: #00ffc3;
+        }
+
+        .chip-resigned {
+            background: rgba(255,92,92,0.2);
+            color: #ff5c5c;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -636,7 +696,20 @@
             </div>
 
             <div class="card">
-                <h3 data-i18n="employee_list">Employee List</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 data-i18n="employee_list" style="margin-bottom:0;">Employee List</h3>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <span id="activeCountChip" class="count-chip chip-active">0</span>
+                        <span style="font-size:12px; color:var(--text-muted);">Active</span>
+                        <span style="color:var(--text-muted); margin:0 4px;">|</span>
+                        <span id="resignedCountChip" class="count-chip chip-resigned">0</span>
+                        <span style="font-size:12px; color:var(--text-muted);">Resigned</span>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <button id="tabActive" class="tab-btn active-tab" onclick="switchTab('active')">✅ Active</button>
+                    <button id="tabResigned" class="tab-btn resigned-tab" onclick="switchTab('resigned')">🚪 Resigned</button>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -645,7 +718,7 @@
                                 <th data-i18n="name_id">Name/ID</th>
                                 <th data-i18n="mobile_number">Mobile</th>
                                 <th data-i18n="role">Role</th>
-                                <th data-i18n="branch">Branch & Dept</th>
+                                <th data-i18n="branch">Branch &amp; Dept</th>
                                 <th data-i18n="salary">Salary</th>
                                 <th data-i18n="punch_mode">Punch Mode</th>
                                 <th data-i18n="shift"><span data-i18n="shift_type">Shift Type</span></th>
@@ -851,6 +924,46 @@
             }
         };
 
+        let currentTab = 'active'; // 'active' or 'resigned'
+        let allEmployeeRows = []; // Store all rendered employee data for tab switching
+
+        function isResigned(emp) {
+            const resignDate = emp.resignDate || '';
+            if (!resignDate) return false;
+            const today = new Date().toISOString().split('T')[0];
+            return resignDate <= today;
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const btnActive = document.getElementById('tabActive');
+            const btnResigned = document.getElementById('tabResigned');
+            if (tab === 'active') {
+                btnActive.classList.add('active-tab');
+                btnResigned.classList.remove('active-tab');
+            } else {
+                btnResigned.classList.add('active-tab');
+                btnActive.classList.remove('active-tab');
+            }
+            renderEmployeeTable();
+        };
+
+        function renderEmployeeTable() {
+            const data = document.getElementById('data');
+            data.innerHTML = '';
+            const filtered = allEmployeeRows.filter(row =>
+                currentTab === 'active' ? !row.resigned : row.resigned
+            );
+            if (filtered.length === 0) {
+                const msg = currentTab === 'active' ? 'No Active Employees found' : 'No Resigned Employees';
+                data.innerHTML = `<tr><td colspan='10' style='text-align:center; color:var(--text-muted); padding:40px;'>${msg}</td></tr>`;
+                return;
+            }
+            filtered.forEach((row, idx) => {
+                data.innerHTML += row.html.replace(/^<tr>/, `<tr data-idx="${idx}">`).replace(/^<tr /, `<tr data-idx="${idx}" `);
+            });
+        }
+
         let employeeCount = 0;
         window.addEmployee = () => {
             const nameVal = document.getElementById('name').value;
@@ -953,9 +1066,10 @@
             }
 
             onValue(ref(db, "employees"), s => {
-                const data = document.getElementById('data');
-                data.innerHTML = "";
+                allEmployeeRows = [];
                 employeeCount = 0;
+                let activeCount = 0;
+                let resignedCount = 0;
 
                 if (s.exists()) {
                     s.forEach(c => {
@@ -967,32 +1081,39 @@
                         const empCompanyId = (e.companyId || "").trim().toLowerCase();
                         const sessionBranch = (adminBranch || "").trim().toLowerCase();
                         const sessionCompanyId = (companyId || "").trim().toLowerCase();
-
                         const empBranchName = (e.branch || "").trim();
+
                         if (role === 'branch_admin' && empBranch !== sessionBranch) {
                             allow = false;
                         } else if (role === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                             allow = false;
-                        } else if (role === 'super_admin' && ( (sessionCompanyId !== "" && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName) )) {
+                        } else if (role === 'super_admin' && ((sessionCompanyId !== '' && empCompanyId !== sessionCompanyId) || branchAdminBranches.has(empBranchName))) {
                             allow = false;
                         }
                         if (!allow) return;
 
+                        // Determine if resigned
+                        const resigned = isResigned(e);
+                        if (resigned) resignedCount++;
+                        else activeCount++;
+
                         employeeCount++;
+                        const displayIdx = employeeCount;
 
                         const punchModeLabel = e.punchMode === 'anywhere' ? '🌍 Anywhere' : '🏢 Office';
                         const status = e.status || 'active';
                         const resignDate = e.resignDate || '';
                         const today = new Date().toISOString().split('T')[0];
-                        const isRelieved = resignDate && resignDate <= today;
+                        const isRelievedFlag = resignDate && resignDate <= today;
+
                         const resignBadge = resignDate
-                            ? (isRelieved
+                            ? (isRelievedFlag
                                 ? `<br><span style="background:rgba(255,92,92,0.15);color:#ff5c5c;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">🚪 Relieved ${resignDate}</span>`
                                 : `<br><span style="background:rgba(255,200,0,0.12);color:#ffc107;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;">📅 Resign: ${resignDate}</span>`)
                             : '';
 
                         const statusBadge = status === 'active'
-                            ? `<span style="background: var(--primary-active-bg); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
+                            ? `<span style="background: rgba(0,255,195,0.1); color: #00ffc3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Active</span>`
                             : `<span style="background: rgba(255, 92, 92, 0.15); color: #ff5c5c; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Inactive</span>`;
 
                         const toggleBtnText = status === 'active' ? '🛑 Deactivate' : '✅ Activate';
@@ -1004,8 +1125,8 @@
 
                         const deptDisplay = e.department ? `<br><span style="font-size:11px; opacity:0.7;">Dept: ${e.department}</span>` : '';
 
-                        data.innerHTML += `<tr>
-                        <td>${employeeCount}</td>
+                        const rowHtml = `<tr>
+                        <td>${displayIdx}</td>
                         <td>${e.name}<br><span style="font-size: 11px; color: #8b92a0;">${e.empId}</span></td>
                         <td>${e.mobile}</td>
                         <td>${e.role}</td>
@@ -1018,7 +1139,7 @@
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
                                 onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}', '${e.resignDate || ''}')">✏️ Edit</button>
-                            <button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>
+                            ${!isRelievedFlag ? `<button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>` : ''}
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
                                 ? `<button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
@@ -1026,10 +1147,18 @@
                             }
                           </div>
                         </td></tr>`;
+
+                        allEmployeeRows.push({ html: rowHtml, resigned });
                     });
-                } else {
-                    data.innerHTML = "<tr><td colspan='10' style='text-align:center'>No Employees found</td></tr>";
                 }
+
+                // Update count chips
+                const activeChip = document.getElementById('activeCountChip');
+                const resignedChip = document.getElementById('resignedCountChip');
+                if (activeChip) activeChip.textContent = activeCount;
+                if (resignedChip) resignedChip.textContent = resignedCount;
+
+                renderEmployeeTable();
             }); // Close onValue("employees")
         }); // Close onValue("admins")
 
