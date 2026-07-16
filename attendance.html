@@ -351,7 +351,9 @@
         }
 
         .badge-paid-leave,
-        .badge-sick-leave {
+        .badge-paid_leave,
+        .badge-sick-leave,
+        .badge-sick_leave {
             color: #ffa726;
             background: rgba(255, 167, 38, 0.15);
             padding: 4px 12px;
@@ -359,6 +361,27 @@
             font-weight: 600;
             font-size: 12px;
             text-transform: uppercase;
+        }
+
+        .paid-leave-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(255, 167, 38, 0.12);
+            border: 1px solid rgba(255, 167, 38, 0.35);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffa726;
+            transition: all .2s ease;
+        }
+
+        .paid-leave-info.danger {
+            background: rgba(255, 92, 92, 0.12);
+            border-color: rgba(255, 92, 92, 0.35);
+            color: #ff5c5c;
         }
 
         tr:hover {
@@ -609,10 +632,10 @@
                         <label data-i18n="employee_id">Employee ID</label>
                         <div class="employee-search-field">
                             <input id="attEmpId" autocomplete="off" placeholder="Search Employee ID or Name..."
-                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('attEmpId', 'attEmpNameDisplay')"
+                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('attEmpId', 'attEmpNameDisplay'); refreshSinglePaidLeaveInfo();"
                                 onfocus="showEmployeeSuggestions('attEmpId', 'attEmpNameDisplay')"
                                 onblur="setTimeout(() => hideEmployeeSuggestions('attEmpId'), 150)"
-                                onchange="updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay')">
+                                onchange="updateEmpNameDisplay('attEmpId', 'attEmpNameDisplay'); refreshSinglePaidLeaveInfo();">
                             <div id="attEmpIdSuggestions" class="employee-suggestions"></div>
                         </div>
                         <div id="attEmpNameDisplay"
@@ -620,11 +643,15 @@
                         </div>
                     </div>
                     <div class="form-group"><label data-i18n="date">Date</label><input type="date" id="attDate"></div>
-                    <div class="form-group"><label data-i18n="status">Status</label><select id="attStatus"
-                            onchange="toggleAttendanceTimes()">
+                    <div class="form-group">
+                        <label data-i18n="status">Status</label>
+                        <select id="attStatus" onchange="toggleAttendanceTimes(); refreshSinglePaidLeaveInfo();">
                             <option value="in" data-i18n="present">Present</option>
                             <option value="absent" data-i18n="absent">Absent</option>
-                        </select></div>
+                            <option value="paid_leave">Paid Leave</option>
+                        </select>
+                        <div id="singlePaidLeaveInfo" style="display:none;"></div>
+                    </div>
                     <div class="form-group" id="attInGroup" style="display:none">
                         <label data-i18n="punch_in_optional">Punch In (Optional - uses office time if empty)</label>
                         <input type="time" id="attIn" placeholder="Leave empty for office time">
@@ -658,10 +685,10 @@
                         <label data-i18n="employee_id">Employee ID</label>
                         <div class="employee-search-field">
                             <input id="bulkEmpId" autocomplete="off" placeholder="Search Employee ID or Name..."
-                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('bulkEmpId', 'bulkEmpNameDisplay')"
+                                data-i18n="search_select_emp" oninput="handleEmployeeSearchInput('bulkEmpId', 'bulkEmpNameDisplay'); refreshBulkPaidLeaveInfo();"
                                 onfocus="showEmployeeSuggestions('bulkEmpId', 'bulkEmpNameDisplay')"
                                 onblur="setTimeout(() => hideEmployeeSuggestions('bulkEmpId'), 150)"
-                                onchange="updateEmpNameDisplay('bulkEmpId', 'bulkEmpNameDisplay')">
+                                onchange="updateEmpNameDisplay('bulkEmpId', 'bulkEmpNameDisplay'); refreshBulkPaidLeaveInfo();">
                             <div id="bulkEmpIdSuggestions" class="employee-suggestions"></div>
                         </div>
                         <div id="bulkEmpNameDisplay"
@@ -672,11 +699,15 @@
                             id="bulkFrom"></div>
                     <div class="form-group"><label data-i18n="to_date">To Date</label><input type="date" id="bulkTo">
                     </div>
-                    <div class="form-group"><label data-i18n="status">Status</label><select id="bulkStatus"
-                            onchange="toggleBulkTimes()">
+                    <div class="form-group">
+                        <label data-i18n="status">Status</label>
+                        <select id="bulkStatus" onchange="toggleBulkTimes(); refreshBulkPaidLeaveInfo();">
                             <option value="in" data-i18n="present">Present</option>
                             <option value="absent" data-i18n="absent">Absent</option>
-                        </select></div>
+                            <option value="paid_leave">Paid Leave</option>
+                        </select>
+                        <div id="bulkPaidLeaveInfo" style="display:none;"></div>
+                    </div>
                     <div class="form-group" id="bulkInGroup" style="display:none"><label
                             data-i18n="punch_in_optional">Punch In (Optional - uses
                             office time if empty)</label><input type="time" id="bulkIn"
@@ -1189,7 +1220,154 @@
             }
         };
 
-        window.markAttendance = () => {
+        // --- PAID LEAVE BALANCE HELPERS ---
+
+        async function fetchPaidLeaveBalance(empId) {
+            try {
+                const sanitizedId = empId.replace(/[.#$\[\]]/g, '_');
+                const empSnap = await get(ref(db, `employees/${empRecordKeyMap[empId] || sanitizedId}`));
+                const empData = empSnap.val() || {};
+                const empCompanyId = empData.companyId || '';
+                const empBranch = empData.branch || '';
+
+                let startDateStr = empData.onboardingDate || (empData.createdAt ? empData.createdAt.split('T')[0] : '');
+
+                const configPaths = [];
+                if (empBranch) configPaths.push(`settings/branches/${empBranch}/leaveConfig`);
+                if (empCompanyId) configPaths.push(`settings/companies/${empCompanyId}/leaveConfig`);
+                configPaths.push('settings/leaveConfig');
+
+                let paidLeavesPerMonth = 0;
+                let configEffectiveFrom = '';
+                for (const path of configPaths) {
+                    const snap = await get(ref(db, path));
+                    if (snap.exists() && snap.val() && snap.val().paidLeavesPerMonth != null) {
+                        paidLeavesPerMonth = parseInt(snap.val().paidLeavesPerMonth) || 0;
+                        configEffectiveFrom = snap.val().paidLeaveEffectiveFrom || '';
+                        break;
+                    }
+                }
+
+                if (paidLeavesPerMonth === 0) return null;
+
+                const parseMonthStr = (str) => {
+                    if (!str) return null;
+                    const parts = str.split('-');
+                    if (parts.length < 2) return null;
+                    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+                };
+                const parseDateStr = (str) => {
+                    if (!str) return null;
+                    return new Date(str.split('T')[0]);
+                };
+                const monthStart = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+
+                const now = new Date();
+                const currentMonthStart = monthStart(now);
+                const configMonth = parseMonthStr(configEffectiveFrom) || currentMonthStart;
+                const empStartDate = parseDateStr(startDateStr);
+                const empStartMonth = empStartDate ? monthStart(empStartDate) : null;
+
+                let accrualStart = configMonth;
+                if (empStartMonth && empStartMonth > configMonth) {
+                    accrualStart = empStartMonth;
+                }
+
+                const monthsAccrued = Math.max(0,
+                    (now.getFullYear() - accrualStart.getFullYear()) * 12 +
+                    (now.getMonth() - accrualStart.getMonth()) + 1
+                );
+                const totalAccrued = paidLeavesPerMonth * monthsAccrued;
+
+                const leaveSnap = await get(ref(db, 'leaveRequests'));
+                let usedDays = 0;
+                if (leaveSnap.exists() && leaveSnap.val()) {
+                    const allLeaves = leaveSnap.val();
+                    Object.values(allLeaves).forEach(req => {
+                        if (!req) return;
+                        const reqEmpId = String(req.employeeId || '');
+                        if (reqEmpId !== empId && reqEmpId !== sanitizedId) return;
+                        const status = (req.status || '').toLowerCase();
+                        if (status === 'rejected' || status === 'cancelled' || status === 'denied') return;
+                        const leaveType = (req.leaveType || '').toLowerCase();
+                        const approvedAs = (req.approvedAs || '').toLowerCase();
+                        const isPaid = leaveType === 'paid' || (leaveType === 'sick' && approvedAs === 'paid');
+                        if (!isPaid) return;
+                        const from = parseDateStr(req.fromDate);
+                        const to = parseDateStr(req.toDate) || from;
+                        if (!from || !to) return;
+                        const countFrom = from < accrualStart ? accrualStart : from;
+                        const countTo = to;
+                        if (countTo < countFrom) return;
+                        const days = Math.floor((countTo - countFrom) / (1000 * 60 * 60 * 24)) + 1;
+                        usedDays += days;
+                    });
+                }
+
+                return Math.max(0, totalAccrued - usedDays);
+            } catch (e) {
+                console.error('Error fetching paid leave balance:', e);
+                return null;
+            }
+        }
+
+        window.refreshSinglePaidLeaveInfo = async () => {
+            const infoEl = document.getElementById('singlePaidLeaveInfo');
+            if (!infoEl) return;
+            const status = document.getElementById('attStatus').value;
+            if (status !== 'paid_leave') {
+                infoEl.style.display = 'none';
+                return;
+            }
+            const empIdInput = document.getElementById('attEmpId').value.trim();
+            const empId = resolveEmployeeId(empIdInput, true);
+            if (!empId) {
+                infoEl.style.display = 'none';
+                return;
+            }
+            infoEl.style.display = 'inline-flex';
+            infoEl.className = 'paid-leave-info';
+            infoEl.innerHTML = '⏳ Loading leave balance...';
+            const balance = await fetchPaidLeaveBalance(empId);
+            if (balance === null) {
+                infoEl.innerHTML = '📋 No leave config set';
+            } else if (balance <= 0) {
+                infoEl.className = 'paid-leave-info danger';
+                infoEl.innerHTML = `⚠️ Paid Leave: <strong>0 available</strong> (Used all)`;
+            } else {
+                infoEl.innerHTML = `🏖️ Paid Leave Available: <strong>${balance}</strong>`;
+            }
+        };
+
+        window.refreshBulkPaidLeaveInfo = async () => {
+            const infoEl = document.getElementById('bulkPaidLeaveInfo');
+            if (!infoEl) return;
+            const status = document.getElementById('bulkStatus').value;
+            if (status !== 'paid_leave') {
+                infoEl.style.display = 'none';
+                return;
+            }
+            const empIdInput = document.getElementById('bulkEmpId').value.trim();
+            const empId = resolveEmployeeId(empIdInput, true);
+            if (!empId) {
+                infoEl.style.display = 'none';
+                return;
+            }
+            infoEl.style.display = 'inline-flex';
+            infoEl.className = 'paid-leave-info';
+            infoEl.innerHTML = '⏳ Loading leave balance...';
+            const balance = await fetchPaidLeaveBalance(empId);
+            if (balance === null) {
+                infoEl.innerHTML = '📋 No leave config set';
+            } else if (balance <= 0) {
+                infoEl.className = 'paid-leave-info danger';
+                infoEl.innerHTML = `⚠️ Paid Leave: <strong>0 available</strong> (Used all)`;
+            } else {
+                infoEl.innerHTML = `🏖️ Paid Leave Available: <strong>${balance}</strong>`;
+            }
+        };
+
+        window.markAttendance = async () => {
             const empIdInput = document.getElementById('attEmpId').value.trim();
             if (!empIdInput) {
                 alert("Please enter Employee Name or ID");
@@ -1209,22 +1387,30 @@
 
             const status = document.getElementById('attStatus').value;
             const date = document.getElementById('attDate').value;
-
             if (empOnboardingMap[empId] && date < empOnboardingMap[empId]) {
                 alert("You cannot join this company before onboarding date: " + empOnboardingMap[empId]);
                 return;
             }
 
-            let punchInTime = document.getElementById('attIn').value;
-            let punchOutTime = document.getElementById('attOut').value;
-
-            const punchInBase64 = document.getElementById('attInBase64').value;
-            const punchOutBase64 = document.getElementById('attOutBase64').value;
-
             if (!empId || !date) {
                 alert("Please fill required fields");
                 return;
             }
+
+            // --- PAID LEAVE VALIDATION ---
+            if (status === 'paid_leave') {
+                const balance = await fetchPaidLeaveBalance(empId);
+                if (balance !== null && balance <= 0) {
+                    if (!confirm(`⚠️ This employee has NO available paid leaves (balance: ${balance}).\nDo you still want to mark as Paid Leave?`)) {
+                        return;
+                    }
+                }
+            }
+
+            let punchInTime = document.getElementById('attIn').value;
+            let punchOutTime = document.getElementById('attOut').value;
+            const punchInBase64 = document.getElementById('attInBase64').value;
+            const punchOutBase64 = document.getElementById('attOutBase64').value;
 
             if (status === 'in') {
                 if (!punchInTime) punchInTime = storedOfficeStart;
@@ -1235,19 +1421,26 @@
             document.getElementById('filterToDate').value = date;
 
             const sanitizedId = empId.replace(/[.#$\[\]]/g, '_');
-            set(ref(db, `attendance/${sanitizedId}/${date}`), {
-                punchIn: punchInTime ? {
-                    time: punchInTime,
-                    admin: true,
-                    imageBase64: punchInBase64 || null
-                } : null,
-                punchOut: punchOutTime ? {
-                    time: punchOutTime,
-                    admin: true,
-                    imageBase64: punchOutBase64 || null
-                } : null,
-                status
+            await set(ref(db, `attendance/${sanitizedId}/${date}`), {
+                punchIn: (status === 'in' && punchInTime) ? { time: punchInTime, admin: true, imageBase64: punchInBase64 || null } : null,
+                punchOut: (status === 'in' && punchOutTime) ? { time: punchOutTime, admin: true, imageBase64: punchOutBase64 || null } : null,
+                status: status
             });
+
+            if (status === 'paid_leave') {
+                const leaveKey = `admin_${sanitizedId}_${date}`;
+                await set(ref(db, `leaveRequests/${leaveKey}`), {
+                    employeeId: empId,
+                    leaveType: 'paid',
+                    fromDate: date,
+                    toDate: date,
+                    status: 'approved',
+                    approvedAs: 'paid',
+                    reason: 'Admin marked as Paid Leave (no leave application)',
+                    appliedOn: new Date().toISOString(),
+                    adminMarked: true
+                });
+            }
 
             alert('Attendance marked successfully!');
             document.getElementById('attEmpId').value = '';
@@ -1262,6 +1455,7 @@
             document.getElementById('previewAttIn').style.display = 'none';
             document.getElementById('previewAttOut').style.display = 'none';
             document.getElementById('attStatus').value = 'in';
+            document.getElementById('singlePaidLeaveInfo').style.display = 'none';
             toggleAttendanceTimes();
         };
 
@@ -1285,8 +1479,8 @@
 
             const from = new Date(document.getElementById('bulkFrom').value);
             const to = new Date(document.getElementById('bulkTo').value);
-            
             const fromDateStr = document.getElementById('bulkFrom').value;
+
             if (empOnboardingMap[emp] && fromDateStr < empOnboardingMap[emp]) {
                 alert("You cannot join this company before onboarding date: " + empOnboardingMap[emp]);
                 return;
@@ -1306,83 +1500,71 @@
                 if (!punchOutTime) punchOutTime = storedOfficeEnd;
             }
 
-            let settingsRoot = "settings";
-            if (emp) {
-                const employeeKey = empRecordKeyMap[emp] || emp;
-                const empSnap = await get(ref(db, `employees/${employeeKey}`));
-                const employee = empSnap.val() || {};
-                if (employee.companyId) {
-                    const compSnap = await get(ref(db, `settings/companies/${employee.companyId}`));
-                    if (compSnap.exists()) settingsRoot = `settings/companies/${employee.companyId}`;
-                } else if (employee.branch) {
-                    const branchSnap = await get(ref(db, `settings/branches/${employee.branch}`));
-                    if (branchSnap.exists()) settingsRoot = `settings/branches/${employee.branch}`;
+            if (status === 'paid_leave') {
+                const balance = await fetchPaidLeaveBalance(emp);
+                const daysRequested = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+                if (balance !== null && balance < daysRequested) {
+                    if (!confirm(`⚠️ Employee has only ${balance} paid leave(s) available, but you're marking ${daysRequested} day(s).\nContinue anyway?`)) return;
                 }
             }
 
-            const globalSettingsSnap = await get(ref(db, settingsRoot));
-            const weekOffNames = globalSettingsSnap.child("weekOffs").val() || [];
-            const allHolidaysRaw = globalSettingsSnap.child("holidays").val() || {};
-            const secondSaturdayData = globalSettingsSnap.child("secondSaturday").val();
-
-            const allHolidays = {};
-            Object.values(allHolidaysRaw).forEach(h => {
-                if (h && h.date) allHolidays[h.date] = true;
-            });
-
             const sanitizedId = emp.replace(/[.#$\[\]]/g, '_');
             const updates = {};
+            const leaveDates = [];
             let count = 0;
             
-            // Use local dates and a clone to avoid mutation bugs
             let current = new Date(from);
             while (current <= to) {
                 const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
-                
                 updates[`attendance/${sanitizedId}/${key}`] = {
-                    punchIn: punchInTime ? { time: punchInTime, admin: true } : null,
-                    punchOut: punchOutTime ? { time: punchOutTime, admin: true } : null,
+                    punchIn: (status === 'in' && punchInTime) ? { time: punchInTime, admin: true } : null,
+                    punchOut: (status === 'in' && punchOutTime) ? { time: punchOutTime, admin: true } : null,
                     status: status
                 };
-                
+                if (status === 'paid_leave') leaveDates.push(key);
                 count++;
                 current.setDate(current.getDate() + 1);
             }
 
-            if (count === 0) {
-                alert("No dates found in range! Please check from/to dates.");
-                return;
-            }
+            if (count === 0) { alert("No dates found in range!"); return; }
 
-            if (!confirm(`Mark ${status.toUpperCase()} for ${empMap[emp]} (${sanitizedId}) from ${document.getElementById('bulkFrom').value} to ${document.getElementById('bulkTo').value}? (${count} days)`)) {
-                return;
-            }
+            if (!confirm(`Mark ${status.toUpperCase()} for ${emp} from ${fromDateStr} to ${document.getElementById('bulkTo').value}? (${count} days)`)) return;
 
             try {
                 await update(ref(db), updates);
-                alert(`Successfully marked bulk attendance for ${count} days!`);
-                
-                // Clear form
+                if (status === 'paid_leave' && leaveDates.length > 0) {
+                    const leaveUpdates = {};
+                    leaveDates.forEach(dateKey => {
+                        leaveUpdates[`leaveRequests/admin_${sanitizedId}_${dateKey}`] = {
+                            employeeId: emp, leaveType: 'paid', fromDate: dateKey, toDate: dateKey,
+                            status: 'approved', approvedAs: 'paid', reason: 'Admin bulk marked',
+                            appliedOn: new Date().toISOString(), adminMarked: true
+                        };
+                    });
+                    await update(ref(db), leaveUpdates);
+                }
+                alert('Success!');
                 document.getElementById('bulkEmpId').value = '';
-                document.getElementById('bulkEmpNameDisplay').textContent = '';
                 document.getElementById('bulkFrom').value = '';
                 document.getElementById('bulkTo').value = '';
                 document.getElementById('bulkIn').value = '';
                 document.getElementById('bulkOut').value = '';
+                document.getElementById('bulkPaidLeaveInfo').style.display = 'none';
                 toggleBulkTimes();
-            } catch (err) {
-                console.error("Bulk mark failed:", err);
-                alert("Error saving bulk attendance: " + err.message);
-            }
-            document.getElementById('bulkTo').value = '';
-            document.getElementById('bulkIn').value = '';
-            document.getElementById('bulkOut').value = '';
-            toggleBulkTimes();
+            } catch (err) { alert("Error: " + err.message); }
         };
 
         function normalizeAttendanceStatus(record, dateKey) {
             const rawStatus = String(record?.status || 'absent').trim().toLowerCase();
             const hasPunchOut = !!(record?.punchOut && String(record.punchOut.time || '').trim());
+
+            // Leave statuses should not be overridden
+            if (rawStatus === 'paid_leave' || rawStatus === 'paid-leave' ||
+                rawStatus === 'unpaid_leave' || rawStatus === 'unpaid-leave' ||
+                rawStatus === 'sick_leave' || rawStatus === 'sick-leave' ||
+                rawStatus === 'halfday') {
+                return rawStatus;
+            }
 
             if ((rawStatus === 'in' || rawStatus === 'halfday') && hasPunchOut) {
                 return 'out';
