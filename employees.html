@@ -1100,6 +1100,9 @@
                 });
             }
 
+            // Map of empId → full employee data (to access salary_config safely)
+            const empDataMap = {};
+
             onValue(ref(db, "employees"), s => {
                 allEmployeeRows = [];
                 employeeCount = 0;
@@ -1109,6 +1112,7 @@
                 if (s.exists()) {
                     s.forEach(c => {
                         const e = c.val();
+                        empDataMap[c.key] = e; // store full data including salary_config
 
                         // Security / Context Filtering
                         let allow = true;
@@ -1174,6 +1178,8 @@
                           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-small" style="background: transparent; border: 1px solid #3b82f6; color: #3b82f6;" 
                                 onclick="editEmployee('${e.name}','${e.empId}','${e.mobile}','${e.role}','${e.branch || ''}','${e.department || ''}','${e.salary}','${e.punchMode || 'office'}','${e.shiftType || 'fixed'}','${e.shiftStart || ''}','${e.shiftEnd || ''}', '${status}', '${e.companyId || ''}', '${e.verificationStatus || 'pending'}', '${e.onboardingDate || ''}', '${e.resignDate || ''}', '${e.homeLatitude || ''}', '${e.homeLongitude || ''}')">✏️ Edit</button>
+                            <button class="btn-small" style="background: transparent; border: 1px solid #22c55e; color: #22c55e;" onclick="openIncrementModal('${e.empId}')">📈 Increment</button>
+                            <button class="btn-small" style="background: transparent; border: 1px solid #f97316; color: #f97316;" onclick="openHistoryModal('${e.empId}')">🕐 History</button>
                             ${!isRelievedFlag ? `<button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>` : ''}
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
@@ -1328,6 +1334,149 @@
                 alert('Error: ' + err.message);
             }
         };
+
+        // ============ SALARY HELPER (JS port) ============
+        function getEffectiveSalary(empData, monthKey) {
+            if (!empData) return 0;
+            const config = empData.salary_config;
+            if (config && typeof config === 'object') {
+                const keys = Object.keys(config).sort();
+                if (keys.length > 0) {
+                    let targetKey = null;
+                    for (const k of keys) {
+                        if (k <= monthKey) targetKey = k;
+                        else break;
+                    }
+                    if (targetKey !== null) {
+                        return parseFloat(String(config[targetKey]).replace(/[^0-9.]/g, '')) || 0;
+                    }
+                    // monthKey is before all config keys — return earliest
+                    return parseFloat(String(config[keys[0]]).replace(/[^0-9.]/g, '')) || 0;
+                }
+            }
+            return parseFloat(String(empData.salary || 0).replace(/[^0-9.]/g, '')) || 0;
+        }
+
+        function getCurrentMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        // ============ GIVE INCREMENT MODAL ============
+        window.openIncrementModal = (empId) => {
+            const emp = empDataMap[empId];
+            if (!emp) { alert('Employee data not found.'); return; }
+            const monthKey = getCurrentMonthKey();
+            const currentSalary = getEffectiveSalary(emp, monthKey);
+
+            document.getElementById('incModal').style.display = 'flex';
+            document.getElementById('incEmpId').value = empId;
+            document.getElementById('incCurrentSalary').textContent = `${currencySymbol}${currentSalary.toLocaleString('en-IN')}`;
+            document.getElementById('incMonthLabel').textContent = monthKey;
+            document.getElementById('incAmount').value = '';
+            document.getElementById('incNewSalary').textContent = `${currencySymbol}${currentSalary.toLocaleString('en-IN')}`;
+            document.getElementById('incAmount').oninput = () => {
+                const inc = parseFloat(document.getElementById('incAmount').value) || 0;
+                const newSal = currentSalary + inc;
+                document.getElementById('incNewSalary').textContent = `${currencySymbol}${newSal.toLocaleString('en-IN')}`;
+            };
+            setTimeout(() => document.getElementById('incAmount').focus(), 100);
+        };
+
+        window.closeIncrementModal = () => { document.getElementById('incModal').style.display = 'none'; };
+
+        window.applyIncrement = async () => {
+            const empId = document.getElementById('incEmpId').value;
+            const incVal = parseFloat(document.getElementById('incAmount').value);
+            if (!empId || isNaN(incVal) || incVal <= 0) {
+                alert('Please enter a valid increment amount.');
+                return;
+            }
+            const emp = empDataMap[empId];
+            const monthKey = getCurrentMonthKey();
+            const currentSalary = getEffectiveSalary(emp, monthKey);
+            const newSalary = currentSalary + incVal;
+
+            // Build salary_config preserving all history
+            const salaryConfig = (emp.salary_config && typeof emp.salary_config === 'object')
+                ? { ...emp.salary_config }
+                : {};
+
+            // If no history yet, seed with current salary at onboarding/baseline
+            if (Object.keys(salaryConfig).length === 0 && currentSalary > 0) {
+                let baseKey = '2000-01';
+                if (emp.onboardingDate) {
+                    const d = new Date(emp.onboardingDate);
+                    if (!isNaN(d.getTime())) {
+                        baseKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    }
+                }
+                salaryConfig[baseKey] = currentSalary;
+            }
+            salaryConfig[monthKey] = newSalary;
+
+            try {
+                await update(ref(db, `employees/${empId}`), {
+                    salary: String(Math.round(newSalary)),
+                    salary_config: salaryConfig
+                });
+                closeIncrementModal();
+                alert(`✅ Increment applied!\nNew salary: ${currencySymbol}${Math.round(newSalary).toLocaleString('en-IN')} from ${monthKey}`);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        };
+
+        // ============ FIX SALARY HISTORY MODAL ============
+        window.openHistoryModal = (empId) => {
+            const emp = empDataMap[empId];
+            if (!emp) { alert('Employee data not found.'); return; }
+
+            document.getElementById('histModal').style.display = 'flex';
+            document.getElementById('histEmpId').value = empId;
+            document.getElementById('histEmpName').textContent = emp.name || empId;
+            document.getElementById('histMonth').value = '';
+            document.getElementById('histSalary').value = '';
+
+            // Render current history
+            const config = emp.salary_config;
+            const histList = document.getElementById('histCurrentList');
+            if (config && typeof config === 'object') {
+                const keys = Object.keys(config).sort();
+                histList.innerHTML = keys.map(k =>
+                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span style="color:#8b92a0;font-size:12px;">${k}</span>
+                        <span style="color:#00ffc3;font-weight:600;font-size:12px;">${currencySymbol}${parseFloat(config[k]).toLocaleString('en-IN')}</span>
+                    </div>`
+                ).join('');
+            } else {
+                histList.innerHTML = '<p style="color:#8b92a0;font-size:12px;">No salary history yet.</p>';
+            }
+        };
+
+        window.closeHistoryModal = () => { document.getElementById('histModal').style.display = 'none'; };
+
+        window.saveHistoryEntry = async () => {
+            const empId = document.getElementById('histEmpId').value;
+            const monthKey = document.getElementById('histMonth').value.trim();
+            const salVal = parseFloat(document.getElementById('histSalary').value);
+            if (!monthKey || isNaN(salVal) || salVal <= 0) {
+                alert('Please enter a valid month (yyyy-MM) and salary.');
+                return;
+            }
+            if (!/^\d{4}-\d{2}$/.test(monthKey)) {
+                alert('Month must be in yyyy-MM format (e.g. 2026-06)');
+                return;
+            }
+            try {
+                await update(ref(db, `employees/${empId}/salary_config`), { [monthKey]: salVal });
+                closeHistoryModal();
+                alert(`✅ Saved: ${monthKey} → ${currencySymbol}${salVal.toLocaleString('en-IN')}`);
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        };
+
     </script>
 
     <script src="sidebar.js"></script>
@@ -1365,6 +1514,62 @@
             });
         });
     </script>
+<!-- ===== GIVE INCREMENT MODAL ===== -->
+<div id="incModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#141a22;border:1px solid #22c55e44;border-radius:16px;padding:28px;width:400px;max-width:95vw;box-shadow:0 8px 40px rgba(34,197,94,0.15);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <span style="font-size:22px;">📈</span>
+      <h3 style="color:#22c55e;margin:0;">Give Salary Increment</h3>
+    </div>
+    <p style="color:#8b92a0;font-size:12px;margin-bottom:16px;">Effective from: <strong id="incMonthLabel" style="color:#60a5fa;"></strong> onwards</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span style="color:#8b92a0;font-size:13px;">Current Salary:</span>
+      <span id="incCurrentSalary" style="color:#fff;font-weight:700;font-size:15px;"></span>
+    </div>
+    <input type="hidden" id="incEmpId">
+    <div style="margin-bottom:14px;">
+      <label style="color:#8b92a0;font-size:12px;display:block;margin-bottom:6px;">Increment Amount (₹)</label>
+      <input id="incAmount" type="number" min="1" placeholder="e.g. 5000"
+        style="width:100%;padding:10px 14px;background:#0f151d;border:1px solid #22c55e55;border-radius:8px;color:#fff;font-size:14px;outline:none;"
+        onkeydown="if(event.key==='Enter')applyIncrement()">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25);border-radius:10px;padding:12px 16px;margin-bottom:20px;">
+      <span style="color:#8b92a0;font-size:13px;">New Salary:</span>
+      <span id="incNewSalary" style="color:#22c55e;font-weight:700;font-size:20px;"></span>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeIncrementModal()" style="padding:9px 20px;background:transparent;border:1px solid #ffffff22;color:#8b92a0;border-radius:8px;cursor:pointer;">Cancel</button>
+      <button onclick="applyIncrement()" style="padding:9px 22px;background:#22c55e;border:none;color:#000;font-weight:700;border-radius:8px;cursor:pointer;font-size:14px;">📈 Apply Increment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIX SALARY HISTORY MODAL ===== -->
+<div id="histModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#141a22;border:1px solid #f9731644;border-radius:16px;padding:28px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(249,115,22,0.12);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <span style="font-size:22px;">🕐</span>
+      <h3 style="color:#f97316;margin:0;">Fix Salary History</h3>
+    </div>
+    <p style="color:#8b92a0;font-size:12px;margin-bottom:14px;">Employee: <strong id="histEmpName" style="color:#fff;"></strong></p>
+    <input type="hidden" id="histEmpId">
+
+    <div id="histCurrentList" style="max-height:140px;overflow-y:auto;margin-bottom:16px;padding:10px;background:#0f151d;border-radius:8px;border:1px solid #1e2530;"></div>
+
+    <p style="color:#8b92a0;font-size:12px;margin-bottom:8px;">Add / correct a salary entry:</p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <input id="histMonth" type="text" placeholder="yyyy-MM (e.g. 2026-06)"
+        style="flex:1;padding:9px 12px;background:#0f151d;border:1px solid #f9731655;border-radius:8px;color:#fff;font-size:13px;outline:none;">
+      <input id="histSalary" type="number" min="1" placeholder="Salary ₹"
+        style="flex:1;padding:9px 12px;background:#0f151d;border:1px solid #f9731655;border-radius:8px;color:#fff;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeHistoryModal()" style="padding:9px 20px;background:transparent;border:1px solid #ffffff22;color:#8b92a0;border-radius:8px;cursor:pointer;">Cancel</button>
+      <button onclick="saveHistoryEntry()" style="padding:9px 22px;background:#f97316;border:none;color:#fff;font-weight:700;border-radius:8px;cursor:pointer;font-size:14px;">💾 Save Entry</button>
+    </div>
+  </div>
+</div>
+
 </body>
 
 </html>
