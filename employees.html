@@ -761,6 +761,8 @@
         let currencySymbol = localStorage.getItem("currencySymbol") || "₹";
         const toAmount = (value) => Number(String(value ?? 0).replace(/[^0-9.\-]/g, '')) || 0;
         const formatMoney = (value) => `${currencySymbol}${toAmount(value).toLocaleString('en-IN')}`;
+        // Module-level map so all functions (openIncrementModal etc.) can access employee data
+        const empDataMap = {};
 
         if (localStorage.getItem("admin") !== "true") {
             location = "index.html";
@@ -1100,8 +1102,6 @@
                 });
             }
 
-            // Map of empId → full employee data (to access salary_config safely)
-            const empDataMap = {};
 
             onValue(ref(db, "employees"), s => {
                 allEmployeeRows = [];
