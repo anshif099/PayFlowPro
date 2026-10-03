@@ -1,6 +1,6 @@
 // Shared database reads. Writes and validation reads always use fresh SDK data.
 export * from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js';
-import { get as remoteGet, onValue as remoteOnValue, queryEqual, ref, query, orderByKey, startAt, endAt } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js';
+import { get as remoteGet, onValue as remoteOnValue, ref, query, orderByKey, startAt, endAt } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js';
 
 const pending = new Map();
 const memory = new Map();
@@ -57,7 +57,7 @@ function snapshot(value, key) {
 
 export function get(query, cacheKey) {
     // Query URLs omit range/order constraints, so never share their URL cache.
-    if (!cacheKey && !queryEqual(query, query.ref)) {
+    if (!cacheKey && !query.isEqual(query.ref)) {
         dependencies?.add('uncached-query');
         return remoteGet(query);
     }
@@ -115,7 +115,7 @@ export function readView(render, name = render.name) {
 }
 
 export function cachedOnValue(query, callback, ...options) {
-    if (!queryEqual(query, query.ref)) return remoteOnValue(query, callback, ...options);
+    if (!query.isEqual(query.ref)) return remoteOnValue(query, callback, ...options);
     const key = query.toString();
     const saved = read(key);
     const onlyOnce = options.some(option => option?.onlyOnce);
