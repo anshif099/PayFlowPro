@@ -573,7 +573,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, readView } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -595,7 +595,7 @@
         window.toggleSidebar = () => {
             document.getElementById('sidebar').classList.toggle('open');
         };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
 
         const normalizeValue = (value) => (value || "").toString().trim().toLowerCase();
 
@@ -655,15 +655,18 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        async function loadDocuments() {
+        function loadDocuments() { return readView(refreshloadDocuments); }
+        async function refreshloadDocuments() {
             const role = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
             const companyId = localStorage.getItem("companyId");
 
             try {
-                const employeesSnap = await get(ref(db, "employees"));
-                const docsSnap = await get(ref(db, "documents"));
-                const branchesSnap = await get(ref(db, "branches"));
+                const [employeesSnap, docsSnap, branchesSnap] = await Promise.all([
+                    get(ref(db, "employees")),
+                    get(ref(db, "documents")),
+                    get(ref(db, "branches"))
+                ]);
 
                 const container = document.getElementById('employeesContainer');
                 container.innerHTML = '';

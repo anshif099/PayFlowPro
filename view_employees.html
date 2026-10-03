@@ -572,7 +572,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, cachedOnValue as onValue, get } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -592,7 +592,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
         const role = localStorage.getItem("role");
         const adminBranch = localStorage.getItem("branch");
         const companyId = localStorage.getItem("companyId");

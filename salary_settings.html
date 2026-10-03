@@ -508,7 +508,7 @@
                 <div class="filter-group">
                     <label data-i18n="select_employee">Select Employee</label>
                     <select id="employeeSelect" class="styled-select">
-                        <option value="">-- Employee Loading --</option>
+                        <option value="">-- Select Employee --</option>
                     </select>
                 </div>
                 <div class="filter-group" style="flex: 0;">
@@ -518,7 +518,7 @@
             </div>
 
             <!-- Salary Display -->
-            <div id="salaryResult" style="display:none; animation: fadeIn 0.5s ease;">
+            <div id="salaryResult" style="display:none; ">
                 <div class="salary-card">
                     <div class="salary-title" data-i18n="total_payable_salary">Total Payable Salary</div>
                     <div class="salary-amount" id="finalSalary">₹0</div>
@@ -622,7 +622,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, cachedOnValue as onValue, get, update } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -655,7 +655,7 @@
 
         // UI Toggles
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "index.html"; };
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; };
 
         // Set Default Month to Current Month
         const monthPicker = document.getElementById('monthPicker');
@@ -758,7 +758,7 @@
                 return;
             }
 
-            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
             document.getElementById('salaryResult').style.display = 'none';
 
             const applyPenalty = document.getElementById('applyPenaltyToggle')?.checked || false;
@@ -767,7 +767,7 @@
             const daysInMonth = new Date(year, month, 0).getDate();
 
             // 2. Fetch Settings
-            const settingsSnap = await get(ref(db, "settings"));
+            const [settingsSnap, attSnap] = await Promise.all([get(ref(db, "settings")), get(ref(db, `attendance/${empId}`))]);
             const weekOffNames = settingsSnap.child("weekOffs").val() || [];
             const secondSaturdayData = settingsSnap.child("secondSaturday").val();
             const allHolidaysRaw = settingsSnap.child("holidays").val() || {};
@@ -803,7 +803,7 @@
             const isCurrentMonthGlobal = (today.getFullYear() === year && today.getMonth() + 1 === month);
 
             // 3. Fetch Attendance & Calculate Late/Extra
-            const attSnap = await get(ref(db, `attendance/${empId}`));
+
             let presentCount = 0;
             let totalLateMins = 0;
             let totalExtraMins = 0;

@@ -776,7 +776,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, cachedOnValue as onValue, remove, get, update } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -800,7 +800,7 @@
         };
 
         window.logout = () => {
-            localStorage.clear();
+            sessionStorage.clear(); localStorage.clear();
             location = "index.html";
         };
 
@@ -968,7 +968,7 @@
                 const hasEmployees = employeesLoaded && Object.keys(empMap).length > 0;
                 item.innerHTML = hasEmployees
                     ? "<strong>No employee found</strong><span>Try another name or ID</span>"
-                    : "<strong>Loading employees...</strong><span>Please wait a moment</span>";
+                    : "<strong>Employee list</strong><span>Please wait a moment</span>";
                 box.appendChild(item);
                 box.style.display = "block";
                 return;

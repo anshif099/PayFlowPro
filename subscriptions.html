@@ -366,7 +366,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set, child, onValue, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, set, child, cachedOnValue as onValue, remove } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -401,7 +401,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
 
         let currentTargetCompanyId = null;
         let planDefinitions = {};

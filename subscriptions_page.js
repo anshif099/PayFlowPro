@@ -1,5 +1,5 @@
 import { getApps, initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+import { getDatabase, ref, cachedOnValue as onValue, update } from "./data.js";
 
 const role = localStorage.getItem("role") || "";
 const isAdmin = localStorage.getItem("admin") === "true";

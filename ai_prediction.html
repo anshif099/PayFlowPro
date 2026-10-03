@@ -515,7 +515,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, cachedOnValue as onValue, readView } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -538,7 +538,7 @@
         }
 
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
         onValue(ref(db, "settings/currencySymbol"), snap => {
             currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
             localStorage.setItem("currencySymbol", currencySymbol);
@@ -604,20 +604,24 @@
             return settingsRoot;
         }
 
-        async function initPage() {
+        function initPage() { return readView(refreshinitPage); }
+        async function refreshinitPage() {
             const role = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
             const companyId = localStorage.getItem("companyId");
 
             try {
-                const [empSnap, branchesSnap] = await Promise.all([
+                const [empSnap, branchesSnap, settingsRoot] = await Promise.all([
                     get(ref(db, "employees")),
-                    get(ref(db, "branches"))
+                    get(ref(db, "branches")),
+                    resolveSettingsRoot(companyId, adminBranch)
                 ]);
-                cachedSettingsRoot = await resolveSettingsRoot(companyId, adminBranch);
+                cachedSettingsRoot = settingsRoot;
                 if (empSnap.exists()) {
                     cachedEmpData = empSnap.val();
                     const selector = document.getElementById('empSelector');
+                    const selectedEmployee = selector.value;
+                    selector.querySelectorAll('option:not(:first-child)').forEach(option => option.remove());
                     const allowedBranchTokens = buildAllowedBranchTokens(branchesSnap, adminBranch);
                     const sessionCompanyId = normalizeValue(companyId);
                     let visibleEmployees = 0;
@@ -636,6 +640,7 @@
                         visibleEmployees++;
                     });
 
+                    selector.value = selectedEmployee;
                     if (visibleEmployees === 0) {
                         const opt = document.createElement('option');
                         opt.value = '';
@@ -697,8 +702,8 @@
                 return;
             }
 
-            document.getElementById('resultsContainer').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
 
             try {
                 if (!cachedSettings || !cachedAttData) {

@@ -257,7 +257,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, get, onValue, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    import { getDatabase, ref, get, cachedOnValue as onValue, push, set, readView, replayingReads } from "./data.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -275,19 +275,10 @@
 
     if (localStorage.getItem("admin") !== "true") { location = "index.html"; }
 
-    window.logout = () => { localStorage.clear(); location = "index.html"; };
+    window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; };
     window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
 
-    async function fetchData() {
-       const today = new Date().toISOString().split('T')[0];
-       
-       const [empSnap, attSnap, leaveSnap, currencySnap] = await Promise.all([
-          get(ref(db, "employees")),
-          get(ref(db, "attendance")),
-          get(ref(db, "leaveRequests")),
-          get(ref(db, "settings/currencySymbol"))
-       ]);
-
+    async function updateSubscription() {
        const isSuperAdmin = localStorage.getItem("role") === "super_admin" || localStorage.getItem("impersonator_role") === "super_admin";
        if (isSuperAdmin) {
            document.getElementById('subscriptionWidgetContainer').style.display = 'none';
@@ -314,6 +305,22 @@
                }
            } catch(e) { console.error("Error fetching subscription:", e); }
        }
+
+    }
+
+    function fetchData() { return readView(refreshfetchData); }
+        async function refreshfetchData() {
+       const today = new Date().toISOString().split('T')[0];
+       
+       const [empSnap, attSnap, leaveSnap, currencySnap] = await Promise.all([
+          get(ref(db, "employees")),
+          get(ref(db, "attendance")),
+          get(ref(db, "leaveRequests")),
+          get(ref(db, "settings/currencySymbol"))
+       ]);
+
+       // Subscription information updates independently of attendance totals.
+       if (!replayingReads()) updateSubscription();
 
        const currency = currencySnap.val() || "₹";
        const allAtt = attSnap.val() || {};

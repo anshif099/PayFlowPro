@@ -563,7 +563,7 @@
                         <tbody id="paymentData">
                             <tr>
                                 <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);"
-                                    data-i18n="loading_employees">Loading employees...</td>
+                                    >Employee list</td>
                             </tr>
                         </tbody>
                     </table>
@@ -594,7 +594,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, set, cachedOnValue as onValue } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -617,7 +617,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
         
 
         const role = localStorage.getItem("role");

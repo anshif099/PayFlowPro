@@ -646,7 +646,7 @@
 
     <main class="content">
         <div id="projectList" class="project-grid">
-            <div class="empty-card muted">Loading TimeTrack projects...</div>
+            <div class="empty-card muted">Projects</div>
         </div>
     </main>
 
@@ -792,7 +792,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, onValue, push, update, remove, off, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, cachedOnValue as onValue, push, update, remove, off, serverTimestamp } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",

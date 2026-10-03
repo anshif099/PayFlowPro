@@ -285,7 +285,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, cachedOnValue as onValue, get, update } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -310,7 +310,7 @@
         };
 
         window.logout = () => {
-            localStorage.clear();
+            sessionStorage.clear(); localStorage.clear();
             location = "index.html";
         };
 

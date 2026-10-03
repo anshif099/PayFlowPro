@@ -499,7 +499,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, cachedOnValue as onValue, readView, monthlyRecords } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -519,7 +519,7 @@
 
         if (localStorage.getItem("admin") !== "true") location = "index.html";
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "index.html"; };
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; };
         onValue(ref(db, "settings/currencySymbol"), snap => {
             currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
             localStorage.setItem("currencySymbol", currencySymbol);
@@ -554,25 +554,25 @@
 
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
 
-        window.generateReport = async () => {
-            const monthVal = document.getElementById('reportMonth').value;
+        window.generateReport = () => { const month = document.getElementById('reportMonth').value; return readView(() => refreshReport(month), 'report:' + month); };
+        async function refreshReport(monthVal) {
+
             if (!monthVal) return alert("Select Month");
 
             const tbody = document.getElementById('reportData');
-            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--text-muted);">Loading Report...</td></tr>`;
+            // Keep the displayed report while refreshing this month.
 
             const adminRole = localStorage.getItem("role");
             const adminBranch = localStorage.getItem("branch");
 
             try {
-                const [empSnap, settingsSnap, attendanceSnap, approvalsSnap, adminsSnap] = await Promise.all([
+                const [empSnap, settingsSnap, adminsSnap] = await Promise.all([
                     get(ref(db, "employees")),
                     get(ref(db, "settings")),
-                    get(ref(db, "attendance")),
-                    get(ref(db, "salary_approvals")),
                     get(ref(db, "admins"))
                 ]);
 
+                if (document.getElementById('reportMonth').value !== monthVal) return;
                 if (!empSnap.exists()) {
                     tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--text-muted);">No employees found</td></tr>`;
                     return;
@@ -633,6 +633,8 @@
                 }
 
                 let html = "";
+                const [attendanceSnap, approvalsSnap] = await monthlyRecords(db, monthVal, employees.map(emp => emp.empId));
+                if (document.getElementById('reportMonth').value !== monthVal) return;
                 const allAttendance = attendanceSnap.val() || {};
                 const allApprovals = approvalsSnap.val() || {};
 

@@ -419,7 +419,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, cachedOnValue as onValue, readView, monthlyRecords } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -447,7 +447,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
         
 
         onValue(ref(db, "settings/currencySymbol"), snap => {
@@ -467,8 +467,9 @@
 
         let currentReportData = []; // Array used to populate exporting logic
 
-        window.generateReport = async () => {
-            const monthStr = document.getElementById('monthSelector').value;
+        window.generateReport = () => { const month = document.getElementById('monthSelector').value; return readView(() => refreshReport(month), 'report:' + month); };
+        async function refreshReport(monthStr) {
+
             if (!monthStr) return alert("Select a month first");
 
             const tbody = document.getElementById('reportTableBody');
@@ -476,8 +477,7 @@
             const exportBtn = document.getElementById('exportBtn');
             const generateBtn = document.getElementById('generateBtn');
 
-            tbody.innerHTML = "";
-            loader.style.display = "block";
+            loader.style.display = "none";
             exportBtn.disabled = true;
             generateBtn.disabled = true;
             currentReportData = [];
@@ -489,13 +489,12 @@
                 const daysInMonth = new Date(year, month, 0).getDate();
 
                 // 1. Fetch Basic Data Maps Object concurrently securely
-                const [empSnap, settingsSnap, attSnap, appSnap] = await Promise.all([
+                const [empSnap, settingsSnap] = await Promise.all([
                     get(ref(db, "employees")),
-                    get(ref(db, "settings")),
-                    get(ref(db, "attendance")),
-                    get(ref(db, "salary_approvals"))
+                    get(ref(db, "settings"))
                 ]);
 
+                if (document.getElementById('monthSelector').value !== monthStr) return;
                 if (!empSnap.exists()) {
                     loader.style.display = "none";
                     generateBtn.disabled = false;
@@ -509,7 +508,7 @@
                 if (Array.isArray(empRaw)) {
                     employees = empRaw.filter(e => e !== null);
                 } else {
-                    for (const key in empRaw) employees.push(empRaw[key]);
+                    for (const key in empRaw) if (empRaw[key]) employees.push({ ...empRaw[key], empId: empRaw[key].empId || key });
                 }
 
                 // Filter mapping logic against companyId / branchId scoping
@@ -614,6 +613,8 @@
                 }
 
                 // Fetch Global Maps for fast evaluation without nested awaits securely (Attendance, Approvals)
+                const [attSnap, appSnap] = await monthlyRecords(db, monthStr, employees.map(emp => emp.empId));
+                if (document.getElementById('monthSelector').value !== monthStr) return;
                 const allAtt = attSnap.exists() ? attSnap.val() : {};
                 const allApprovals = appSnap.exists() ? appSnap.val() : {};
 

@@ -505,7 +505,7 @@
                 </div>
 
                 <div id="leaderboardContainer" class="leaderboard-list">
-                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading ranks...</div>
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Rankings</div>
                 </div>
             </div>
         </div>
@@ -513,7 +513,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, readView } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -533,7 +533,7 @@
         }
 
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
 
         let currentFilter = 'Monthly';
 
@@ -719,8 +719,9 @@
             return workingDays;
         }
 
-        async function loadLeaderboard() {
-            document.getElementById('leaderboardContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Calculating...</div>';
+        function loadLeaderboard() { return readView(refreshloadLeaderboard); }
+        async function refreshloadLeaderboard() {
+            // Keep rankings visible during refresh.
 
             try {
                 const role = localStorage.getItem("role");

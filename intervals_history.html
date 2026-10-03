@@ -345,7 +345,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    import { getDatabase, ref, get, query, orderByKey, startAt, endAt, readView } from "./data.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -365,7 +365,7 @@
     }
 
     window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-    window.logout = () => { localStorage.clear(); location = "index.html"; };
+    window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; };
 
     const adminRole = localStorage.getItem("role");
     const adminBranch = localStorage.getItem("branch");
@@ -391,14 +391,13 @@
 
     let allRecords = [];
 
-    async function loadData() {
-        allRecords = [];
-        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Loading...</td></tr>";
+    function loadData() { const from = datePickerFrom.value, to = datePickerTo.value; return readView(() => refreshloadData(from, to), `intervals:${from}:${to}`); }
+        async function refreshloadData(fromDate, toDate) {
+        // Keep displayed records until the replacement is ready.
         noData.style.display = "none";
         
         try {
-            const fromDate = datePickerFrom.value;
-            const toDate = datePickerTo.value;
+
 
             // Fetch valid employees
             const empSnap = await get(ref(db, "employees"));
@@ -419,9 +418,10 @@
                 });
             }
 
-            // Fetch all interval records and filter locally
-            for (const [sanitizedId, emp] of Object.entries(validEmployees)) {
-                const punchSnap = await get(ref(db, `employees/${sanitizedId}/interval_punches`));
+            // Fetch employees concurrently and replace the result together.
+            const records = [];
+            await Promise.all(Object.entries(validEmployees).map(async ([sanitizedId, emp]) => {
+                const punchSnap = await get(query(ref(db, `employees/${sanitizedId}/interval_punches`), orderByKey(), startAt(fromDate || "0000-00-00"), endAt(toDate || "9999-12-31")), `${fromDate}:${toDate}`);
                 if (punchSnap.exists()) {
                     punchSnap.forEach(dateSnap => {
                         const dateKey = dateSnap.key; // yyyy-MM-dd
@@ -432,7 +432,7 @@
 
                         dateSnap.forEach(pSnap => {
                             const p = pSnap.val();
-                            allRecords.push({
+                            records.push({
                                date: dateKey,
                                empName: emp.name || 'Unknown',
                                empId: emp.id,
@@ -444,7 +444,9 @@
                         });
                     });
                 }
-            }
+            }));
+            if (datePickerFrom.value !== fromDate || datePickerTo.value !== toDate) return;
+            allRecords = records;
             
             // Sort by date desc, then punchIn desc
             allRecords.sort((a, b) => {

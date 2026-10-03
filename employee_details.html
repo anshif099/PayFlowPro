@@ -550,7 +550,7 @@
             <div class="header-card">
                 <div class="profile-picture" id="empProfilePic">?</div>
                 <div class="emp-info">
-                    <h2 id="empName">Loading...</h2>
+                    <h2 id="empName">Employee</h2>
                     <p id="empDetails">Role: - | Branch: - | ID: -</p>
                 </div>
             </div>
@@ -605,7 +605,7 @@
                             </tr>
                         </thead>
                         <tbody id="intervalsData">
-                            <tr><td colspan="6" style="text-align:center;">Loading intervals...</td></tr>
+                            <tr><td colspan="6" style="text-align:center;">Intervals</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -616,7 +616,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, cachedOnValue as onValue, get } from "./data.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -639,7 +639,7 @@
         }
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        window.logout = () => { localStorage.clear(); location = "index.html"; }
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html"; }
         get(ref(db, "settings/currencySymbol")).then((snap) => {
             currencySymbol = snap.exists() ? (snap.val() || "₹") : "₹";
             localStorage.setItem("currencySymbol", currencySymbol);

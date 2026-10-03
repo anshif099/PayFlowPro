@@ -98,7 +98,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, get, set } from "./data.js";
 
         const firebaseConfig = { apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain: "payflowpro-6e62d.firebaseapp.com", databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId: "payflowpro-6e62d", storageBucket: "payflowpro-6e62d.firebasestorage.app", messagingSenderId: "69298740438", appId: "1:69298740438:web:18fd85e982e083e1543d77" };
         const app = initializeApp(firebaseConfig);
@@ -149,7 +149,7 @@
         }
 
         window.fetchTierData = async (tier) => {
-            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingOverlay').style.display = 'none';
             const snapshot = await get(ref(db, `plan_definitions/${tier}`));
             if (snapshot.exists()) {
                 const data = snapshot.val();

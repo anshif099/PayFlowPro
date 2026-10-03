@@ -969,7 +969,7 @@
                         <h3 style="margin-bottom:4px;">&#x1F4CB; Your Subscription</h3>
                         <p style="color:var(--text-muted);font-size:13px;">Your current plan and access level</p>
                     </div>
-                    <span id="subStatusBadge" style="font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; border:1px solid var(--primary); color:var(--primary);">LOADING...</span>
+                    <span id="subStatusBadge" style="font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; border:1px solid var(--primary); color:var(--primary);">Subscription</span>
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:24px;">
                     <div style="background:var(--bg-input); padding:16px; border-radius:10px; border:1px solid var(--border);">
@@ -1235,7 +1235,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, get, onValue, remove, push, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, get, cachedOnValue as onValue, remove, push, update } from "./data.js";
         const firebaseConfig = { apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain: "payflowpro-6e62d.firebaseapp.com", databaseURL: "https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId: "payflowpro-6e62d", storageBucket: "payflowpro-6e62d.firebasestorage.app", messagingSenderId: "69298740438", appId: "1:69298740438:web:18fd85e982e083e1543d77" };
         const app = initializeApp(firebaseConfig); 
         const db = getDatabase(app);
@@ -1246,7 +1246,7 @@
 
         if (localStorage.getItem("admin") !== "true") { location = "index.html" }
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open') };
-        window.logout = () => { localStorage.clear(); location = "index.html" };
+        window.logout = () => { sessionStorage.clear(); localStorage.clear(); location = "index.html" };
 
         // Theme Initialization
         const themeColors = [
