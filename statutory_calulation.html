@@ -307,7 +307,20 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, cachedOnValue as onValue, push, set, update, remove, get } from "./data.js";
+    const { getDatabase, ref, cachedOnValue: onValue, push, set, update, remove, get } = await import("./data.js?v=20261003-2").catch(async error => {
+            console.warn("Shared data module unavailable; using Firebase directly.", error);
+            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            return {
+                ...sdk,
+                cachedOnValue: sdk.onValue,
+                readView: render => render(),
+                replayingReads: () => false,
+                monthlyRecords: db => Promise.all([
+                    sdk.get(sdk.ref(db, "attendance")),
+                    sdk.get(sdk.ref(db, "salary_approvals"))
+                ])
+            };
+        });
 
     const firebaseConfig = { apiKey:"AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk", authDomain:"payflowpro-6e62d.firebaseapp.com", databaseURL:"https://payflowpro-6e62d-default-rtdb.firebaseio.com", projectId:"payflowpro-6e62d", storageBucket:"payflowpro-6e62d.firebasestorage.app", messagingSenderId:"69298740438", appId:"1:69298740438:web:18fd85e982e083e1543d77" };
     const app = initializeApp(firebaseConfig);

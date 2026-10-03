@@ -535,7 +535,20 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, cachedOnValue as onValue, remove, update } from "./data.js";
+        const { getDatabase, ref, set, cachedOnValue: onValue, remove, update } = await import("./data.js?v=20261003-2").catch(async error => {
+            console.warn("Shared data module unavailable; using Firebase directly.", error);
+            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            return {
+                ...sdk,
+                cachedOnValue: sdk.onValue,
+                readView: render => render(),
+                replayingReads: () => false,
+                monthlyRecords: db => Promise.all([
+                    sdk.get(sdk.ref(db, "attendance")),
+                    sdk.get(sdk.ref(db, "salary_approvals"))
+                ])
+            };
+        });
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",

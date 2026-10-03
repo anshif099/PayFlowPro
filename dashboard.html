@@ -257,7 +257,20 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, get, cachedOnValue as onValue, push, set, readView, replayingReads } from "./data.js";
+    const { getDatabase, ref, get, cachedOnValue: onValue, push, set, readView, replayingReads } = await import("./data.js?v=20261003-2").catch(async error => {
+            console.warn("Shared data module unavailable; using Firebase directly.", error);
+            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            return {
+                ...sdk,
+                cachedOnValue: sdk.onValue,
+                readView: render => render(),
+                replayingReads: () => false,
+                monthlyRecords: db => Promise.all([
+                    sdk.get(sdk.ref(db, "attendance")),
+                    sdk.get(sdk.ref(db, "salary_approvals"))
+                ])
+            };
+        });
 
     const firebaseConfig = {
       apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -308,7 +321,20 @@
 
     }
 
-    function fetchData() { return readView(refreshfetchData); }
+    function fetchData() {
+       return readView(refreshfetchData).catch(error => {
+          console.error('Dashboard data could not be fetched:', error);
+          const tbody = document.getElementById('recentAttendance');
+          tbody.replaceChildren();
+          const row = tbody.insertRow();
+          const cell = row.insertCell();
+          cell.colSpan = 7;
+          cell.textContent = 'Unable to fetch dashboard data. Check your connection and sign in again. ' + (error.code || error.message || '');
+          ['totalEmployees', 'presentToday', 'absentToday', 'pendingRequests'].forEach(id => {
+             document.getElementById(id).textContent = '—';
+          });
+       });
+    }
         async function refreshfetchData() {
        const today = new Date().toISOString().split('T')[0];
        
@@ -328,7 +354,11 @@
        if (empSnap.exists()) {
           empSnap.forEach(c => {
              const e = c.val();
-             if (e.companyId === companyId) {
+             const normalize = value => String(value || '').trim().toLowerCase();
+             const adminRole = localStorage.getItem('role');
+             const matchesCompany = normalize(e.companyId) === normalize(companyId);
+             const matchesBranch = normalize(e.branch) === normalize(localStorage.getItem('branch'));
+             if (adminRole === 'super_admin' || (matchesCompany && (adminRole !== 'branch_admin' || matchesBranch))) {
                 // Skip resigned employees (resignDate set and <= today)
                 if (window.isResigned && window.isResigned(e)) return;
                 employees.push({ ...e, uid: c.key });
