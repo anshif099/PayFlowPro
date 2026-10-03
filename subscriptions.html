@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="loading.js?v=20261003-1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Subscriptions - Teamsive</title>
@@ -366,12 +367,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        const { getDatabase, ref, get, set, child, cachedOnValue: onValue, remove } = await import("./data.js?v=20261003-2").catch(async error => {
+        const { getDatabase, ref, get, set, child, cachedOnValue: onValue, remove } = await import("./data.js?v=20261003-3").catch(async error => {
             console.warn("Shared data module unavailable; using Firebase directly.", error);
             const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
             return {
                 ...sdk,
-                cachedOnValue: sdk.onValue,
+                get: (...args) => window.AdminLoading.track(sdk.get(...args)),
+                cachedOnValue: (...args) => window.AdminLoading.listen(sdk.onValue, ...args),
                 readView: render => render(),
                 replayingReads: () => false,
                 monthlyRecords: db => Promise.all([

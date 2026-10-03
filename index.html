@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <script src="loading.js?v=20261003-1"></script>
     <title>Teamsive Admin Login</title>
     <script src="lang.js"></script>
     <style>
@@ -109,14 +110,13 @@
 
             from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 
-        import {
+        import { 
             getDatabase,
             ref,
-            get,
+            get as firebaseGet,
             update
-        }
-
-            from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+         } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        const get = (...args) => window.AdminLoading.track(firebaseGet(...args));
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",

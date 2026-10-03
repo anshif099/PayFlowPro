@@ -11,6 +11,8 @@ let replay = false;
 let queue = Promise.resolve();
 let dependencies = null;
 const views = new Map();
+const showLoading = () => globalThis.window?.AdminLoading?.begin() || (() => {});
+const trackRead = promise => globalThis.window?.AdminLoading?.track(promise) || promise;
 class CacheMiss extends Error {}
 
 function read(key) {
@@ -59,7 +61,7 @@ export function get(query, cacheKey) {
     // Query URLs omit range/order constraints, so never share their URL cache.
     if (!cacheKey && !query.isEqual(query.ref)) {
         dependencies?.add('uncached-query');
-        return remoteGet(query);
+        return trackRead(remoteGet(query));
     }
     const key = query.toString() + (cacheKey ? ':' + cacheKey : '');
     dependencies?.add(key);
@@ -68,7 +70,7 @@ export function get(query, cacheKey) {
         return saved ? Promise.resolve(snapshot(saved.value, saved.key)) : Promise.reject(new CacheMiss());
     }
     if (!pending.has(key)) {
-        const request = remoteGet(query).then(value => { save(key, value); return value; }).finally(() => pending.delete(key));
+        const request = trackRead(remoteGet(query)).then(value => { save(key, value); return value; }).finally(() => pending.delete(key));
         pending.set(key, request);
     }
     return pending.get(key);
@@ -115,19 +117,29 @@ export function readView(render, name = render.name) {
 }
 
 export function cachedOnValue(query, callback, ...options) {
-    if (!query.isEqual(query.ref)) return remoteOnValue(query, callback, ...options);
+    if (!query.isEqual(query.ref)) {
+        return globalThis.window?.AdminLoading
+            ? window.AdminLoading.listen(remoteOnValue, query, callback, ...options)
+            : remoteOnValue(query, callback, ...options);
+    }
     const key = query.toString();
     const saved = read(key);
     const onlyOnce = options.some(option => option?.onlyOnce);
     let active = true;
     let receivedLive = false;
+    const finish = showLoading();
     if (saved && !onlyOnce) queueMicrotask(() => {
-        if (active && !receivedLive) callback(snapshot(saved.value, saved.key));
+        if (active && !receivedLive) {
+            try { callback(snapshot(saved.value, saved.key)); } finally { finish(); }
+        }
     });
-    const stop = remoteOnValue(query, value => {
-        receivedLive = true;
-        save(key, value);
-        callback(value);
-    }, ...options);
-    return () => { active = false; stop(); };
+    const cancel = typeof options[0] === 'function' ? options.shift() : null;
+    let stop;
+    try {
+        stop = remoteOnValue(query, value => {
+            receivedLive = true;
+            try { save(key, value); callback(value); } finally { finish(); }
+        }, error => { finish(); if (cancel) cancel(error); else console.error(error); }, ...options);
+    } catch (error) { finish(); throw error; }
+    return () => { active = false; finish(); stop(); };
 }

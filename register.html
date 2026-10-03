@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="loading.js?v=20261003-1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Your Company - Teamsive</title>
@@ -630,7 +631,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import {  getDatabase, ref, get as firebaseGet, set, update  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        const get = (...args) => window.AdminLoading.track(firebaseGet(...args));
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
