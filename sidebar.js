@@ -16,7 +16,7 @@ window.isResigned = function(emp) {
     const companyId = localStorage.getItem("companyId");
     const impersonatorRole = localStorage.getItem("impersonator_role");
     const currentPage = window.location.pathname.split('/').pop() || '';
-    const canManageBranches = role === "super_admin" || role === "company_admin";
+    const canManageBranches = role === "super_admin" || role === "company_admin" || role === "sub_admin";
     const retiredModuleHrefs = new Set();
     let isNormalizingBranchLinks = false;
 
@@ -505,3 +505,45 @@ window.toggleDropdown = function(id, el) {
         chevron.style.transition = 'transform 0.3s ease';
     }
 };
+
+// Apply assigned sidebar permissions after role and subscription normalization.
+(async () => {
+ if(localStorage.getItem('role')!=='sub_admin')return;
+ await window.adminPermissionReady;
+ const apply=()=>{
+  document.querySelectorAll('.sidebar-nav a').forEach(link=>{
+   const page=(link.getAttribute('href')||'').split('?')[0];
+   const module=window.adminPageModules?.[page];
+   if(module)link.style.setProperty('display',window.adminCan(module,'view')?'flex':'none','important');
+  });
+  for(const id of ['empDropdown','intervalDropdown','salaryDropdown']){
+   const group=document.getElementById(id);if(!group)continue;
+   const visible=[...group.querySelectorAll('a')].some(a=>a.style.display!=='none');
+   if(!visible){group.style.setProperty('display','none','important');
+    document.querySelectorAll('[onclick*="'+id+'"]').forEach(el=>el.style.setProperty('display','none','important'));}
+  }
+ };
+ apply();[0,100,500,1600].forEach(ms=>setTimeout(apply,ms));window.addEventListener('load',apply);
+ document.addEventListener('click',event=>{
+  const target=event.target.closest('button,[onclick],a');if(!target || target.closest('.sidebar-nav'))return;
+  const description=(target.getAttribute('onclick')||'')+' '+(target.title||'')+' '+target.textContent;
+  const action=/delete|delEmp|remove|trash|unmake/i.test(description)?'delete':/save|edit|approve|reject|add|increment|makeAdmin|pay|submit|hireThis/i.test(description)?'edit':null;
+  const module=window.adminPageModules[location.pathname.split('/').pop()];
+  if(action && !window.adminCan(module,action)){event.preventDefault();event.stopImmediatePropagation();alert('You do not have permission for this action.');}
+ },true);
+})();
+
+// Keep unavailable mutation controls out of the sub-admin view as tables refresh.
+(async () => {
+ if(localStorage.getItem('role')!=='sub_admin')return;
+ await window.adminPermissionReady;
+ const module=window.adminPageModules?.[location.pathname.split('/').pop()];
+ const apply=()=>document.querySelectorAll('button,[onclick]').forEach(target=>{
+  if(target.closest('.sidebar-nav') || target.closest('dialog'))return;
+  const description=(target.getAttribute('onclick')||'')+' '+(target.title||'')+' '+target.textContent;
+  const adminAction=/makeAdmin|loginAs/.test(description);
+  const action=/delete|delEmp|remove|trash/i.test(description)?'delete':/save|edit|approve|reject|add|increment|pay|submit|hireThis/i.test(description)?'edit':null;
+  if(adminAction || (action && !window.adminCan(module,action)))target.style.setProperty('display','none','important');
+ });
+ apply();new MutationObserver(apply).observe(document.body,{childList:true,subtree:true});
+})();

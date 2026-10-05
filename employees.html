@@ -8,6 +8,7 @@
     <title>Employees - Teamsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="theme.js"></script>
+    <script src="permissions.js"></script>
     <script src="lang.js"></script>
     <style>
         :root {
@@ -745,9 +746,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        const { getDatabase, ref, set, update, cachedOnValue: onValue, remove, get } = await import("./data.js?v=20261003-3").catch(async error => {
+        const { getDatabase, ref, set, update, cachedOnValue: onValue, remove, get } = await import("./data.js?v=permissions-1").catch(async error => {
             console.warn("Shared data module unavailable; using Firebase directly.", error);
-            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            const sdk = await import("./data.js?v=permissions-1");
             return {
                 ...sdk,
                 get: (...args) => window.AdminLoading.track(sdk.get(...args)),
@@ -845,12 +846,12 @@
             if (companySelect) companySelect.style.display = 'none';
         }
 
-        if (role === 'branch_admin') {
+        if ((role === 'branch_admin' || role === 'sub_admin')) {
             // Can't manage admins or branches
         }
 
         // Dropdowns for Branches and Departments
-        if (role === 'super_admin' || role === 'company_admin' || role === 'branch_admin') {
+        if (role === 'super_admin' || role === 'company_admin' || (role === 'branch_admin' || role === 'sub_admin')) {
             // Read branches from BOTH paths and merge
             let companyScopedBranches = {};
             let globalBranches = {};
@@ -884,7 +885,7 @@
                     branchSelect.innerHTML += `<option value="${name}">${name}</option>`;
                 });
 
-                if (role === 'branch_admin' && adminBranch) {
+                if ((role === 'branch_admin' || role === 'sub_admin') && adminBranch) {
                     branchSelect.value = adminBranch;
                     branchSelect.disabled = true;
                 } else {
@@ -1075,7 +1076,7 @@
                     document.getElementById('onboardingDate').value = '';
                     document.getElementById('resignDate').value = '';
 
-                    if (role !== 'branch_admin') {
+                    if (role !== 'branch_admin' && role !== 'sub_admin') {
                         document.getElementById('branch').value = '';
                     }
                     document.getElementById('department').value = '';
@@ -1137,7 +1138,7 @@
                         const sessionCompanyId = (companyId || "").trim().toLowerCase();
                         const empBranchName = (e.branch || "").trim();
 
-                        if (role === 'branch_admin' && empBranch !== sessionBranch) {
+                        if ((role === 'branch_admin' || role === 'sub_admin') && empBranch !== sessionBranch) {
                             allow = false;
                         } else if (role === 'company_admin' && (empCompanyId !== sessionCompanyId || branchAdminBranches.has(empBranchName))) {
                             allow = false;
@@ -1198,7 +1199,7 @@
                             ${!isRelievedFlag ? `<button class="btn-small" style="background: transparent; border: 1px solid var(--border); ${toggleBtnColor}" onclick="toggleStatus('${e.empId}', '${status}')">${toggleBtnText}</button>` : ''}
                             <button class="btn-small" style="background: transparent; border: 1px solid #ff5c5c; color: #ff5c5c;" onclick="delEmp('${e.empId}')">🗑️</button>
                             ${e.isAdmin === true
-                                ? `<button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
+                                ? `<button class="btn-small btn-admin" onclick="makeAdmin('${e.empId}', '${e.name}')">Permissions</button><button class="btn-small" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #a855f7;" onclick="unmakeAdmin('${e.empId}', '${e.name}')">🛡️ Unmake Admin</button>`
                                 : `<button class="btn-small btn-admin" onclick="makeAdmin('${e.empId}', '${e.name}')">🛡️ Make Admin</button>`
                             }
                           </div>
@@ -1269,6 +1270,10 @@
         };
 
         window.makeAdmin = async (empId, empName) => {
+            if (localStorage.getItem('role') === 'sub_admin') return;
+            const snapshot = await get(ref(db, 'employees/' + empId));
+            const adminPermissions = await window.chooseAdminPermissions(snapshot.val()?.adminPermissions || {});
+            if (!adminPermissions) return;
             const enteredPassword = prompt(`Enter Admin Password to make "${empName}" an Admin:`);
             if (!enteredPassword) return;
 
@@ -1303,7 +1308,7 @@
                 }
 
                 // Password verified — set isAdmin on employee
-                await update(ref(db, 'employees/' + empId), { isAdmin: true });
+                await update(ref(db, 'employees/' + empId), { isAdmin: true, adminPermissions });
                 alert(`✅ ${empName} is now an Admin! They will see the Admin Panel on their profile.`);
             } catch (err) {
                 alert('Error: ' + err.message);
@@ -1343,7 +1348,7 @@
                 }
 
                 // Password verified — remove isAdmin
-                await update(ref(db, 'employees/' + empId), { isAdmin: false });
+                await update(ref(db, 'employees/' + empId), { isAdmin: false, adminPermissions: null });
                 alert(`✅ ${empName} is no longer an Admin.`);
             } catch (err) {
                 alert('Error: ' + err.message);

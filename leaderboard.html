@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="permissions.js"></script>
     <script src="loading.js?v=20261003-1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -514,9 +515,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        const { getDatabase, ref, get, readView } = await import("./data.js?v=20261003-3").catch(async error => {
+        const { getDatabase, ref, get, readView } = await import("./data.js?v=permissions-1").catch(async error => {
             console.warn("Shared data module unavailable; using Firebase directly.", error);
-            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            const sdk = await import("./data.js?v=permissions-1");
             return {
                 ...sdk,
                 get: (...args) => window.AdminLoading.track(sdk.get(...args)),
@@ -807,7 +808,7 @@
                     const empCompanyId = normalizeValue(emp.companyId);
                     const sessionCompanyId = normalizeValue(companyId);
 
-                    if (role === 'branch_admin' && !allowedBranchTokens.has(empBranch)) continue;
+                    if ((role === 'branch_admin' || role === 'sub_admin') && !allowedBranchTokens.has(empBranch)) continue;
 
                     if ((role === 'company_admin' || role === 'super_admin')) {
                         if (empCompanyId !== sessionCompanyId) {

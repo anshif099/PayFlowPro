@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="permissions.js"></script>
     <script src="loading.js?v=20261003-1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -793,9 +794,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        const { getDatabase, ref, get, cachedOnValue: onValue, push, update, remove, off, serverTimestamp } = await import("./data.js?v=20261003-3").catch(async error => {
+        const { getDatabase, ref, get, cachedOnValue: onValue, push, update, remove, off, serverTimestamp } = await import("./data.js?v=permissions-1").catch(async error => {
             console.warn("Shared data module unavailable; using Firebase directly.", error);
-            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            const sdk = await import("./data.js?v=permissions-1");
             return {
                 ...sdk,
                 get: (...args) => window.AdminLoading.track(sdk.get(...args)),
@@ -886,7 +887,7 @@
             const branchAdminBranches = new Set();
             if (adminsSnap.exists()) {
                 Object.values(adminsSnap.val() || {}).forEach((admin) => {
-                    if (admin && admin.role === "branch_admin" && admin.branch) {
+                    if (admin && admin.role === 'branch_admin' && admin.branch) {
                         branchAdminBranches.add(String(admin.branch).trim());
                     }
                 });
@@ -900,7 +901,7 @@
                     const empCompanyId = String(emp.companyId || "").trim().toLowerCase();
                     let allow = true;
 
-                    if (role === "branch_admin" && empBranch.toLowerCase() !== adminBranch.trim().toLowerCase()) {
+                    if ((role === 'branch_admin' || role === 'sub_admin') && empBranch.toLowerCase() !== adminBranch.trim().toLowerCase()) {
                         allow = false;
                     } else if (role === "company_admin" && (empCompanyId !== companyId || branchAdminBranches.has(empBranch))) {
                         allow = false;
@@ -1618,7 +1619,7 @@
                         <div>${body}</div>
                         ${mentions ? `<div class="muted" style="margin-top:6px;color:var(--primary);">${mentions}</div>` : ""}
                         <div class="chat-time">${time} 
-                        ${isMe || role === "admin" || role === "super_admin" || role === "company_admin" || role === "branch_admin" ? `<button class="ghost-button danger-button" style="min-height:26px;padding:2px 7px;margin-left:6px;" onclick="deleteChatMessage('${esc(message.id)}')" type="button">Delete</button>` : ""}
+                        ${isMe || role === "admin" || role === "super_admin" || role === "company_admin" || (role === 'branch_admin' || role === 'sub_admin') ? `<button class="ghost-button danger-button" style="min-height:26px;padding:2px 7px;margin-left:6px;" onclick="deleteChatMessage('${esc(message.id)}')" type="button">Delete</button>` : ""}
                         <button class="ghost-button" style="min-height:26px;padding:2px 7px;margin-left:6px;" onclick="setReply('${esc(message.id)}')" type="button">Reply</button></div>
                     </div>
                 `;

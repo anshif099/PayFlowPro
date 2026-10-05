@@ -143,3 +143,19 @@ export function cachedOnValue(query, callback, ...options) {
     } catch (error) { finish(); throw error; }
     return () => { active = false; finish(); stop(); };
 }
+
+// UI permission checks for sub-admin mutations. Server rules remain authoritative.
+import {set as remoteSet, update as remoteUpdate, remove as remoteRemove} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js';
+async function requirePermission(action, target, value) {
+ if(localStorage.getItem('role') !== 'sub_admin')return;
+ await window.adminPermissionReady;
+ const module=window.adminPageModules?.[location.pathname.split('/').pop()];
+ if(!module || !window.adminCan?.(module,'view') || !window.adminCan?.(module,action))throw new Error('You do not have permission for this action.');
+ const path=target.toString();
+ if(/\/(admins|companies)\//.test(path) && /password|role|adminEmail|adminId/.test(JSON.stringify(value||{})))throw new Error('Sub-admins cannot change administrator credentials.');
+ if(/isAdmin|adminPermissions/.test(JSON.stringify(value||{})))throw new Error('Sub-admins cannot grant administrator access.');
+ if(action==='edit' && value && Object.values(value).some(item=>item===null) && !window.adminCan(module,'delete'))throw new Error('Delete permission is required.');
+}
+export async function set(target,value,...args){await requirePermission(value===null?'delete':'edit',target,value);return remoteSet(target,value,...args);}
+export async function update(target,value,...args){const action=value && Object.values(value).length && Object.values(value).every(item=>item===null)?'delete':'edit';await requirePermission(action,target,value);return remoteUpdate(target,value,...args);}
+export async function remove(target,...args){await requirePermission('delete',target);return remoteRemove(target,...args);}

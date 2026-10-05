@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="permissions.js"></script>
     <script src="loading.js?v=20261003-1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -544,9 +545,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        const { getDatabase, ref, set, cachedOnValue: onValue, remove, update } = await import("./data.js?v=20261003-3").catch(async error => {
+        const { getDatabase, ref, set, cachedOnValue: onValue, remove, update } = await import("./data.js?v=permissions-1").catch(async error => {
             console.warn("Shared data module unavailable; using Firebase directly.", error);
-            const sdk = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js");
+            const sdk = await import("./data.js?v=permissions-1");
             return {
                 ...sdk,
                 get: (...args) => window.AdminLoading.track(sdk.get(...args)),
@@ -581,7 +582,7 @@
         let companyName = localStorage.getItem("companyName");
 
         // Role Check: Only Super Admin & Company Admin can manage branch admins
-        if (role !== "super_admin" && role !== "company_admin") {
+        if (role !== "super_admin" && role !== "company_admin" && role !== "sub_admin" && role !== "sub_admin") {
             location = "dashboard.html";
         }
 
@@ -743,6 +744,7 @@
         loadAdmins();
 
         window.loginAs = (name, email, branch, adminId, cId) => {
+            if (localStorage.getItem("role") === "sub_admin") return;
             if (confirm(`Login as ${name}?`)) {
                 if (localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'company_admin') {
                     localStorage.setItem('impersonator_role', localStorage.getItem('role'));

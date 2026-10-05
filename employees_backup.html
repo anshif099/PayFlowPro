@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="permissions.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employees - Teamsive</title>
@@ -658,7 +659,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, remove, get } from "./data.js?v=permissions-1";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -847,7 +848,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, remove, get } from "./data.js?v=permissions-1";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADjMc3Jwsjlg_ajo282ZtM5jvDUuGdoRk",
@@ -1090,7 +1091,7 @@
                     document.getElementById('shiftStart').value = '';
                     document.getElementById('shiftEnd').value = '';
 
-                    if (role !== 'branch_admin') {
+                    if (role !== 'branch_admin' && role !== 'sub_admin') {
                         document.getElementById('branch').value = '';
                     }
                     document.getElementById('department').value = '';
