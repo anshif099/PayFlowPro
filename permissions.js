@@ -1,27 +1,43 @@
 // Shared sub-admin permission catalogue and editor.
-window.adminModules = {"dashboard":"Dashboard","employees":"Employees","hire_resign":"Hire","companies":"Manage Companies","subscriptions":"Subscriptions","interval":"Interval","timetrack":"TimeTrack","attendance":"Attendance","leaves":"Leave Management","salary":"Salary","monthly_report":"Monthly Report","salary_report":"Salary Report","statutory_calculation":"Statutory Calculation","documents":"Documents","leaderboard":"Leaderboard","ai_prediction":"AI Prediction","teamsive_passport":"Teamsive Passport","feedback":"Feedback","notes":"Notes","branches":"Branches","settings":"Settings"};
+window.adminModules = {"dashboard":"Dashboard","view_employees":"List Employees","manage_employees":"Manage Employees","hire_resign":"Hire","companies":"Manage Companies","subscriptions":"Subscriptions","timetrack":"TimeTrack","attendance":"Attendance","leaves":"Leave Management","monthly_report":"Monthly Report","salary_report":"Salary Report","statutory_calculation":"Statutory Calculation","documents":"Documents","leaderboard":"Leaderboard","ai_prediction":"AI Prediction","teamsive_passport":"Teamsive Passport","feedback":"Feedback","notes":"Notes","branches":"Branches","settings":"Settings","interval_management":"Interval Management","interval_history":"Intervals History","salary_settings":"Salary Settings","salary_payments":"Salary Payments"};
+window.adminLegacyAreas = {"manage_employees":"employees","view_employees":"employees","interval_management":"interval","interval_history":"interval","salary_settings":"salary","salary_payments":"salary"};
 window.chooseAdminPermissions = (initial = {}) => new Promise(resolve => {
+ const areas = Object.fromEntries(Object.keys(adminModules).map(key => [key,
+   initial.areas ? initial.areas[key] === true : (initial[key] || initial[adminLegacyAreas[key]])?.view === true]));
+ const actions = Object.fromEntries(['view','edit','delete'].map(action => [action,
+   initial.actions ? initial.actions[action] === true : Object.keys(areas).some(key => areas[key] && (initial[key] || initial[adminLegacyAreas[key]])?.[action] === true)]));
  const dialog = document.createElement('dialog');
- dialog.style.cssText = 'background:var(--bg-card,#142e30);color:var(--text,#fff);border:1px solid #456;border-radius:16px;max-width:560px;width:90%;max-height:85vh;overflow:auto';
- dialog.innerHTML = '<h2>Sub-admin permissions</h2><p>Select sidebar sections and allowed actions.</p><table style="width:100%"><thead><tr><th>Section</th><th>View</th><th>Edit</th><th>Delete</th></tr></thead><tbody>' + Object.entries(adminModules).map(([key,label]) => '<tr><td>'+label+'</td>'+['view','edit','delete'].map(action => '<td><input type="checkbox" data-module="'+key+'" data-action="'+action+'" aria-label="'+label+' '+action+'" '+(initial[key]?.[action] ? 'checked' : '')+'></td>').join('')+'</tr>').join('')+'</tbody></table><div style="display:flex;gap:16px;margin-top:20px"><button id="permissionCancel">Cancel</button><button id="permissionSave">Continue</button></div>';
- const finish = result => {dialog.close();dialog.remove();resolve(result);};
- dialog.addEventListener('cancel', event => {event.preventDefault();finish(null);});
- dialog.querySelector('#permissionCancel').onclick = () => finish(null);
- dialog.addEventListener('change', event => {
-   const input=event.target;if(!input.dataset.module)return;
-   const row=input.closest('tr');const view=row.querySelector('[data-action="view"]');
-   if(input.checked && input.dataset.action!=='view')view.checked=true;
-   if(!view.checked)row.querySelectorAll('input').forEach(el=>el.checked=false);
+ dialog.style.cssText='background:var(--bg-card,#142e30);color:var(--text,#fff);border:1px solid #456;border-radius:16px;width:min(90%,520px);max-height:85vh';
+ dialog.innerHTML='<h2>Sub-admin permissions</h2><p>Common permissions for all selected areas</p><div style="display:flex;gap:24px">'+['view','edit','delete'].map(action=>'<label><input type="checkbox" data-action="'+action+'" '+(actions[action]?'checked':'')+'> '+action[0].toUpperCase()+action.slice(1)+'</label>').join('')+'</div><hr><p>Select areas visible to this sub-admin</p><div style="max-height:45vh;overflow:auto">'+Object.entries(adminModules).map(([key,label])=>'<label style="display:flex;align-items:center;gap:12px;padding:9px 0"><input type="checkbox" data-area="'+key+'" '+(areas[key]?'checked':'')+'> '+label+'</label>').join('')+'</div><div style="display:flex;gap:16px;margin-top:20px"><button id="permissionCancel">Cancel</button><button id="permissionSave">Continue</button></div>';
+ const finish=result=>{dialog.close();dialog.remove();resolve(result);};
+ dialog.addEventListener('cancel',event=>{event.preventDefault();finish(null);});
+ dialog.querySelector('#permissionCancel').onclick=()=>finish(null);
+ dialog.addEventListener('change',event=>{
+  const input=event.target;if(!input.dataset.action)return;
+  const view=dialog.querySelector('[data-action="view"]');
+  if(input.checked && input.dataset.action!=='view')view.checked=true;
+  if(!view.checked)dialog.querySelectorAll('[data-action]').forEach(el=>el.checked=false);
  });
- dialog.querySelector('#permissionSave').onclick = () => {
-   const result={};dialog.querySelectorAll('input').forEach(el=>{(result[el.dataset.module]??={})[el.dataset.action]=el.checked;});finish(result);
+ dialog.querySelector('#permissionSave').onclick=()=>{
+  dialog.querySelectorAll('[data-action]').forEach(el=>actions[el.dataset.action]=el.checked);
+  dialog.querySelectorAll('[data-area]').forEach(el=>areas[el.dataset.area]=el.checked);
+  finish({version:2,actions,areas});
  };
  document.body.append(dialog);dialog.showModal();
 });
 
-window.adminPageModules = {"dashboard.html":"dashboard","employees.html":"employees","employees_backup.html":"employees","view_employees.html":"employees","employee_details.html":"employees","hire_resign.html":"hire_resign","manage_companies.html":"companies","subscriptions.html":"subscriptions","intervalmanagement.html":"interval","intervals_history.html":"interval","timetrack.html":"timetrack","attendance.html":"attendance","leave_management.html":"leaves","salary_settings.html":"salary","salary_payments.html":"salary","monthly_report.html":"monthly_report","salary_report.html":"salary_report","statutory_calulation.html":"statutory_calculation","documents.html":"documents","leaderboard.html":"leaderboard","ai_prediction.html":"ai_prediction","teamsive_passport.html":"teamsive_passport","manage_feedback.html":"feedback","manage_notes.html":"notes","manage_branches.html":"branches","manage_admins.html":"branches","settings.html":"settings","tier_management.html":"subscriptions"};
+window.adminPageModules = {"dashboard.html":"dashboard","employees.html":"manage_employees","employees_backup.html":"manage_employees","view_employees.html":"view_employees","employee_details.html":"view_employees","hire_resign.html":"hire_resign","manage_companies.html":"companies","subscriptions.html":"subscriptions","intervalmanagement.html":"interval_management","intervals_history.html":"interval_history","timetrack.html":"timetrack","attendance.html":"attendance","leave_management.html":"leaves","salary_settings.html":"salary_settings","salary_payments.html":"salary_payments","monthly_report.html":"monthly_report","salary_report.html":"salary_report","statutory_calulation.html":"statutory_calculation","documents.html":"documents","leaderboard.html":"leaderboard","ai_prediction.html":"ai_prediction","teamsive_passport.html":"teamsive_passport","manage_feedback.html":"feedback","manage_notes.html":"notes","manage_branches.html":"branches","manage_admins.html":"branches","settings.html":"settings","tier_management.html":"subscriptions"};
 window.adminPermissionGrants = {};
-window.adminCan = (module, action) => localStorage.getItem('role') !== 'sub_admin' || (window.adminPermissionGrants[module]?.view === true && window.adminPermissionGrants[module]?.[action] === true);
+window.adminCan = (module, action) => {
+ if(localStorage.getItem('role')!=='sub_admin')return true;
+ const grants=window.adminPermissionGrants;
+ if(grants.areas && grants.actions){
+  const selected=grants.areas[module]===true || Object.entries(window.adminLegacyAreas).some(([key,group])=>group===module && grants.areas[key]===true);
+  return selected && grants.actions.view===true && grants.actions[action]===true;
+ }
+ const old=grants[module] || grants[window.adminLegacyAreas[module]];
+ return old?.view===true && old?.[action]===true;
+};
 window.adminPermissionReady = (async () => {
  if(localStorage.getItem('role') !== 'sub_admin')return;
  try {
@@ -48,3 +64,4 @@ window.adminPermissionReady = (async () => {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);else hide();
  }
 })();
+
